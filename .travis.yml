@@ -1,0 +1,12 @@
+language: scala
+
+env:
+ - SCALISMO_PLATFORM=linux64
+
+scala:
+  - 2.11.7
+
+script:
+  - sbt ++$TRAVIS_SCALA_VERSION update
+  - sbt ++$TRAVIS_SCALA_VERSION compile
+  - sbt ++$TRAVIS_SCALA_VERSION -Djava.awt.headless=true test
