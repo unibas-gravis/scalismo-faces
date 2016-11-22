@@ -1,4 +1,4 @@
-scalismo-faces
+scalismo-faces [![Build Status](https://travis-ci.org/unibas-gravis/scalismo-faces.svg?branch=master)](https://travis-ci.org/unibas-gravis/scalismo-faces)
 ==============
 
 This is a framework for shape modeling and model-based image analysis in scala.
