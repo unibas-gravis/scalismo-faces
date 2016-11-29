@@ -1,5 +1,9 @@
-scalismo-faces [![Build Status](https://travis-ci.org/unibas-gravis/scalismo-faces.svg?branch=master)](https://travis-ci.org/unibas-gravis/scalismo-faces)
+scalismo-faces
 ==============
+
+[![Build Status](https://travis-ci.org/unibas-gravis/scalismo-faces.svg?branch=master)](https://travis-ci.org/unibas-gravis/scalismo-faces)
+
+[![Download](https://api.bintray.com/packages/sschoenborn/unibas-gravis/scalismo-faces/images/download.svg?version=0.1.0) ](https://bintray.com/sschoenborn/unibas-gravis/scalismo-faces/0.1.0/link)
 
 This is a framework for shape modeling and model-based image analysis in scala.
 It is based on the [scalismo](https://github.com/unibas-gravis/scalismo)
@@ -16,13 +20,18 @@ Usage
 
 ### sbt
 
-**Warning:** artefact currently not published yet, will be coming soon. Until then compile for yourself with `sbt publish-local`.
-
 Add the dependency to your `build.sbt`:
 
 ```scala
-libraryDependencies += "ch.unibas.cs.gravis" %% "scalismo-faces" % "0.1.+"
-resolvers += "scalismo (public)" at "http://shapemodelling.cs.unibas.ch/repository/public"
+libraryDependencies += "ch.unibas.cs.gravis" %% "scalismo-faces" % "0.1.0"
+resolvers += Resolver.bintrayRepo("sschoenborn", "unibas-gravis")
+```
+
+Currently also add the scalismo native libs as an explicit dependency:
+
+```scala
+libraryDependencies += "ch.unibas.cs.gravis" % "scalismo-native-all" % "3.0.0"
+resolvers += "Statismo" at "http://shapemodelling.cs.unibas.ch/repository/public"
 ```
 
 ### Getting Started
