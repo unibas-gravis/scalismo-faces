@@ -44,7 +44,7 @@ object LanguageUtilities {
   }
 
   /** mutable object initialization as a single block */
-  def withMutable[A](obj: A)(f: A => Unit) = {
+  def withMutable[A](obj: A)(f: A => Unit): A = {
     f(obj)
     obj
   }
