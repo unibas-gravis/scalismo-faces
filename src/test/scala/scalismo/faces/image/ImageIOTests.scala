@@ -23,7 +23,7 @@ import scalismo.faces.color.ColorSpaceOperations.implicits._
 import scalismo.faces.color.{ColorSpaceOperations, RGBA}
 import scalismo.faces.image.PixelImage.implicits._
 import scalismo.faces.image.PixelImageConversion.BufferedImageConverter
-import scalismo.faces.utilities.LanguageUtilities
+import scalismo.faces.utils.LanguageUtilities
 
 import scala.reflect.ClassTag
 

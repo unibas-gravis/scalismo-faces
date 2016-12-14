@@ -18,7 +18,7 @@ package scalismo.faces.image
 
 import scalismo.faces.color.{ColorSpaceOperations, RGB, RGBA}
 import scalismo.faces.common.ComponentRepresentation
-import scalismo.faces.utilities.LanguageUtilities
+import scalismo.faces.utils.LanguageUtilities
 
 import scala.reflect.ClassTag
 

@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package scalismo.faces.utilities
+package scalismo.faces.utils
 
 import scala.annotation.tailrec
 
