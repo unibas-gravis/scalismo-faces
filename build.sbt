@@ -16,7 +16,6 @@ libraryDependencies  ++= Seq(
 
 // bintray repository
 bintrayRepository := "unibas-gravis"
-bintrayReleaseOnPublish in ThisBuild := false
 
 // Git versioning
 enablePlugins(GitVersioning, GitBranchPrompt)
