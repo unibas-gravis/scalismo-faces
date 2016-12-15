@@ -23,7 +23,7 @@ Usage
 Add the dependency to your `build.sbt`:
 
 ```scala
-libraryDependencies += "ch.unibas.cs.gravis" %% "scalismo-faces" % "0.1.0"
+libraryDependencies += "ch.unibas.cs.gravis" %% "scalismo-faces" % "0.2.0"
 resolvers += Resolver.bintrayRepo("unibas-gravis", "maven")
 ```
 
