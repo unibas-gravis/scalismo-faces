@@ -15,7 +15,7 @@ libraryDependencies  ++= Seq(
 )
 
 // bintray repository
-bintrayRepository := "unibas-gravis"
+bintrayOrganization := Some("unibas-gravis")
 
 // Git versioning
 enablePlugins(GitVersioning, GitBranchPrompt)
