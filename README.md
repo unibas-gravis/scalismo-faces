@@ -3,8 +3,8 @@ scalismo-faces
 
 [![Build Status](https://travis-ci.org/unibas-gravis/scalismo-faces.svg?branch=master)](https://travis-ci.org/unibas-gravis/scalismo-faces)
 
-[![Download](https://api.bintray.com/packages/sschoenborn/unibas-gravis/scalismo-faces/images/download.svg?version=0.1.0) ](https://bintray.com/sschoenborn/unibas-gravis/scalismo-faces/0.1.0/link)
-
+[![Download](https://api.bintray.com/packages/unibas-gravis/maven/scalismo-faces/images/download.svg) ](https://bintray.com/unibas-gravis/maven/scalismo-faces/_latestVersion)
+ 
 This is a framework for shape modeling and model-based image analysis in scala.
 It is based on the [scalismo](https://github.com/unibas-gravis/scalismo)
 library for shape modelling. It originates from the [Graphics
