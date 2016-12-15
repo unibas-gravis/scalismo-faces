@@ -51,7 +51,6 @@ object ResampleFilter {
 
     // kernel
     val rx = kernel.radius * kScaleW
-    val ry = kernel.radius * kScaleH
 
     // row filter for the image
     def filter1D(cols: Int, scale: Double, kScale: Double) = new ImageFilter[A, A] {
@@ -85,8 +84,8 @@ object ResampleFilter {
 
     // do the resampling: choose inner loop based on image domain, buffer the intermediate result (careful with access modes)
     image.domain match {
-      case d: ColumnMajorImageDomain => image.transposed.filter(colFilter).transposed.filter(rowFilter)
-      case d: RowMajorImageDomain => image.filter(rowFilter).transposed.filter(colFilter).transposed
+      case _: ColumnMajorImageDomain => image.transposed.filter(colFilter).transposed.filter(rowFilter)
+      case _: RowMajorImageDomain => image.filter(rowFilter).transposed.filter(colFilter).transposed
     }
   }
 }

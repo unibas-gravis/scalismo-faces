@@ -28,7 +28,7 @@ import scala.util.{Failure, Try}
 object PixelImageConversion {
 
   implicit def bufferedImageConverterDouble(implicit doubleConv: BufferedImageConverter[Double]) = new BufferedImageConverter[Double] {
-    override def toBufferedImage(image: PixelImage[Double]): BufferedImage = doubleConv.toBufferedImage(image.map(_.toDouble))
+    override def toBufferedImage(image: PixelImage[Double]): BufferedImage = doubleConv.toBufferedImage(image)
 
     override def fromBufferedImage(image: BufferedImage): PixelImage[Double] = doubleConv.fromBufferedImage(image)
   }

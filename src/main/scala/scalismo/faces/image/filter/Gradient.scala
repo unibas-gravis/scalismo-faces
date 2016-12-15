@@ -22,22 +22,22 @@ import scalismo.faces.image.{PixelImage, PixelImageDomain}
 import scala.reflect.ClassTag
 
 object Gradient {
-  def sobelX[Pixel: ClassTag](implicit ops: ColorSpaceOperations[Pixel]) = {
+  def sobelX[Pixel: ClassTag](implicit ops: ColorSpaceOperations[Pixel]): SeparableCorrelationFilter[Pixel] = {
     val row: PixelImage[Double] = PixelImage(PixelImageDomain(3, 1), Array(-1.0, 0.0, 1.0))
     val col: PixelImage[Double] = PixelImage(PixelImageDomain(1, 3), Array(1.0, 2.0, 1.0))
     SeparableCorrelationFilter[Pixel](row, col)
   }
-  def sobelY[Pixel: ClassTag](implicit ops: ColorSpaceOperations[Pixel]) = {
+  def sobelY[Pixel: ClassTag](implicit ops: ColorSpaceOperations[Pixel]): SeparableCorrelationFilter[Pixel] = {
     val row: PixelImage[Double] = PixelImage(PixelImageDomain(3, 1), Array(1.0, 2.0, 1.0))
     val col: PixelImage[Double] = PixelImage(PixelImageDomain(1, 3), Array(-1.0, 0.0, 1.0))
     SeparableCorrelationFilter[Pixel](row, col)
   }
-  def scharrX[Pixel: ClassTag](implicit ops: ColorSpaceOperations[Pixel]) = {
+  def scharrX[Pixel: ClassTag](implicit ops: ColorSpaceOperations[Pixel]): SeparableCorrelationFilter[Pixel] = {
     val row: PixelImage[Double] = PixelImage(PixelImageDomain(3, 1), Array(-1.0, 0.0, 1.0))
     val col: PixelImage[Double] = PixelImage(PixelImageDomain(1, 3), Array(3.0, 10.0, 3.0))
     SeparableCorrelationFilter[Pixel](row, col)
   }
-  def scharrY[Pixel: ClassTag](implicit ops: ColorSpaceOperations[Pixel]) = {
+  def scharrY[Pixel: ClassTag](implicit ops: ColorSpaceOperations[Pixel]): SeparableCorrelationFilter[Pixel] = {
     val row: PixelImage[Double] = PixelImage(PixelImageDomain(3, 1), Array(3.0, 10.0, 3.0))
     val col: PixelImage[Double] = PixelImage(PixelImageDomain(1, 3), Array(-1.0, 0.0, 1.0))
     SeparableCorrelationFilter[Pixel](row, col)

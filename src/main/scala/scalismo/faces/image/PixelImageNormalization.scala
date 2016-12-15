@@ -38,7 +38,7 @@ object PixelImageNormalization {
   }
 
   /** Normalize the image to range ([0,1], [0,1], [0,1]). (Each channel is normalized seperately.) */
-  def normalizedRGBPerChannel(img: PixelImage[RGB]) = {
+  def normalizedRGBPerChannel(img: PixelImage[RGB]): PixelImage[RGB] = {
     val r = normalizeDoubleImage(img.map(_.r))
     val g = normalizeDoubleImage(img.map(_.g))
     val b = normalizeDoubleImage(img.map(_.b))
@@ -47,7 +47,7 @@ object PixelImageNormalization {
 
   /** Expand value range without saturating a channel.
     * Normalizes the image such that the smallest value over all channels is 0 and the largest over all channels is 1. */
-  def normalizedRGB(img: PixelImage[RGB]) = {
+  def normalizedRGB(img: PixelImage[RGB]): PixelImage[RGB] = {
     def minmax(img: PixelImage[Double]): (Double, Double) = {
       val arr = img.toArray
       (arr.min, arr.max)

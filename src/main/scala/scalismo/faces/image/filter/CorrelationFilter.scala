@@ -58,7 +58,7 @@ case class SeparableCorrelationFilter[@specialized A: ClassTag](kernelRow: Pixel
   private val rowFilter = CorrelationFilter(kernelRow)
 
   override def filter(image: PixelImage[A]): PixelImage[A] = image.domain match {
-    case d: ColumnMajorImageDomain => image.filter(columnFilter).filter(rowFilter)
-    case d: RowMajorImageDomain => image.filter(rowFilter).filter(columnFilter)
+    case _: ColumnMajorImageDomain => image.filter(columnFilter).filter(rowFilter)
+    case _: RowMajorImageDomain => image.filter(rowFilter).filter(columnFilter)
   }
 }

@@ -20,8 +20,8 @@ import scala.reflect.ClassTag
 
 /** Image buffer for mutable creation of an image, use toImage when finished to convert to a standard immutable image */
 class ImageBuffer[@specialized(Int, Float, Double) Pixel: ClassTag] (val domain: PixelImageDomain, private var data: Array[Pixel]) {
-  def width = domain.width
-  def height = domain.height
+  def width: Int = domain.width
+  def height: Int = domain.height
 
   require(data.length == domain.length)
 
@@ -125,7 +125,7 @@ object ImageBuffer {
     // create storage: uninitialized Array
     val data = new Array[Pixel](width * height)
     val buffer = ImageBuffer(width, height, data)
-    buffer.transformWithIndexParallel((x: Int, y: Int, c: Pixel) => f(x, y))
+    buffer.transformWithIndexParallel((x: Int, y: Int, _: Pixel) => f(x, y))
     buffer
   }
 

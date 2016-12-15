@@ -23,13 +23,10 @@ import scala.reflect.ClassTag
 /** fast raw image with multiple Double channels */
 class MultiChannelImageBuffer private (val width: Int, val height: Int, val channels: Int, private val data: Array[Double]) {
 
-  val length = width * height * channels
+  val length: Int = width * height * channels
 
   // channel / column major access
   private def index(x: Int, y: Int, c: Int): Int = x * height * channels + y * channels + c
-  private def x(index: Int) = index / (height * channels)
-  private def y(index: Int) = (index % height * channels) / channels
-  private def c(index: Int) = index % channels
 
   /** access value at (x, y), in channel c */
   def apply(x: Int, y: Int, c: Int): Double = data(index(x, y, c))

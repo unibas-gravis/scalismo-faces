@@ -26,9 +26,9 @@ trait InterpolationKernel {
 
 object InterpolationKernel {
   case class BoxKernel(size: Double) extends InterpolationKernel {
-    override val radius = size
+    override val radius: Double = size
 
-    override def apply(x: Double) = if (math.abs(x) <= size) 1.0 / (2.0 * size) else 0.0
+    override def apply(x: Double): Double = if (math.abs(x) <= size) 1.0 / (2.0 * size) else 0.0
   }
 
   case class LanczosKernel(window: Int) extends InterpolationKernel {
@@ -40,11 +40,11 @@ object InterpolationKernel {
 
     private def sinc(x: Double): Double = sin(x * math.Pi) / (x * math.Pi)
 
-    override def radius = window
+    override def radius: Double = window
   }
 
   case class GaussKernel(sigma: Double) extends InterpolationKernel {
-    override val radius = 4 * sigma
+    override val radius: Double = 4 * sigma
     private val n = math.sqrt(2 * math.Pi) / sigma
 
     override def apply(x: Double): Double = math.exp(-0.5 * x * x / sigma / sigma) / n
@@ -59,7 +59,7 @@ object InterpolationKernel {
       else kernel(cell)
     }
 
-    override def radius = (kernel.size - 1) / 2
+    override def radius: Double = (kernel.size - 1) / 2
   }
 
   /**
@@ -97,7 +97,7 @@ object InterpolationKernel {
   case object BilinearKernel extends InterpolationKernel {
     override val radius = 1.0
 
-    override def apply(x: Double) = {
+    override def apply(x: Double): Double = {
       if (math.abs(x) <= 1.0)
         if (x > 0) 1.0 - x else x + 1.0
       else

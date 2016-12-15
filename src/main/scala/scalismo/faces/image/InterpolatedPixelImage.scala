@@ -31,8 +31,8 @@ case class InterpolatedPixelImage[Pixel](image: PixelImage[Pixel],
   override val height: Double = image.height
 
   private val f: (Double, Double) => Pixel = image.domain match {
-      case d: ColumnMajorImageDomain => (x, y) => InterpolatedPixelImage.interpolatedImageAccessColFirst(image, x, y, kernel)
-      case d: RowMajorImageDomain => (x, y) => InterpolatedPixelImage.interpolateCellBasedRowFirst(image, x, y, kernel)
+      case _: ColumnMajorImageDomain => (x, y) => InterpolatedPixelImage.interpolatedImageAccessColFirst(image, x, y, kernel)
+      case _: RowMajorImageDomain => (x, y) => InterpolatedPixelImage.interpolateCellBasedRowFirst(image, x, y, kernel)
   }
 
   /** read the value at the given location, "continuous pixel index" (Double coordinates) */
@@ -136,7 +136,7 @@ case class NearestNeighbourPixelImage[A](image: PixelImage[A]) extends Continuou
   override val width: Double = image.width
   override val height: Double = image.height
 
-  private def interpolateNearestNeighbour[@specialized(Double, Float, Int, Boolean) A](image: PixelImage[A], x: Double, y: Double): A = {
+  private def interpolateNearestNeighbour(image: PixelImage[A], x: Double, y: Double): A = {
     val ix = math.round(x - 0.5).toInt // nearest grid cell x
     val iy = math.round(y - 0.5).toInt // nearest grid cell y
     image(ix, iy)
@@ -158,7 +158,7 @@ case class NearestNeighbourPixelImage[A](image: PixelImage[A]) extends Continuou
   /**
     * Chooses nearest neighbour pixel for pixel value during resampling.
     * */
-  def nearestNeighbourResample[@specialized(Double, Float, Int, Boolean) A](image: PixelImage[A], cols: Int, rows: Int)(implicit tag: ClassTag[A]): PixelImage[A] = {
+  def nearestNeighbourResample(image: PixelImage[A], cols: Int, rows: Int)(implicit tag: ClassTag[A]): PixelImage[A] = {
     require(cols > 0 && rows > 0, s"cannot resample to new size of 0: ($cols, $rows)")
     require(image.width > 0 && image.height > 0, s"cannot resample image size of 0: (${image.width}, ${image.height})")
 
@@ -170,8 +170,8 @@ case class NearestNeighbourPixelImage[A](image: PixelImage[A]) extends Continuou
     val scaleH = height.toDouble / rows
 
     val domain = image.domain match {
-      case col: ColumnMajorImageDomain => ColumnMajorImageDomain(cols, rows)
-      case row: RowMajorImageDomain => RowMajorImageDomain(cols, rows)
+      case _: ColumnMajorImageDomain => ColumnMajorImageDomain(cols, rows)
+      case _: RowMajorImageDomain => RowMajorImageDomain(cols, rows)
     }
     val access = (x: Int, y: Int) => interpolateNearestNeighbour(image, (x + 0.5) * scaleW, (y + 0.5) * scaleH)
     PixelImage(domain, access).withAccessMode(AccessMode.Functional(access))

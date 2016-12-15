@@ -51,7 +51,7 @@ trait ComponentRepresentation[A] {
 
 object ComponentRepresentation {
 
-  def apply[A](implicit vec: ComponentRepresentation[A]) = vec
+  def apply[A](implicit vec: ComponentRepresentation[A]): ComponentRepresentation[A] = vec
 
   implicit object VectorComponents2D extends ComponentRepresentation[Vector[_2D]] {
     override def fromArray(arr: Array[Double]): Vector[_2D] = Vector(arr(0), arr(1))

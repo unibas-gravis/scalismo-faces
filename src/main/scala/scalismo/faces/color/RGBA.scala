@@ -27,7 +27,7 @@ import scala.annotation.switch
 
 case class RGBA(r: Double, g: Double, b: Double, a: Double) {
 
-  def isInBounds = r >= 0.0 && r <= 1.0 && g >= 0.0 && g <= 1.0 && b >= 0.0 && b <= 1.0 && a >= 0.0 && a <= 1.0
+  def isInBounds: Boolean = r >= 0.0 && r <= 1.0 && g >= 0.0 && g <= 1.0 && b >= 0.0 && b <= 1.0 && a >= 0.0 && a <= 1.0
 
   /** clamp all values to valid range [0, 1] */
   def clamped: RGBA = {
@@ -72,7 +72,7 @@ case class RGBA(r: Double, g: Double, b: Double, a: Double) {
   def toRGB: RGB = RGB(r, g, b)
 
   /** convert to Tuple */
-  def toTuple = (r, g, b, a)
+  def toTuple: (Double, Double, Double, Double) = (r, g, b, a)
 
   /** apply an operation to RGB part, keep alpha channel */
   def mapRGB(f: RGB => RGB): RGBA = RGBA(f(toRGB), a)

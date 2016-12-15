@@ -28,7 +28,7 @@ import scalismo.mesh.Interpolator
 import scala.annotation.switch
 
 case class RGB(r: Double, g: Double, b: Double) {
-  def isInBounds = r >= 0.0 && r <= 1.0 && g >= 0.0 && g <= 1.0 && b >= 0.0 && b <= 1.0
+  def isInBounds: Boolean = r >= 0.0 && r <= 1.0 && g >= 0.0 && g <= 1.0 && b >= 0.0 && b <= 1.0
 
   def sum: Double = r + g + b
 
@@ -90,7 +90,7 @@ case class RGB(r: Double, g: Double, b: Double) {
   def toRGBA: RGBA = RGBA(r, g, b, 1.0)
 
   /** convert to Tuple */
-  def toTuple = (r, g, b)
+  def toTuple: (Double, Double, Double) = (r, g, b)
 
   /** convert to standard Vector[_3D] */
   def toVector[_3D] = Vector(r, g, b)

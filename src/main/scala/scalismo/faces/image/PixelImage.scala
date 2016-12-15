@@ -24,9 +24,9 @@ import scala.reflect.ClassTag
 /** a basic pixel-based image, access through pixel coordinates (x, y) */
 class PixelImage[@specialized A](val domain: PixelImageDomain, val accessMode: AccessMode[A], val f: (Int, Int) => A) extends ((Int, Int) => A) {
 
-  val width = domain.width
-  val height = domain.height
-  val length = domain.length
+  val width: Int = domain.width
+  val height: Int = domain.height
+  val length: Int = domain.length
 
   /** access image at (x, y) */
   def apply(x: Int, y: Int): A = if (domain.isDefinedAt(x, y)) valueAt(x, y) else accessMode.outsideAccess(x, y, this)
@@ -145,7 +145,7 @@ class PixelImage[@specialized A](val domain: PixelImageDomain, val accessMode: A
 
   val isBuffered = false
 
-  override def toString = "PixelImage(" + domain + ")"
+  override def toString: String = "PixelImage(" + domain + ")"
 
   // correct equality with respect to underlying data
   override def equals(other: Any): Boolean = other match {
@@ -154,7 +154,7 @@ class PixelImage[@specialized A](val domain: PixelImageDomain, val accessMode: A
   }
 
   // correct hashCode with respect to underlying data
-  override def hashCode = domain.hashCode() * 43 + values.toIndexedSeq.hashCode()
+  override def hashCode: Int = domain.hashCode() * 43 + values.toIndexedSeq.hashCode()
 }
 
 object PixelImage {
@@ -205,8 +205,8 @@ object PixelImage {
   def fromTemplate[A: ClassTag](image: PixelImage[A], width: Int, height: Int, f: (Int, Int) => A): PixelImage[A] = {
     val accessMode = image.accessMode
     val domain = image.domain match {
-      case cm: ColumnMajorImageDomain => ColumnMajorImageDomain(width, height)
-      case rm: RowMajorImageDomain => RowMajorImageDomain(width, height)
+      case _: ColumnMajorImageDomain => ColumnMajorImageDomain(width, height)
+      case _: RowMajorImageDomain => RowMajorImageDomain(width, height)
     }
     view(domain, f).buffer.withAccessMode(accessMode)
   }
@@ -225,27 +225,27 @@ object PixelImage {
 
       def +(other: PixelImage[A]): PixelImage[A] = applyOperation2(other)(ops.add)
 
-      def -(other: PixelImage[A]) = applyOperation2(other)((a, b) => a - b)
+      def -(other: PixelImage[A]): PixelImage[A] = applyOperation2(other)((a, b) => a - b)
 
-      def x(other: PixelImage[A]) = applyOperation2(other)(ops.multiply)
+      def x(other: PixelImage[A]): PixelImage[A] = applyOperation2(other)(ops.multiply)
 
-      def multiply(other: PixelImage[A]) = applyOperation2(other)(ops.multiply)
+      def multiply(other: PixelImage[A]): PixelImage[A] = applyOperation2(other)(ops.multiply)
 
-      def *(other: PixelImage[Double]) = applyOperation2(other)(ops.scale)
+      def *(other: PixelImage[Double]): PixelImage[A] = applyOperation2(other)(ops.scale)
 
-      def *:(other: PixelImage[Double]) = applyOperation2(other)(ops.scale)
+      def *:(other: PixelImage[Double]): PixelImage[A] = applyOperation2(other)(ops.scale)
 
-      def /(other: PixelImage[Double]) = applyOperation2(other)((a, l) => ops.scale(a, 1.0f / l))
+      def /(other: PixelImage[Double]): PixelImage[A] = applyOperation2(other)((a, l) => ops.scale(a, 1.0f / l))
 
-      def dot(other: PixelImage[A]) = applyOperation2(other)(ops.dot).values.sum
+      def dot(other: PixelImage[A]): Double = applyOperation2(other)(ops.dot).values.sum
 
       def normSq: Double = image.values.map(ops.normSq).sum
 
       def norm: Double = math.sqrt(normSq)
 
-      def unary_- = image.mapLazy(p => -p)
+      def unary_- : PixelImage[A] = image.mapLazy(p => -p)
 
-      def zero = PixelImage.view(image.domain, (x, y) => ops.zero).withAccessMode(image.accessMode)
+      def zero: PixelImage[A] = PixelImage.view(image.domain, (_, _) => ops.zero).withAccessMode(image.accessMode)
     }
 
     implicit def imageWithOperators[A: ClassTag](image: PixelImage[A])(implicit ops: ColorSpaceOperations[A]) = new ImageWithOperators[A](image)
@@ -257,8 +257,6 @@ private class ArrayImage[A: ClassTag](override val domain: PixelImageDomain,
   private val data: Array[A])
     extends PixelImage[A](domain, accessMode, (x: Int, y: Int) => data(domain.index(x, y))) {
   require(data.length == domain.length, "domain and array differ in size")
-
-  private val tag = implicitly[ClassTag[A]]
 
   /** direct raw access of image value at (x, y) */
   override def valueAt(x: Int, y: Int): A = data(domain.index(x, y))
@@ -286,7 +284,7 @@ private class ArrayImage[A: ClassTag](override val domain: PixelImageDomain,
   /** get all values as data Array (linearization strategy depends on domain, creates a copy) */
   override def toArray(implicit tag: ClassTag[A]): Array[A] = data.clone()
 
-  override def toString = "ArrayImage(" + domain + ")"
+  override def toString: String = "ArrayImage(" + domain + ")"
 
   override val isBuffered = true
 
@@ -298,5 +296,5 @@ private class ArrayImage[A: ClassTag](override val domain: PixelImageDomain,
   }
 
   // correct hashCode with respect to underlying data array
-  override def hashCode = domain.hashCode() * 43 + data.deep.hashCode()
+  override def hashCode: Int = domain.hashCode() * 43 + data.deep.hashCode()
 }

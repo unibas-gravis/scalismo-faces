@@ -43,9 +43,6 @@ object PixelImageOperations {
 
   /// subimage of image, lazy
   def subImage[Pixel](image: PixelImage[Pixel], x: Int, y: Int, width: Int, height: Int): PixelImage[Pixel] = {
-    def f(ix: Int, iy: Int): Pixel = {
-      image(ix + x, iy + y)
-    }
     PixelImage.view(width, height, (ix: Int, iy: Int) => image(ix + x, iy + y))
   }
 
@@ -127,7 +124,7 @@ object PixelImageOperations {
   }
 
   /** average an image to half its size multiple times */
-  def pyramidAverage[A](image: PixelImage[A], levels: Int = 1)(implicit ops: ColorSpaceOperations[A], tag: ClassTag[A]) = {
+  def pyramidAverage[A](image: PixelImage[A], levels: Int = 1)(implicit ops: ColorSpaceOperations[A], tag: ClassTag[A]): PixelImage[A] = {
     def shrink2(image: PixelImage[A]): PixelImage[A] = image.resample(image.width / 2, image.height / 2, InterpolationKernel.BilinearKernel)
     LanguageUtilities.iterate(image, levels)(shrink2).resample(image.width, image.height, InterpolationKernel.BilinearKernel)
   }

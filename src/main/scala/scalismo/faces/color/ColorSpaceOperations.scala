@@ -23,7 +23,7 @@ import scala.annotation.tailrec
 /** vector space operations for a pixel type, necessary for filtering */
 trait ColorSpaceOperations[@specialized(Double, Float) A] {
   /** blending using vector space operations */
-  def blend(v: A, w: A, l: Double) = add(scale(v, l), scale(w, 1.0 - l))
+  def blend(v: A, w: A, l: Double): A = add(scale(v, l), scale(w, 1.0 - l))
 
   /** add two pixels */
   def add(pix1: A, pix2: A): A
@@ -92,7 +92,7 @@ object ColorSpaceOperations {
     override def dot(pix1: Vector[D], pix2: Vector[D]): Double = pix1 dot pix2
     override def scale(pix: Vector[D], l: Double): Vector[D] = pix * l
     override val zero: Vector[D] = Vector.zeros[D]
-    override val dimensionality = NDSpace[D].dimensionality
+    override val dimensionality: Int = NDSpace[D].dimensionality
   }
 
   /** implementation for type A wrapped in Option[A] */
@@ -102,7 +102,7 @@ object ColorSpaceOperations {
     override def dot(pix1: Option[A], pix2: Option[A]): Double = (for (p1 <- pix1; p2 <- pix2) yield ops.dot(p1, p2)).getOrElse(0.0)
     override def scale(pix: Option[A], l: Double): Option[A] = for (p1 <- pix) yield ops.scale(p1, l)
     override val zero: Option[A] = Some(ops.zero)
-    override val dimensionality = ops.dimensionality
+    override val dimensionality: Int = ops.dimensionality
   }
 
   /** implicit conversions to work with infix operator notations for ColorSpaceOperations[A] */
@@ -114,7 +114,7 @@ object ColorSpaceOperations {
     implicit def toColor[A](vector: ColorSpaceVector[A]): A = vector.color
 
     class ColorSpaceVector[A](val color: A)(implicit space: ColorSpaceOperations[A]) {
-      val dimensionality = space.dimensionality
+      val dimensionality: Int = space.dimensionality
 
       def +(other: A): A = space.add(color, other)
 
@@ -134,7 +134,7 @@ object ColorSpaceOperations {
 
       def normSq: Double = space.normSq(color)
 
-      def unary_- = space.scale(color, -1.0)
+      def unary_- : A = space.scale(color, -1.0)
 
       def isZero: Boolean = space.isZero(color)
     }

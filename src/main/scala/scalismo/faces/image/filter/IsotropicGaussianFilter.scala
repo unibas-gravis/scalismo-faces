@@ -23,22 +23,22 @@ import scala.reflect.ClassTag
 /** isotropic Gaussian blur filter, uses fast separable convolution */
 class IsotropicGaussianFilter[A: ClassTag](sigma: Double, windowSize: Int)(implicit ops: ColorSpaceOperations[A]) extends ImageFilter[A, A] {
 
-  val s22 = 2.0 * sigma * sigma
-  val N = 1.0 / (math.Pi * s22)
-  def gauss = (d2: Double) => N * math.exp(-d2 / s22)
+  val s22: Double = 2.0 * sigma * sigma
+  val N: Double = 1.0 / (math.Pi * s22)
+  def gauss: (Double) => Double = (d2: Double) => N * math.exp(-d2 / s22)
 
-  val m = windowSize / 2
-  def d2 = (x: Double) => math.pow(x - m, 2.0)
+  val m: Int = windowSize / 2
+  def d2: (Double) => Double = (x: Double) => math.pow(x - m, 2.0)
 
-  val Z = {0 until windowSize map { x => gauss(d2(x)) } sum}
+  val Z: Double = (0 until windowSize).map{ x => gauss(d2(x))}.sum
 
-  val kernel = PixelImage[Double](
+  val kernel: PixelImage[Double] = PixelImage[Double](
     windowSize,
     1,
-    (x: Int, y: Int) => {gauss(d2(x)) / Z}
+    (x: Int, _: Int) => {gauss(d2(x)) / Z}
   )
 
-  val gaussFilter = SeparableCorrelationFilter[A](kernel, kernel.transposed)
+  val gaussFilter: SeparableCorrelationFilter[A] = SeparableCorrelationFilter[A](kernel, kernel.transposed)
 
   override def filter(image: PixelImage[A]): PixelImage[A] = gaussFilter.filter(image)
 }
