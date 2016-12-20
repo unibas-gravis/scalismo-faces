@@ -20,4 +20,4 @@ bintrayOrganization := Some("unibas-gravis")
 // Git versioning
 enablePlugins(GitVersioning, GitBranchPrompt)
 com.typesafe.sbt.SbtGit.useJGit 
-git.useGitDescribe := true
+git.baseVersion := "develop"
