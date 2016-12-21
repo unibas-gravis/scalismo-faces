@@ -16,11 +16,11 @@
 
 package scalismo.faces.image
 
-import java.io.File
+import java.io._
 
 import scalismo.faces.FacesTestSuite
 import scalismo.faces.color.ColorSpaceOperations.implicits._
-import scalismo.faces.color.{ColorSpaceOperations, RGBA}
+import scalismo.faces.color.{ColorSpaceOperations, RGB, RGBA}
 import scalismo.faces.image.PixelImage.implicits._
 import scalismo.faces.image.PixelImageConversion.BufferedImageConverter
 import scalismo.faces.utils.LanguageUtilities
@@ -29,24 +29,28 @@ import scala.reflect.ClassTag
 
 class ImageIOTests extends FacesTestSuite {
 
-  /** number of write/read cycles */
+  /** number of cycles to test*/
   val repetitions = 2
   /** reconstruction tolerance, IO is only 8 bit! */
-  val tolerance = 0.1 * 1.0 / 255.0 // 8 bit write/read
+  val tolerance = math.sqrt(4*math.pow(1.0/255.0,2.0)) // 8 bit write/read
 
   val img = randomImage(37, 67)
   val imgG = img.map(_.gray)
   val imgA = img.map(RGBA(_))
 
-  /** evlauate difference of image and write/read-cycled image */
-  def diffWR[A: ClassTag](image: PixelImage[A])(implicit converter: BufferedImageConverter[A], ops: ColorSpaceOperations[A]): Double = {
-    val wrImage: PixelImage[A] = doWR(image)
+  /** evaluate difference of repeated identity transforms */
+  def diffOfIdentityTransform[A: ClassTag](image: PixelImage[A], identityTransform: PixelImage[A] => PixelImage[A])
+                                          (implicit converter: BufferedImageConverter[A], ops: ColorSpaceOperations[A])
+  : Double = {
+    val wrImage: PixelImage[A] = repeatIdentityTransformation(image,identityTransform)
     val diff = PixelImage(image.width, image.height, (x, y) => image(x, y) - wrImage(x, y))
-    diff.norm / image.width / image.height
+    math.sqrt(diff.values.map(ops.normSq).max)
   }
 
-  /** execute repetion write/read cycles */
-  def doWR[A](image: PixelImage[A])(implicit converter: BufferedImageConverter[A]): PixelImage[A] = LanguageUtilities.iterate(image, repetitions)(writeReadCycle[A])
+  /** execute repeated identity transforms */
+  def repeatIdentityTransformation[A](image: PixelImage[A], identity: PixelImage[A] => PixelImage[A])
+                                    (implicit converter: BufferedImageConverter[A])
+  : PixelImage[A] = LanguageUtilities.iterate(image, repetitions)(identity)
 
   /** perform a write-read cycle for an image */
   def writeReadCycle[A](img: PixelImage[A])(implicit conv: BufferedImageConverter[A]): PixelImage[A] = {
@@ -56,21 +60,35 @@ class ImageIOTests extends FacesTestSuite {
     PixelImageIO.read[A](f).get
   }
 
+  /** perform a write-read cycle for an image */
+  def writeReadStreamCycle[A](img: PixelImage[A])(implicit conv: BufferedImageConverter[A]): PixelImage[A] = {
+    val os = new ByteArrayOutputStream()
+    PixelImageIO.write[A](img, os).get
+    val is  = new ByteArrayInputStream(os.toByteArray)
+    PixelImageIO.read[A](is).get
+  }
+
   describe("A random RGB color image") {
     it("survives a write-read cycle unaltered") {
-      diffWR(img) should be < tolerance
+      diffOfIdentityTransform(img,writeReadCycle[RGB]) should be <= tolerance
     }
   }
 
   describe("A random RGBA color image") {
     it("survives a write-read cycle unaltered") {
-      diffWR(imgA) should be < tolerance
+      diffOfIdentityTransform(imgA,writeReadCycle[RGBA]) should be <= tolerance
     }
   }
 
   describe("A random gray image") {
     it("survives a write-read cycle unaltered") {
-      diffWR(imgG) should be < tolerance
+      diffOfIdentityTransform(imgG,writeReadCycle[Double]) should be <= tolerance
+    }
+  }
+
+  describe("The IO-Method") {
+    it("writes and reads and image unaltered with streams") {
+      diffOfIdentityTransform(imgA,writeReadStreamCycle[RGBA]) should be <= tolerance
     }
   }
 }

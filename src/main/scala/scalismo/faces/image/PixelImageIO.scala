@@ -18,7 +18,6 @@ package scalismo.faces.image
 
 import java.awt.Color
 import java.awt.image.BufferedImage
-import java.io.File
 
 import scalismo.faces.color.{RGB, RGBA}
 import scalismo.faces.image.PixelImageConversion.BufferedImageConverter
@@ -162,6 +161,17 @@ object PixelImageConversion {
 }
 
 object PixelImageIO {
+  import java.io.{File, InputStream, OutputStream}
+
+  def read[Pixel](inputStream: InputStream)(implicit converter: BufferedImageConverter[Pixel]): Try[PixelImage[Pixel]] = {
+    val img: Try[java.awt.image.BufferedImage] = Try(javax.imageio.ImageIO.read(inputStream))
+    img.map(converter.fromBufferedImage)
+  }
+
+  def write[Pixel](image: PixelImage[Pixel], outputStream: OutputStream, format: String = "png")(implicit converter: BufferedImageConverter[Pixel]): Try[Unit] = {
+    val bufImage = converter.toBufferedImage(image)
+    Try(javax.imageio.ImageIO.write(bufImage, format, outputStream))
+  }
 
   def read[Pixel](file: File)(implicit converter: BufferedImageConverter[Pixel]): Try[PixelImage[Pixel]] = {
     val img: Try[java.awt.image.BufferedImage] = Try(javax.imageio.ImageIO.read(file))
