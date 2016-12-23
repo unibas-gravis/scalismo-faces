@@ -24,6 +24,16 @@ import scala.reflect.ClassTag
 
 object PixelImageOperations {
 
+  def alphaBlending(background: PixelImage[RGB], foreground: PixelImage[RGB], mask: PixelImage[Double]): PixelImage[RGB] = {
+    alphaBlending(background,setAlpha(foreground,mask))
+  }
+
+  def alphaBlending(background: PixelImage[RGB], foreground: PixelImage[RGBA]): PixelImage[RGB] = {
+    background.zip(foreground).map{
+      case (bg,fg) => bg.blend(fg)
+    }
+  }
+
   def applyToRGB(image: PixelImage[RGBA], f: PixelImage[RGB] => PixelImage[RGB]): PixelImage[RGBA] = {
     setAlpha(f(removeAlpha(image)), extractAlpha(image))
   }
