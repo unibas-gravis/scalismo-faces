@@ -24,10 +24,27 @@ import scala.reflect.ClassTag
 
 object PixelImageOperations {
 
+  /**
+    * Blends the foreground over the background according to the mask.
+    * The foreground is visible where the mask is 1.0. The Background is visible where the mask is 0.0. For other mask
+    * values the two images are blended accordingly.
+    * @param background visible when mask = 0.0
+    * @param foreground visible when mask = 1.0
+    * @param mask used for blending the colors
+    * @return
+    */
   def alphaBlending(background: PixelImage[RGB], foreground: PixelImage[RGB], mask: PixelImage[Double]): PixelImage[RGB] = {
     alphaBlending(background,setAlpha(foreground,mask))
   }
 
+  /**
+    * Blends the foreground over the background according to the alpha channel of the foreground.
+    * The foreground is visible where its alpha channel is 1.0. The Background is visible when the foreground alpha
+    * channel is 0.0. For other values the two images are blended accordingly.
+    * @param background visible when alpha channel of foreground = 0.0
+    * @param foreground visible when alpha channel = 1.0
+    * @return
+    */
   def alphaBlending(background: PixelImage[RGB], foreground: PixelImage[RGBA]): PixelImage[RGB] = {
     background.zip(foreground).map{
       case (bg,fg) => bg.blend(fg)
