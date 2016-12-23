@@ -18,7 +18,6 @@ package scalismo.faces.image
 
 import scalismo.faces.FacesTestSuite
 import scalismo.faces.color.ColorSpaceOperations.implicits._
-import scalismo.faces.color.RGB
 import scalismo.faces.image.PixelImage.implicits._
 
 class ImageOperatorsTest extends FacesTestSuite {
