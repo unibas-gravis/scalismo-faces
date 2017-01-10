@@ -13,8 +13,9 @@ libraryDependencies  ++= Seq(
     "org.scalatest" %% "scalatest" % "3.0.0" % "test"
 )
 
-// bintray repository 
-bintrayOrganization := Some("unibas-gravis")
+// hack to resolve issues with 3.0.+ dependency of scalismo-0.14.0
+// should be fixed by setting to explicit version number
+dependencyOverrides += "ch.unibas.cs.gravis" % "scalismo-native-stub" % "3.0.0"
 
 // Git versioning
 enablePlugins(GitVersioning, GitBranchPrompt)
