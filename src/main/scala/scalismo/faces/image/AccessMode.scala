@@ -16,9 +16,15 @@
 
 package scalismo.faces.image
 
+/** manages access outside the image domain of a PixelImage */
 trait AccessMode[A] {
+  /** outside access */
   def apply(x: Int, y: Int, image: PixelImage[A]): A = outsideAccess(x, y, image)
+
+  /** outside access */
   def outsideAccess(x: Int, y: Int, image: PixelImage[A]): A
+
+  /** transform type */
   def map[B](f: A => B): AccessMode[B]
 }
 
