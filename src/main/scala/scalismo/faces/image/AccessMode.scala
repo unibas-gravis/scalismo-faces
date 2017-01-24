@@ -16,18 +16,13 @@
 
 package scalismo.faces.image
 
-/** manages access outside the image domain of a PixelImage */
 trait AccessMode[A] {
-  /** outside access */
   def apply(x: Int, y: Int, image: PixelImage[A]): A = outsideAccess(x, y, image)
-
-  /** outside access */
   def outsideAccess(x: Int, y: Int, image: PixelImage[A]): A
-
-  /** transform type */
   def map[B](f: A => B): AccessMode[B]
 }
 
+/// Provides various typical image access boundary conditions
 object AccessMode {
   case class Padded[A](outsideValue: A) extends AccessMode[A] {
     override def map[B](f: (A) => B): AccessMode[B] = Padded(f(outsideValue))
@@ -96,6 +91,40 @@ object AccessMode {
       else
         throw new Exception(s"image access outside domain: ($x, $y), size=(${image.width}, ${image.height})")
     }
+  }
+
+  /**
+    * This is used by the gauss & laplace pyramid as border condition.
+    * Usually this is used with the combine function: (a,b) => 2*a-b.
+    *
+    * @param combine Functional to combine the two values at positions.
+    */
+  case class MirroredPositionFunctional[A](combine: (A,A) => A) extends AccessMode[A] {
+    override def map[B](f: (A) => B): AccessMode[B] = ???
+
+    override def outsideAccess(x: Int, y: Int, image: PixelImage[A]): A = {
+      if (image.domain.isDefinedAt(x, y))
+        image(x, y)
+      else {
+        val dx = if (x < 0) Some((0, clamp(x * (-1),0,image.width-1))) else if (x >= image.width) Some((image.width - 1, clamp(2 * (image.width - 1) - x,0,image.width-1))) else None
+        val dy = if (y < 0) Some((0, clamp(y * (-1),0,image.height-1))) else if (y >= image.height) Some((image.height - 1, clamp(2 * (image.height - 1) - y,0,image.height-1))) else None
+        if (dx.isDefined && dy.isDefined) {
+          val px = dx.get
+          val py = dy.get
+          combine(image.valueAt(px._1, py._1), image.valueAt(px._2, py._2))
+        } else if (dx.isDefined) {
+          val px = dx.get
+          combine(image.valueAt(px._1, y), image.valueAt(px._2, y))
+        } else if (dy.isDefined) {
+          val py = dy.get
+          combine(image.valueAt(x, py._1),image.valueAt(x, py._2))
+        } else {
+          throw new Exception(s"image access mode was outside but now inside.... confusing: ($x, $y), size=(${image.width}, ${image.height})")
+        }
+      }
+    }
+
+    private def clamp(i: Int, min: Int, max: Int): Int = math.min(max, math.max(min, i))
   }
 
   /** delegate outside access to given function */
