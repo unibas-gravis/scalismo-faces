@@ -34,13 +34,13 @@ import scala.reflect._
 class GaussPyramid[A: ClassTag](val image: PixelImage[A], val reduce: ImageFilter[A, A], val reductions: Int)(implicit ops: ColorSpaceOperations[A])
   extends ImagePyramid[A] {
 
-  override val levels: Int = {
+  private val maxReductions: Int = {
     val maxNumberOfReductions = min(
       GaussPyramid.findNumberOfTwoInPrimFactorDecomposition(image.width),
       GaussPyramid.findNumberOfTwoInPrimFactorDecomposition(image.height))
 
     if (reductions >= 0 && reductions < maxNumberOfReductions) {
-      reductions + 1
+      reductions
     } else {
       maxNumberOfReductions.toInt
     }
@@ -52,8 +52,10 @@ class GaussPyramid[A: ClassTag](val image: PixelImage[A], val reduce: ImageFilte
       else image +: makeReducedImages(reduce(image), levels - 1)
     }
 
-    makeReducedImages(image, levels)
+    makeReducedImages(image, maxReductions)
   }
+
+  override val levels = level.size
 }
 
 object GaussPyramid {

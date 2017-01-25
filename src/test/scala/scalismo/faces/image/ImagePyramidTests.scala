@@ -107,6 +107,14 @@ class ImagePyramidTests extends FacesTestSuite {
       }
     }
 
+    it("calculates the correct number of levels") {
+      val image: PixelImage[Double] = chessBoard(1024, 128, 1.0, 0.0)
+      for( reductions <- 0 to 10 by 2) {
+        val pyramid = GaussPyramid(image,reductions)
+        pyramid.levels shouldBe (reductions+1)
+      }
+    }
+
   }
 
   describe("A Laplacian Pyramid") {
