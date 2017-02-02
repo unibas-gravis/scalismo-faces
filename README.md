@@ -24,7 +24,7 @@ Add the dependency to your `build.sbt`:
 
 ```scala
 libraryDependencies += "ch.unibas.cs.gravis" %% "scalismo-faces" % "0.2.2"
-resolvers += Resolver.bintrayResolver("unibas-gravis", "maven")
+resolvers += Resolver.bintrayRepo("unibas-gravis", "maven")
 ```
 
 Currently also add the scalismo native libs as an explicit dependency:
