@@ -26,19 +26,6 @@ class sRGBTests extends FacesTestSuite {
       }
     }
 
-    it("reads well") {
-      //val image = PixelImageIO.read[sRGB](new File("/export/faces/model/model2012.2/reference/mean2012-bfm_0.png")).get
-      val verlauf = randomImage(256,256)//PixelImage(256,256, (x,y)=> RGB( x/255.0 ))
-      PixelImageIO.write[RGB](verlauf, new File("/tmp/00000_random.png")).get
-      val read = PixelImageIO.read[RGB](new File("/tmp/00000_random.png")).get
-      println(read(127,127), verlauf(127,127))
-      import PixelImage.implicits._
-      println(math.sqrt((verlauf-read).normSq/(256*256)))
-
-      PixelImageIO.write[RGB](read, new File("/tmp/00000_random_read.png")).get
-      false shouldBe true
-    }
-
   }
 
 }
