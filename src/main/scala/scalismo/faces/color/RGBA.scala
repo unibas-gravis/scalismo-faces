@@ -71,6 +71,8 @@ case class RGBA(r: Double, g: Double, b: Double, a: Double) {
   /** convert to RGB */
   def toRGB: RGB = RGB(r, g, b)
 
+  def tosRGBA: sRGBA = sRGBA(RGBsRGBConversion.tosRGB(toRGB), a)
+
   /** convert to Tuple */
   def toTuple: (Double, Double, Double, Double) = (r, g, b, a)
 
