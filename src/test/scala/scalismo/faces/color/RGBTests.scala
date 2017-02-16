@@ -16,23 +16,11 @@
 
 package scalismo.faces.color
 
-import java.awt.Color
-
 import scalismo.faces.FacesTestSuite
 
 class RGBTests extends FacesTestSuite {
 
   describe("RGB") {
-    it("can be converted to Java AWT Color") {
-      val awtColor = Color.CYAN
-      RGB(0, 1, 1).toAWTColor shouldBe awtColor
-    }
-
-    it("can be created from a Java AWT Color") {
-      val awtColor = Color.CYAN
-      RGB(awtColor) shouldBe RGB(0, 1, 1)
-    }
-
     it("supports a roundtrip conversion to/from AWT Color") {
       val color = randomRGB
       RGB(color.toAWTColor).toAWTColor shouldBe color.toAWTColor
@@ -40,16 +28,6 @@ class RGBTests extends FacesTestSuite {
   }
 
   describe("RGBA") {
-    it("can be converted to Java AWT Color") {
-      val awtColor = Color.CYAN
-      RGBA(0, 1, 1).toAWTColor shouldBe awtColor
-    }
-
-    it("can be created from a Java AWT Color") {
-      val awtColor = Color.CYAN
-      RGBA(awtColor) shouldBe RGBA(0, 1, 1)
-    }
-
     it("supports a roundtrip conversion to/from AWT Color") {
       val color = randomRGBA
       RGBA(color.toAWTColor).toAWTColor shouldBe color.toAWTColor

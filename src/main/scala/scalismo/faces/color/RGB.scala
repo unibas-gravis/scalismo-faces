@@ -99,7 +99,7 @@ case class RGB(r: Double, g: Double, b: Double) {
 
   /** convert to AWT default color
     * expects a clamped color value */
-  def toAWTColor: Color = new Color(RGB.toInt8(r), RGB.toInt8(g), RGB.toInt8(b))
+  def toAWTColor: Color = tosRGB.toAWTColor
 }
 
 object RGB {
@@ -111,7 +111,7 @@ object RGB {
   def apply(gray: Double): RGB = new RGB(gray, gray, gray)
   def apply(tuple: (Double, Double, Double)) = new RGB(tuple._1, tuple._2, tuple._3)
   def apply(vector3D: Vector[_3D]) = new RGB(vector3D.x, vector3D.y, vector3D.z)
-  def apply(awtColor: Color) = new RGB(fromInt8(awtColor.getRed), fromInt8(awtColor.getGreen), fromInt8(awtColor.getBlue))
+  def apply(awtColor: Color) = new sRGB(fromInt8(awtColor.getRed), fromInt8(awtColor.getGreen), fromInt8(awtColor.getBlue)).toRGB
 
   implicit object RGBComponents extends ComponentRepresentation[RGB] with Vectorizer[RGB] {
 

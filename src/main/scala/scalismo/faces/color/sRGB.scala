@@ -1,5 +1,8 @@
 package scalismo.faces.color
 
+import java.awt.Color
+import scalismo.geometry.{Vector, _3D}
+
 case class sRGB(r: Double, g: Double, b: Double) {
   require(r>=0.0 && g>= 0.0 && b >= 0.0, "sRGB color values must be >= 0.") // because what sould be done with gamma on negative values?
 
@@ -18,12 +21,23 @@ case class sRGB(r: Double, g: Double, b: Double) {
     else
       this
   }
+
+  /** convert to AWT default color. expects a clamped color value */
+  def toAWTColor: Color = new Color(sRGB.toInt8(r), sRGB.toInt8(g), sRGB.toInt8(b))
 }
 
 object sRGB {
   val White: sRGB = sRGB(1.0, 1.0, 1.0)
   val Black: sRGB = sRGB(0.0, 0.0, 0.0)
+
+  def apply(color: RGBA): sRGB = new sRGB(color.r, color.g, color.b)
   def apply(gray: Double): sRGB = new sRGB(gray, gray, gray)
+  def apply(tuple: (Double, Double, Double)) = new sRGB(tuple._1, tuple._2, tuple._3)
+  def apply(vector3D: Vector[_3D]) = new sRGB(vector3D.x, vector3D.y, vector3D.z)
+  def apply(awtColor: Color) = new sRGB(fromInt8(awtColor.getRed), fromInt8(awtColor.getGreen), fromInt8(awtColor.getBlue))
+
+  private def toInt8(value: Double): Int = (value * 255.0).toInt
+  private def fromInt8(intValue: Int): Double = intValue / 255.0
 }
 
 case class sRGBA(r: Double, g: Double, b: Double, a: Double) {
@@ -43,6 +57,9 @@ case class sRGBA(r: Double, g: Double, b: Double, a: Double) {
     else
       this
   }
+
+  /** convert to AWT default color. expects a clamped color value */
+  def toAWTColor: Color = new Color(sRGBA.toInt8(r), sRGBA.toInt8(g), sRGBA.toInt8(b))
 }
 
 object sRGBA {
@@ -53,8 +70,16 @@ object sRGBA {
   val BlackTransparent: sRGBA = sRGBA(0.0, 0.0, 0.0, 0.0)
 
   def apply(color: sRGB): sRGBA = new sRGBA(color.r, color.g, color.b, 1.0)
-  def apply(color: sRGB, alpha: Double): sRGBA = new sRGBA(color.r, color.g, color.b, alpha)
+  def apply(color: sRGB, a: Double): sRGBA = new sRGBA(color.r, color.g, color.b, a)
+  def apply(r: Double, g: Double, b: Double): sRGBA = new sRGBA(r, g, b, 1.0)
+  def apply(gray: Double): sRGBA = new sRGBA(gray, gray, gray, 1.0)
+  def apply(gray: Double, a: Double): sRGBA = new sRGBA(gray, gray, gray, a)
+  def apply(tuple: (Double, Double, Double, Double)) = new sRGBA(tuple._1, tuple._2, tuple._3, tuple._4)
+  def apply(awtColor: Color): sRGBA = sRGBA(fromInt8(awtColor.getRed), fromInt8(awtColor.getGreen), fromInt8(awtColor.getBlue), fromInt8(awtColor.getAlpha))
 
+  private def toInt8(value: Double): Int = (value * 255.0).toInt
+
+  private def fromInt8(intValue: Int): Double = intValue / 255.0
 
 }
 
@@ -64,10 +89,11 @@ object sRGBA {
   * Naming convention:
   *   sRGB: Gamma distorted sRGB values
   *   RGB: linear sRGB values.
-  * RGB color values can be used during rendering.
-  * Applying linear transforms to sRGB leads to wrong results.
   *
-  * Source of transformations: https://en.wikipedia.org/wiki/SRGB#Specification_of_the_transformation
+  * Source: https://www.w3.org/Graphics/Color/srgb
+  *
+  * This implementation is consistent in round trip sRGB -> RGB and back (errors below 1e-16).
+  * The java internal implementation is much less consistent (errors up to 0.06!)
   */
 object RGBsRGBConversion {
 
@@ -77,7 +103,7 @@ object RGBsRGBConversion {
       if(c <= 0.04045){
         c/12.92
       }else{
-        math.pow((c+0.05)/1.05, 2.4)
+        math.pow((c+0.055)/1.055, 2.4)
       }
     }
     RGB(

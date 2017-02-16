@@ -1,23 +1,20 @@
 package scalismo.faces.color
 
-import java.io.File
+import java.awt.Color
 
 import scalismo.faces.FacesTestSuite
-import scalismo.faces.image.{PixelImage, PixelImageIO}
 
 class sRGBTests extends FacesTestSuite {
 
-  def randomsRGB = sRGB(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
-
   describe("sRGB") {
-    it("is within tolerance for random round trips") {
+    it("is within tolerance for round trips on the inverval [0,1]") {
       def roundTripCheck() = {
         val color = randomsRGB
         val trip = color.toRGB.tosRGB
-        val tol = 1.0 / 256.0 / 2.0 // half of 8 bit granularity
+        val tol = 1e-14
         math.abs(trip.r - color.r) < tol && math.abs(trip.r - color.r) < tol && math.abs(trip.r - color.r) < tol
       }
-      (0 until 1000).map(el => roundTripCheck()).forall( el => el == true)
+      (0.0 to 1.0 by 1.0/1000.0).map(el => roundTripCheck()).forall( el => el == true)
     }
 
     it("negative values not allowed") {
@@ -26,6 +23,19 @@ class sRGBTests extends FacesTestSuite {
       }
     }
 
-  }
+    it("can be converted to Java AWT Color") {
+      val awtColor = Color.CYAN
+      sRGB(0, 1, 1).toAWTColor shouldBe awtColor
+    }
 
+    it("can be created from a Java AWT Color") {
+      val awtColor = Color.CYAN
+      sRGB(awtColor) shouldBe sRGB(0, 1, 1)
+    }
+
+    it("supports a roundtrip conversion to/from AWT Color") {
+      val color = randomsRGB
+      sRGB(color.toAWTColor).toAWTColor shouldBe color.toAWTColor
+    }
+  }
 }

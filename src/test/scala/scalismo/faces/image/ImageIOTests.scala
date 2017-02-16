@@ -21,7 +21,6 @@ import java.io._
 import scalismo.faces.FacesTestSuite
 import scalismo.faces.color.ColorSpaceOperations.implicits._
 import scalismo.faces.color._
-import scalismo.faces.image.PixelImage.implicits._
 import scalismo.faces.image.PixelImageConversion.BufferedImageConverter
 import scalismo.faces.utils.LanguageUtilities
 
@@ -52,11 +51,9 @@ class ImageIOTests extends FacesTestSuite {
                                  (implicit converter: BufferedImageConverter[sRGB])
   : Double = {
     val wrImage: PixelImage[sRGB] = repeatIdentityTransformation(image,identityTransform)
-    val diff = PixelImage(image.width, image.height, (x, y) => (
-        math.pow(image(x, y).r - wrImage(x, y).r, 2) +
-        math.pow(image(x, y).g - wrImage(x, y).g, 2) +
-        math.pow(image(x, y).b - wrImage(x, y).b, 2)
-      ))
+    val diff = PixelImage(image.width, image.height, (x, y) => math.pow(image(x, y).r - wrImage(x, y).r, 2) +
+      math.pow(image(x, y).g - wrImage(x, y).g, 2) +
+      math.pow(image(x, y).b - wrImage(x, y).b, 2))
     math.sqrt(diff.values.max)
   }
 
@@ -65,7 +62,7 @@ class ImageIOTests extends FacesTestSuite {
                                   (implicit converter: BufferedImageConverter[sRGBA])
   : Double = {
     val wrImage: PixelImage[sRGBA] = repeatIdentityTransformation(image,identityTransform)
-    val diff = PixelImage(image.width, image.height, (x, y) => ( math.pow(image(x, y).r - wrImage(x, y).r, 2) + math.pow(image(x, y).g - wrImage(x, y).g, 2) + math.pow(image(x, y).b - wrImage(x, y).b, 2) + math.pow(image(x, y).a - wrImage(x, y).a, 2)))
+    val diff = PixelImage(image.width, image.height, (x, y) => math.pow(image(x, y).r - wrImage(x, y).r, 2) + math.pow(image(x, y).g - wrImage(x, y).g, 2) + math.pow(image(x, y).b - wrImage(x, y).b, 2) + math.pow(image(x, y).a - wrImage(x, y).a, 2))
     math.sqrt(diff.values.max)
   }
 
@@ -96,24 +93,11 @@ class ImageIOTests extends FacesTestSuite {
     }
   }
 
-  describe("A random RGB color image") {
-    it("survives a write-read cycle unaltered") {
-      diffOfIdentityTransform(img,writeReadCycle[RGB]) should be <= tolerance
-    }
-  }
-
   describe("A random sRGBA color image") {
     it("survives a write-read cycle unaltered") {
       diffOfsRGBAIdentityTransform(imgA.map(_.tosRGBA),writeReadCycle[sRGBA]) should be <= tolerance
     }
   }
-
-  describe("A random RGBA color image") {
-    it("survives a write-read cycle unaltered") {
-      diffOfIdentityTransform(imgA, writeReadCycle[RGBA]) should be <= tolerance
-    }
-  }
-
 
   describe("A random gray image") {
     it("survives a write-read cycle unaltered") {
@@ -123,7 +107,7 @@ class ImageIOTests extends FacesTestSuite {
 
   describe("The IO-Method") {
     it("writes and reads and image unaltered with streams") {
-      diffOfIdentityTransform(imgA,writeReadStreamCycle[RGBA]) should be <= tolerance
+      diffOfsRGBAIdentityTransform(imgA.map(_.tosRGBA),writeReadStreamCycle[sRGBA]) should be <= tolerance
     }
   }
 }
