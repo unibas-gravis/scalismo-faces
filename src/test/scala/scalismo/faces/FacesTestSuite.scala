@@ -28,13 +28,13 @@ class FacesTestSuite extends FunSpec with Matchers {
 
   def randomRGB = RGB(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
 
-  def randomsRGB = sRGB(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
+  def randomsRGB: sRGB = sRGB(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
 
   def randomRGBA = RGBA(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
 
   def randomVector3D = Vector3D(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
 
-  def randomDouble = rnd.scalaRandom.nextDouble()
+  def randomDouble: Double = rnd.scalaRandom.nextDouble()
 
   def randomImage(w: Int, h: Int): PixelImage[RGB] = PixelImage(w, h, (x, y) => randomRGB)
 }

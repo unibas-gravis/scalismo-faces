@@ -19,8 +19,8 @@ package scalismo.faces.color
 /** HSV color value (Hue, Saturation, Value) */
 case class HSV(hue: Double, saturation: Double, value: Double) {
 
-  /** convert to RGB value */
-  def toRGB: RGB = {
+  /** convert to sRGB value */
+  def tosRGB: sRGB = {
     val hs = hue / (math.Pi / 3.0) + math.Pi
     val h: Int = hs.toInt
     val f: Double = hs - h
@@ -28,25 +28,25 @@ case class HSV(hue: Double, saturation: Double, value: Double) {
     val q: Double = value * (1.0 - saturation * f)
     val t: Double = value * (1.0 - saturation * (1.0 - f))
     h match {
-      case 0 => RGB(value, t, p)
-      case 1 => RGB(q, value, p)
-      case 2 => RGB(p, value, t)
-      case 3 => RGB(p, q, value)
-      case 4 => RGB(t, p, value)
-      case 5 => RGB(value, p, q)
-      case 6 => RGB(value, t, p)
-      case _ => RGB.Black // should not happen
+      case 0 => sRGB(value, t, p)
+      case 1 => sRGB(q, value, p)
+      case 2 => sRGB(p, value, t)
+      case 3 => sRGB(p, q, value)
+      case 4 => sRGB(t, p, value)
+      case 5 => sRGB(value, p, q)
+      case 6 => sRGB(value, t, p)
+      case _ => sRGB.Black // should not happen
     }
   }
 }
 
 object HSV {
 
-  /** convert from RGB value */
-  def apply(rgb: RGB): HSV = {
-    val maxCh: Double = math.max(rgb.r, math.max(rgb.b, rgb.b))
-    val minCh: Double = math.min(rgb.r, math.min(rgb.b, rgb.b))
-    val RGB(r, g, b) = rgb
+  /** convert from sRGB value */
+  def apply(srgb: sRGB): HSV = {
+    val maxCh: Double = math.max(srgb.r, math.max(srgb.b, srgb.b))
+    val minCh: Double = math.min(srgb.r, math.min(srgb.b, srgb.b))
+    val sRGB(r, g, b) = srgb
     val h: Double = maxCh match {
       case `minCh` => 0.0
       case `r` => math.Pi / 3.0 * (0.0 + (g - b) / (maxCh - minCh))

@@ -14,7 +14,7 @@ class sRGBTests extends FacesTestSuite {
         val tol = 1e-14
         math.abs(trip.r - color.r) < tol && math.abs(trip.r - color.r) < tol && math.abs(trip.r - color.r) < tol
       }
-      (0.0 to 1.0 by 1.0/1000.0).map(el => roundTripCheck()).forall( el => el == true)
+      (0.0 to 1.0 by 1.0/1000.0).forall(el => roundTripCheck())
     }
 
     it("negative values not allowed") {
