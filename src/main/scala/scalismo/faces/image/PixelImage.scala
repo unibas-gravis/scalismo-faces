@@ -118,7 +118,7 @@ class PixelImage[@specialized A](val domain: PixelImageDomain, val accessMode: A
   def mapLazy[B](f: A => B): PixelImage[B] = PixelImage.view(domain, (x, y) => f(this.f(x, y)))
 
   /** apply a function to each pixel, has access to location of pixel */
-  def mapWithIndex[B](f: (Int, Int, A) => B)(implicit tag: ClassTag[B]): PixelImage[B] = PixelImage(domain, (x, y) => f(x, y, this(x, y)))
+  def mapWithIndex[B](f: (A, Int, Int) => B)(implicit tag: ClassTag[B]): PixelImage[B] = PixelImage(domain, (x, y) => f(this(x, y), x, y))
 
   /** zip two images together into a single tupled image */
   def zip[B](other: PixelImage[B]): PixelImage[(A, B)] = {

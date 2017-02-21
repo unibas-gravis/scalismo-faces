@@ -227,7 +227,7 @@ class PixelImageTests extends FacesTestSuite {
     describe("has mapWithIndex with") {
       val image = PixelImage(10, 10, (x, y) => x - y).withAccessMode(AccessMode.Padded(0))
 
-      val summed = image.mapWithIndex((x, y, c) => {
+      val summed = image.mapWithIndex((c, x, y) => {
         image(x - 1, y) + image(x + 1, y) + c
       })
 
