@@ -117,10 +117,18 @@ class PixelImage[@specialized A](val domain: PixelImageDomain, val accessMode: A
   /** apply a function to each pixel */
   def mapLazy[B](f: A => B): PixelImage[B] = PixelImage.view(domain, (x, y) => f(this.f(x, y)))
 
+  /** apply a function to each pixel, has access to location of pixel */
+  def mapWithIndex[B](f: (A, Int, Int) => B)(implicit tag: ClassTag[B]): PixelImage[B] = PixelImage(domain, (x, y) => f(this(x, y), x, y))
+
   /** zip two images together into a single tupled image */
   def zip[B](other: PixelImage[B]): PixelImage[(A, B)] = {
     require(domain == other.domain)
     PixelImage.view(domain, (x, y) => (this(x, y), other(x, y)))
+  }
+
+  /** zip pixel values with their location, yields (Color, (x, y)) */
+  def zipWithIndex: PixelImage[(A, (Int, Int))] = {
+    PixelImage.view(domain, (x, y) => (this(x, y), (x, y)))
   }
 
   /** iterator of all values in image */

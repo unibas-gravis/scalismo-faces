@@ -223,6 +223,27 @@ class PixelImageTests extends FacesTestSuite {
     }
   }
 
+  describe("A PixelImage") {
+    describe("has mapWithIndex with") {
+      val image = PixelImage(10, 10, (x, y) => x - y).withAccessMode(AccessMode.Padded(0))
+
+      val summed = image.mapWithIndex((c, x, y) => {
+        image(x - 1, y) + image(x + 1, y) + c
+      })
+
+      it("proper effect inside image") {
+        summed(5, 0) shouldBe 15
+        summed(5, 5) shouldBe 15 - 15
+      }
+
+      it("proper behavior outside image borders") {
+        summed(0, 0) shouldBe 1
+        summed(0, 5) shouldBe 1 - 10
+        summed(0, -1) shouldBe 0
+      }
+    }
+  }
+
   describe("PixelImage to/from ImageBuffer") {
     // ensure buffered image
     val blackImage = PixelImage(w, h, (x, y) => RGB.Black).buffer
