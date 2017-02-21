@@ -75,15 +75,15 @@ class GeneralMaxConvolutionTests extends FunSpec with Matchers {
     describe("in 2d") {
       it("should be correct using the separable version") {
         val f = fixture
-        val result = GeneralMaxConvolution.separableMaxConvolution2D(f.image, f.eval)
+        val result = GeneralMaxConvolution.separable2D(f.image, f.eval)
 
         def evalForPosition(p: Int, q: Int) {
-          val values = (0 until f.width).flatMap { x =>
+          val allValues = (0 until f.width).flatMap { x =>
             (0 until f.height).map { y =>
               f.image(x, y) + f.eval2d.logValue(Point2D(x - p, y - q))
             }
           }
-          result(p, q) shouldEqual values.max
+          result(p, q) shouldEqual allValues.max
         }
 
         for (p <- 0 until f.width; q <- 0 until f.height) {

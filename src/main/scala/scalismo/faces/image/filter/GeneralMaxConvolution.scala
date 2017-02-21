@@ -24,7 +24,7 @@ import scalismo.sampling.DistributionEvaluator
 object GeneralMaxConvolution {
 
   /** a separable maximum convolution, e.g. with a Gaussian */
-  def separableMaxConvolution2D(pixelImage: PixelImage[Double], eval: DistributionEvaluator[Point[_1D]]): PixelImage[Double] = {
+  def separable2D(pixelImage: PixelImage[Double], eval: DistributionEvaluator[Point[_1D]]): PixelImage[Double] = {
     val maxConv = pixelImage.toBuffer
 
     for (col <- 0 until maxConv.domain.height) {

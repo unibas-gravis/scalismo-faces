@@ -23,7 +23,7 @@ import scalismo.sampling.DistributionEvaluator
 /** calculate distance transforms in the image */
 object DistanceTransform {
   /** euclidian distance transform, uses algorithm of Felzenszwalb */
-  def euclidianDistanceTransform(image: PixelImage[Boolean]): PixelImage[Double] = {
+  def euclidian(image: PixelImage[Boolean]): PixelImage[Double] = {
     // initial distance image
     val softImage = image.map{x => if (x) 0.0 else Double.NegativeInfinity}
 
@@ -33,18 +33,18 @@ object DistanceTransform {
     }
 
     // calculate with max convolution
-    val negSqDistance = GeneralMaxConvolution.separableMaxConvolution2D(softImage, evalSqDist)
+    val negSqDistance = GeneralMaxConvolution.separable2D(softImage, evalSqDist)
 
     // result of MaxConvolution is negative squared distance
     negSqDistance.map{x => math.sqrt(-x)}
   }
 
   /** calculate the signed distance transform: inside object with negative distance to border */
-  def signedDistanceTransform(image: PixelImage[Boolean]): PixelImage[Double] = {
+  def signedEuclidian(image: PixelImage[Boolean]): PixelImage[Double] = {
     // find outside distance transform
-    val outsideDistance = euclidianDistanceTransform(image)
+    val outsideDistance = euclidian(image)
     // find inside distance transform
-    val insideDistance = euclidianDistanceTransform(image.map{!_})
+    val insideDistance = euclidian(image.map{!_})
     // signed distance: negative inside, positive outside
     outsideDistance.zip(insideDistance).map{
       case (out, in) => if (out > 0.0) out else -in

@@ -33,8 +33,8 @@ class DistanceTransformTests extends FacesTestSuite {
   }
 
   describe("In DistanceTransform") {
-    val simpleImage = PixelImage(50, 50, (x, y) => if (Vector2D(x - 25, y - 15).norm <= 5) true else false)
-    val twoObjects = PixelImage(50, 50, (x, y) => if (Vector2D(x - 25, y - 15).norm <= 5 || Vector2D(x - 45, y - 45).norm <= 10) true else false)
+    val simpleImage = PixelImage(50, 50, (x, y) => Vector2D(x - 25, y - 15).norm <= 5)
+    val twoObjects = PixelImage(50, 50, (x, y) => Vector2D(x - 25, y - 15).norm <= 5 || Vector2D(x - 45, y - 45).norm <= 10)
 
     it("our reference distance transform is correct for the simple image") {
       val distanceImage = stupidDistanceTransform(simpleImage)
@@ -56,13 +56,13 @@ class DistanceTransformTests extends FacesTestSuite {
 
     describe("a euclidianDistanceTransform") {
       it("of a simple 2D image is the same as the slow, explicit distance transform") {
-        val distanceImage = DistanceTransform.euclidianDistanceTransform(simpleImage)
+        val distanceImage = DistanceTransform.euclidian(simpleImage)
         val stupidDistanceImage = stupidDistanceTransform(simpleImage)
         distanceImage shouldBe stupidDistanceImage
       }
 
       it("of two objects is the same as the slow, explicit distance transform") {
-        val distanceImage = DistanceTransform.euclidianDistanceTransform(twoObjects)
+        val distanceImage = DistanceTransform.euclidian(twoObjects)
         val stupidDistanceImage = stupidDistanceTransform(twoObjects)
         distanceImage shouldBe stupidDistanceImage
       }
@@ -70,10 +70,10 @@ class DistanceTransformTests extends FacesTestSuite {
 
     describe("a signedDistanceTransform"){
       describe("of a simple image") {
-        val signedDistance = DistanceTransform.signedDistanceTransform(simpleImage)
+        val signedDistance = DistanceTransform.signedEuclidian(simpleImage)
 
         it("is correct outside") {
-          val distanceTransform = DistanceTransform.euclidianDistanceTransform(simpleImage)
+          val distanceTransform = DistanceTransform.euclidian(simpleImage)
           assert(
             signedDistance.zip(distanceTransform).values.forall{
               case(signed, dist) => if (dist > 0.0) signed == dist else true}
@@ -81,7 +81,7 @@ class DistanceTransformTests extends FacesTestSuite {
         }
 
         it("is correct inside") {
-          val distanceTransform = DistanceTransform.euclidianDistanceTransform(simpleImage.map{!_})
+          val distanceTransform = DistanceTransform.euclidian(simpleImage.map{!_})
           assert(
             signedDistance.zip(distanceTransform).values.forall{
               case(signed, dist) => if (dist < 0.0) signed == -dist else true}
@@ -90,10 +90,10 @@ class DistanceTransformTests extends FacesTestSuite {
       }
 
       describe("of two objects") {
-        val signedDistance = DistanceTransform.signedDistanceTransform(twoObjects)
+        val signedDistance = DistanceTransform.signedEuclidian(twoObjects)
 
         it("is correct outside") {
-          val distanceTransform = DistanceTransform.euclidianDistanceTransform(twoObjects)
+          val distanceTransform = DistanceTransform.euclidian(twoObjects)
           assert(
             signedDistance.zip(distanceTransform).values.forall{
               case(signed, dist) => if (dist > 0.0) signed == dist else true}
@@ -101,7 +101,7 @@ class DistanceTransformTests extends FacesTestSuite {
         }
 
         it("is correct inside") {
-          val distanceTransform = DistanceTransform.euclidianDistanceTransform(twoObjects.map{!_})
+          val distanceTransform = DistanceTransform.euclidian(twoObjects.map{!_})
           assert(
             signedDistance.zip(distanceTransform).values.forall{
               case(signed, dist) => if (dist < 0.0) signed == -dist else true}
