@@ -53,7 +53,7 @@ object GeneralMaxConvolution {
   def maxConvolution1D(data: Array[Double], eval: DistributionEvaluator[Point[_1D]]): Array[Double] = {
 
     var maximumsPosition = 0
-    var maxConv: Array[Double] = data.clone()
+    val maxConv: Array[Double] = data.clone()
 
     // keep this line if the local position is often the best one
     maxConv.transform(t => t + eval.logValue(Point1D(0f)))

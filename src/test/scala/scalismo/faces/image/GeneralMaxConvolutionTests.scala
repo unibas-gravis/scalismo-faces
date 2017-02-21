@@ -61,8 +61,8 @@ class GeneralMaxConvolutionTests extends FunSpec with Matchers {
         val result = GeneralMaxConvolution.maxConvolution1D(f.row.toArray, f.eval)
 
         def evalForPosition(p: Int) {
-          val values = f.row.toArray.zipWithIndex.map { e => e._1 + f.eval.logValue(Point1D(e._2 - p)) }
-          result(p) shouldEqual values.max
+          val allValues = f.row.toArray.zipWithIndex.map { e => e._1 + f.eval.logValue(Point1D(e._2 - p)) }
+          result(p) shouldEqual allValues.max
         }
 
         for (p <- 0 until f.width) {
