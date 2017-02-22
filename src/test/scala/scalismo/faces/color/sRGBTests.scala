@@ -33,9 +33,9 @@ class sRGBTests extends FacesTestSuite {
       sRGB(awtColor) shouldBe sRGB(0, 1, 1)
     }
 
-    it("supports a roundtrip conversion to/from AWT Color") {
-      val color = randomsRGB
-      sRGB(color.toAWTColor).toAWTColor shouldBe color.toAWTColor
+    it("AWT color can be converted to sRGB and back") {
+      val color = randomsRGB.toAWTColor
+      sRGB(color).toAWTColor shouldBe color
     }
   }
 }

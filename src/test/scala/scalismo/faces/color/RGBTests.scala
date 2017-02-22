@@ -21,16 +21,16 @@ import scalismo.faces.FacesTestSuite
 class RGBTests extends FacesTestSuite {
 
   describe("RGB") {
-    it("supports a roundtrip conversion to/from AWT Color") {
-      val color = randomRGB
-      RGB(color.toAWTColor).toAWTColor shouldBe color.toAWTColor
+    it("AWT color can be converted to RGB and back") {
+      val color = randomRGB.toAWTColor
+      RGB(color).toAWTColor shouldBe color
     }
   }
 
   describe("RGBA") {
-    it("supports a roundtrip conversion to/from AWT Color") {
-      val color = randomRGBA
-      RGBA(color.toAWTColor).toAWTColor shouldBe color.toAWTColor
+    it("AWT color can be converted to RGBA and back") {
+      val color = randomRGBA.toAWTColor
+      RGBA(color).toAWTColor shouldBe color
     }
   }
 }

@@ -35,7 +35,7 @@ case class HSV(hue: Double, saturation: Double, value: Double) {
       case 4 => sRGB(t, p, value)
       case 5 => sRGB(value, p, q)
       case 6 => sRGB(value, t, p)
-      case _ => sRGB.Black // should not happen
+      case _ => throw new RuntimeException("Invalid hue value in conversion.")
     }
   }
 }
@@ -44,15 +44,14 @@ object HSV {
 
   /** convert from sRGB value. This HSV is defined on the sRGB color space.  */
   def apply(srgb: sRGB): HSV = {
-    val maxCh: Double = math.max(srgb.r, math.max(srgb.b, srgb.b))
-    val minCh: Double = math.min(srgb.r, math.min(srgb.b, srgb.b))
+    val maxCh: Double = math.max(srgb.r, math.max(srgb.g, srgb.b))
+    val minCh: Double = math.min(srgb.r, math.min(srgb.g, srgb.b))
     val sRGB(r, g, b) = srgb
     val h: Double = maxCh match {
       case `minCh` => 0.0
       case `r` => math.Pi / 3.0 * (0.0 + (g - b) / (maxCh - minCh))
       case `g` => math.Pi / 3.0 * (2.0 + (b - r) / (maxCh - minCh))
       case `b` => math.Pi / 3.0 * (4.0 + (r - g) / (maxCh - minCh))
-      case _ => 0.0 // should not happen
     }
     val s = if (maxCh > 0.0) (maxCh - minCh) / maxCh else 0.0
     val v = maxCh
