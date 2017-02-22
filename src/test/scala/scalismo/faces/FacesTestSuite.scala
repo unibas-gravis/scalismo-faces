@@ -16,7 +16,7 @@
 
 package scalismo.faces
 
-import scalismo.faces.color.{RGB, RGBA}
+import scalismo.faces.color.{RGB, RGBA, SRGB}
 import scalismo.faces.image.PixelImage
 import org.scalatest._
 import scalismo.geometry.Vector3D
@@ -28,11 +28,13 @@ class FacesTestSuite extends FunSpec with Matchers {
 
   def randomRGB = RGB(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
 
+  def randomSRGB: SRGB = SRGB(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
+
   def randomRGBA = RGBA(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
 
   def randomVector3D = Vector3D(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
 
-  def randomDouble = rnd.scalaRandom.nextDouble()
+  def randomDouble: Double = rnd.scalaRandom.nextDouble()
 
   def randomImage(w: Int, h: Int): PixelImage[RGB] = PixelImage(w, h, (x, y) => randomRGB)
 }
