@@ -19,7 +19,7 @@ package scalismo.faces.color
 /** HSV color value (Hue, Saturation, Value) */
 case class HSV(hue: Double, saturation: Double, value: Double) {
 
-  /** convert to sRGB value */
+  /** convert to sRGB value. This HSV is defined on the sRGB color space. */
   def tosRGB: sRGB = {
     val hs = hue / (math.Pi / 3.0) + math.Pi
     val h: Int = hs.toInt
@@ -42,7 +42,7 @@ case class HSV(hue: Double, saturation: Double, value: Double) {
 
 object HSV {
 
-  /** convert from sRGB value */
+  /** convert from sRGB value. This HSV is defined on the sRGB color space.  */
   def apply(srgb: sRGB): HSV = {
     val maxCh: Double = math.max(srgb.r, math.max(srgb.b, srgb.b))
     val minCh: Double = math.min(srgb.r, math.min(srgb.b, srgb.b))

@@ -7,7 +7,7 @@ case class sRGB(r: Double, g: Double, b: Double) {
   require(r>=0.0 && g>= 0.0 && b >= 0.0, "sRGB color values must be >= 0.") // because what sould be done with gamma on negative values?
 
   /** converts to the linear sRGB values that can be used with linear operations. */
-  def toRGB = RGBsRGBConversion.toLinear(this)
+  def toRGB = GammaCorrection.toLinear(this)
 
   /** applies f to all channels */
   def map(f: Double => Double): sRGB = sRGB(f(r), f(g), f(b))
@@ -74,7 +74,7 @@ object sRGBA {
   def apply(r: Double, g: Double, b: Double): sRGBA = new sRGBA(r, g, b, 1.0)
   def apply(gray: Double): sRGBA = new sRGBA(gray, gray, gray, 1.0)
   def apply(gray: Double, a: Double): sRGBA = new sRGBA(gray, gray, gray, a)
-  def apply(tuple: (Double, Double, Double, Double)) = new sRGBA(tuple._1, tuple._2, tuple._3, tuple._4)
+  def apply(tuple: (Double, Double, Double, Double)): sRGBA = new sRGBA(tuple._1, tuple._2, tuple._3, tuple._4)
   def apply(awtColor: Color): sRGBA = sRGBA(fromInt8(awtColor.getRed), fromInt8(awtColor.getGreen), fromInt8(awtColor.getBlue), fromInt8(awtColor.getAlpha))
 
   private def toInt8(value: Double): Int = (value * 255.0).toInt
@@ -95,9 +95,9 @@ object sRGBA {
   * This implementation is consistent in round trip sRGB -> RGB and back (errors below 1e-16).
   * The java internal implementation is much less consistent (errors up to 0.06!)
   */
-object RGBsRGBConversion {
+object GammaCorrection {
 
-  /** to linear sRGB*/
+  /** sRGB to linear*/
   def toLinear(srgb: sRGB): RGB = {
     def transformChannel(c: Double) = {
       if(c <= 0.04045){
@@ -114,7 +114,7 @@ object RGBsRGBConversion {
   }
 
   /** linear to sRGB */
-  def tosRGB(rgbLinear: RGB): sRGB = {
+  def toGamma(rgbLinear: RGB): sRGB = {
     def transformChannel(c: Double) = {
       if( c <= 0.0031308) {
         12.92*c

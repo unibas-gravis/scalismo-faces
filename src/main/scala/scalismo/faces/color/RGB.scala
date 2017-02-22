@@ -89,7 +89,7 @@ case class RGB(r: Double, g: Double, b: Double) {
   /** convert to RGBA with full opacity */
   def toRGBA: RGBA = RGBA(r, g, b, 1.0)
 
-  def tosRGB: sRGB = RGBsRGBConversion.tosRGB(this)
+  def tosRGB: sRGB = GammaCorrection.toGamma(this)
 
   /** convert to Tuple */
   def toTuple: (Double, Double, Double) = (r, g, b)
