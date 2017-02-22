@@ -4,13 +4,13 @@ import java.awt.Color
 
 import scalismo.faces.FacesTestSuite
 
-class sRGBTests extends FacesTestSuite {
+class SRGBTests extends FacesTestSuite {
 
   describe("sRGB") {
     it("is within tolerance for round trips on the inverval [0,1]") {
       def roundTripCheck() = {
-        val color = randomsRGB
-        val trip = color.toRGB.tosRGB
+        val color = randomSRGB
+        val trip = color.toRGB.toSRGB
         val tol = 1e-14
         math.abs(trip.r - color.r) < tol && math.abs(trip.r - color.r) < tol && math.abs(trip.r - color.r) < tol
       }
@@ -19,23 +19,23 @@ class sRGBTests extends FacesTestSuite {
 
     it("negative values not allowed") {
       assertThrows[IllegalArgumentException]{
-        sRGB(-1.0,-0.3,-0.1)
+        SRGB(-1.0,-0.3,-0.1)
       }
     }
 
     it("can be converted to Java AWT Color") {
       val awtColor = Color.CYAN
-      sRGB(0, 1, 1).toAWTColor shouldBe awtColor
+      SRGB(0, 1, 1).toAWTColor shouldBe awtColor
     }
 
     it("can be created from a Java AWT Color") {
       val awtColor = Color.CYAN
-      sRGB(awtColor) shouldBe sRGB(0, 1, 1)
+      SRGB(awtColor) shouldBe SRGB(0, 1, 1)
     }
 
     it("AWT color can be converted to sRGB and back") {
-      val color = randomsRGB.toAWTColor
-      sRGB(color).toAWTColor shouldBe color
+      val color = randomSRGB.toAWTColor
+      SRGB(color).toAWTColor shouldBe color
     }
   }
 }

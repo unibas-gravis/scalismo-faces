@@ -47,10 +47,10 @@ class ImageIOTests extends FacesTestSuite {
   }
 
   /** evaluate difference of repeated identity transforms */
-  def diffOfsRGBIdentityTransform(image: PixelImage[sRGB], identityTransform: PixelImage[sRGB] => PixelImage[sRGB])
-                                 (implicit converter: BufferedImageConverter[sRGB])
+  def diffOfSRGBIdentityTransform(image: PixelImage[SRGB], identityTransform: PixelImage[SRGB] => PixelImage[SRGB])
+                                 (implicit converter: BufferedImageConverter[SRGB])
   : Double = {
-    val wrImage: PixelImage[sRGB] = repeatIdentityTransformation(image,identityTransform)
+    val wrImage: PixelImage[SRGB] = repeatIdentityTransformation(image,identityTransform)
     val diff = PixelImage(image.width, image.height, (x, y) => math.pow(image(x, y).r - wrImage(x, y).r, 2) +
       math.pow(image(x, y).g - wrImage(x, y).g, 2) +
       math.pow(image(x, y).b - wrImage(x, y).b, 2))
@@ -58,10 +58,10 @@ class ImageIOTests extends FacesTestSuite {
   }
 
   /** evaluate difference of repeated identity transforms */
-  def diffOfsRGBAIdentityTransform(image: PixelImage[sRGBA], identityTransform: PixelImage[sRGBA] => PixelImage[sRGBA])
-                                  (implicit converter: BufferedImageConverter[sRGBA])
+  def diffOfSRGBAIdentityTransform(image: PixelImage[SRGBA], identityTransform: PixelImage[SRGBA] => PixelImage[SRGBA])
+                                  (implicit converter: BufferedImageConverter[SRGBA])
   : Double = {
-    val wrImage: PixelImage[sRGBA] = repeatIdentityTransformation(image,identityTransform)
+    val wrImage: PixelImage[SRGBA] = repeatIdentityTransformation(image,identityTransform)
     val diff = PixelImage(image.width, image.height, (x, y) => math.pow(image(x, y).r - wrImage(x, y).r, 2) + math.pow(image(x, y).g - wrImage(x, y).g, 2) + math.pow(image(x, y).b - wrImage(x, y).b, 2) + math.pow(image(x, y).a - wrImage(x, y).a, 2))
     math.sqrt(diff.values.max)
   }
@@ -89,13 +89,13 @@ class ImageIOTests extends FacesTestSuite {
 
   describe("A random sRGB color image") {
     it("survives a write-read cycle unaltered") {
-      diffOfsRGBIdentityTransform(img.map(_.tosRGB),writeReadCycle[sRGB]) should be <= tolerance
+      diffOfSRGBIdentityTransform(img.map(_.toSRGB),writeReadCycle[SRGB]) should be <= tolerance
     }
   }
 
   describe("A random sRGBA color image") {
     it("survives a write-read cycle unaltered") {
-      diffOfsRGBAIdentityTransform(imgA.map(_.tosRGBA),writeReadCycle[sRGBA]) should be <= tolerance
+      diffOfSRGBAIdentityTransform(imgA.map(_.toSRGBA),writeReadCycle[SRGBA]) should be <= tolerance
     }
   }
 
@@ -107,7 +107,7 @@ class ImageIOTests extends FacesTestSuite {
 
   describe("The IO-Method") {
     it("writes and reads and image unaltered with streams") {
-      diffOfsRGBAIdentityTransform(imgA.map(_.tosRGBA),writeReadStreamCycle[sRGBA]) should be <= tolerance
+      diffOfSRGBAIdentityTransform(imgA.map(_.toSRGBA),writeReadStreamCycle[SRGBA]) should be <= tolerance
     }
   }
 }

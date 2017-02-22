@@ -71,7 +71,7 @@ case class RGBA(r: Double, g: Double, b: Double, a: Double) {
   /** convert to RGB */
   def toRGB: RGB = RGB(r, g, b)
 
-  def tosRGBA: sRGBA = sRGBA(GammaCorrection.toGamma(toRGB), a)
+  def toSRGBA: SRGBA = SRGBA(GammaCorrection.toGamma(toRGB), a)
 
   /** convert to Tuple */
   def toTuple: (Double, Double, Double, Double) = (r, g, b, a)
@@ -99,7 +99,7 @@ case class RGBA(r: Double, g: Double, b: Double, a: Double) {
 
   /** convert to AWT default color
     * expects a clamped color value */
-  def toAWTColor: Color = tosRGBA.toAWTColor
+  def toAWTColor: Color = toSRGBA.toAWTColor
 }
 
 object RGBA {
@@ -116,7 +116,7 @@ object RGBA {
   def apply(gray: Double): RGBA = new RGBA(gray, gray, gray, 1.0)
   def apply(gray: Double, a: Double): RGBA = new RGBA(gray, gray, gray, a)
   def apply(tuple: (Double, Double, Double, Double)) = new RGBA(tuple._1, tuple._2, tuple._3, tuple._4)
-  def apply(awtColor: Color): RGBA = sRGBA(fromInt8(awtColor.getRed), fromInt8(awtColor.getGreen), fromInt8(awtColor.getBlue), fromInt8(awtColor.getAlpha)).toRGBA
+  def apply(awtColor: Color): RGBA = SRGBA(fromInt8(awtColor.getRed), fromInt8(awtColor.getGreen), fromInt8(awtColor.getBlue), fromInt8(awtColor.getAlpha)).toRGBA
 
   /** implementation of the Vectorizer interface for RGBA */
   implicit object RGBAComponents extends ComponentRepresentation[RGBA] with Vectorizer[RGBA] {
