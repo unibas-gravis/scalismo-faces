@@ -3,7 +3,10 @@ name := """scalismo-faces"""
 licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")) 
 
 scalaVersion  := "2.12.1"
-scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
+
+crossScalaVersions := Seq("2.12.1", "2.11.8")
+
+scalacOptions := Seq("-unchecked", "-deprecation", "-feature")
 
 resolvers += Resolver.jcenterRepo
 
