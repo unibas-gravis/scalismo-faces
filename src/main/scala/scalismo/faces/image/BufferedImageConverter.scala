@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 University of Basel, Graphics and Vision Research Group
+ * Copyright 2017 University of Basel, Graphics and Vision Research Group
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,35 +19,39 @@ package scalismo.faces.image
 import java.awt.Color
 import java.awt.image.BufferedImage
 
-import scalismo.faces.color._
-import scalismo.faces.image.PixelImageConversion.BufferedImageConverter
+import scalismo.faces.color.{RGB, RGBA, SRGB, SRGBA}
 
-import scala.util.{Failure, Try}
+/** convert between PixelImage and BufferedImage */
+trait BufferedImageConverter[Pixel] {
+  def toBufferedImage(pixelImage: PixelImage[Pixel]): BufferedImage
+  def toPixelImage(bufferedImage: BufferedImage): PixelImage[Pixel]
+}
 
-object PixelImageConversion {
+/** convert between PixelImage and BufferedImage */
+object BufferedImageConverter {
 
-  implicit def bufferedImageConverterDouble(implicit doubleConv: BufferedImageConverter[Double]) = new BufferedImageConverter[Double] {
-    override def toBufferedImage(image: PixelImage[Double]): BufferedImage = doubleConv.toBufferedImage(image)
-
-    override def fromBufferedImage(image: BufferedImage): PixelImage[Double] = doubleConv.fromBufferedImage(image)
+  /** convert a PixelImage[A] to a BufferedImage */
+  def toBufferedImage[A](pixelImage: PixelImage[A])(implicit bufferedImageConverter: BufferedImageConverter[A]): BufferedImage = {
+    bufferedImageConverter.toBufferedImage(pixelImage)
   }
 
-  trait BufferedImageConverter[Pixel] {
-    def toBufferedImage(image: PixelImage[Pixel]): BufferedImage
-    def fromBufferedImage(image: BufferedImage): PixelImage[Pixel]
+  /** convert a PixelImage[A] to a BufferedImage */
+  def toPixelImage[A](bufferedImage: BufferedImage)(implicit bufferedImageConverter: BufferedImageConverter[A]): PixelImage[A] = {
+    bufferedImageConverter.toPixelImage(bufferedImage)
   }
 
-  implicit object BufferedImageConverterRGBA extends BufferedImageConverter[RGBA] {
+  /** convert between PixelImage[RGBA] and BufferedImage */
+  implicit object ConverterRGBA extends BufferedImageConverter[RGBA] {
     override def toBufferedImage(image: PixelImage[RGBA]): BufferedImage = {
-      BufferedImageConverterSRGBA.toBufferedImage(image.map(_.toSRGBA))
+      ConverterSRGBA.toBufferedImage(image.map(_.toSRGBA))
     }
-    override def fromBufferedImage(image: BufferedImage): PixelImage[RGBA] = {
-      BufferedImageConverterSRGBA.fromBufferedImage(image).map(_.toRGBA)
+    override def toPixelImage(image: BufferedImage): PixelImage[RGBA] = {
+      ConverterSRGBA.toPixelImage(image).map(_.toRGBA)
     }
   }
 
-
-    implicit object BufferedImageConverterSRGBA extends BufferedImageConverter[SRGBA] {
+  /** convert between PixelImage[SRGBA] and BufferedImage */
+  implicit object ConverterSRGBA extends BufferedImageConverter[SRGBA] {
     override def toBufferedImage(image: PixelImage[SRGBA]): BufferedImage = {
 
       def readIndexed8bitColor(x: Int, y: Int): Int = {
@@ -68,7 +72,7 @@ object PixelImageConversion {
       bufImg
     }
 
-    override def fromBufferedImage(image: BufferedImage): PixelImage[SRGBA] = {
+    override def toPixelImage(image: BufferedImage): PixelImage[SRGBA] = {
       val w = image.getWidth
       val h = image.getHeight
 
@@ -88,19 +92,20 @@ object PixelImageConversion {
     }
   }
 
-
-  implicit object BufferedImageConverterRGB extends BufferedImageConverter[RGB] {
+  /** converter between PixelImage[RGB] and BufferedImage */
+  implicit object ConverterRGB extends BufferedImageConverter[RGB] {
     override def toBufferedImage(image: PixelImage[RGB]): BufferedImage = {
-      BufferedImageConverterSRGB.toBufferedImage(image.map(_.toSRGB))
+      ConverterSRGB.toBufferedImage(image.map(_.toSRGB))
     }
 
-    override def fromBufferedImage(image: BufferedImage): PixelImage[RGB] = {
-      val buffedImage = BufferedImageConverterSRGB.fromBufferedImage(image)
+    override def toPixelImage(image: BufferedImage): PixelImage[RGB] = {
+      val buffedImage = ConverterSRGB.toPixelImage(image)
       buffedImage.map(_.toRGB)
     }
   }
 
-  implicit object BufferedImageConverterSRGB extends BufferedImageConverter[SRGB] {
+  /** convert between PixelImage[SRGB] and BufferedImage */
+  implicit object ConverterSRGB extends BufferedImageConverter[SRGB] {
     override def toBufferedImage(image: PixelImage[SRGB]): BufferedImage = {
 
       def readIndexed8bitColor(x: Int, y: Int): Int = {
@@ -121,7 +126,7 @@ object PixelImageConversion {
       bufImg
     }
 
-    override def fromBufferedImage(image: BufferedImage): PixelImage[SRGB] = {
+    override def toPixelImage(image: BufferedImage): PixelImage[SRGB] = {
       val w = image.getWidth
       val h = image.getHeight
 
@@ -142,7 +147,8 @@ object PixelImageConversion {
     }
   }
 
-  implicit object BufferedImageConverterDouble extends BufferedImageConverter[Double] {
+  /** convert between PixelImage[Double] and BufferedImage */
+  implicit object ConverterDouble extends BufferedImageConverter[Double] {
     override def toBufferedImage(image: PixelImage[Double]): BufferedImage = {
 
       def readIndexed8bitColor(x: Int, y: Int): Int = {
@@ -161,7 +167,7 @@ object PixelImageConversion {
       bufImg
     }
 
-    override def fromBufferedImage(image: BufferedImage): PixelImage[Double] = {
+    override def toPixelImage(image: BufferedImage): PixelImage[Double] = {
       val w = image.getWidth
       val h = image.getHeight
 
@@ -181,33 +187,4 @@ object PixelImageConversion {
       buffer.toImage
     }
   }
-}
-
-object PixelImageIO {
-  import java.io.{File, InputStream, OutputStream}
-
-  def read[Pixel](inputStream: InputStream)(implicit converter: BufferedImageConverter[Pixel]): Try[PixelImage[Pixel]] = {
-    val img: Try[java.awt.image.BufferedImage] = Try(javax.imageio.ImageIO.read(inputStream))
-    img.map(converter.fromBufferedImage)
-  }
-
-  def write[Pixel](image: PixelImage[Pixel], outputStream: OutputStream, format: String = "png")(implicit converter: BufferedImageConverter[Pixel]): Try[Unit] = {
-    val bufImage = converter.toBufferedImage(image)
-    Try(javax.imageio.ImageIO.write(bufImage, format, outputStream))
-  }
-
-  def read[Pixel](file: File)(implicit converter: BufferedImageConverter[Pixel]): Try[PixelImage[Pixel]] = {
-    val img: Try[java.awt.image.BufferedImage] = Try(javax.imageio.ImageIO.read(file))
-    img.map(converter.fromBufferedImage)
-  }
-
-  def write[Pixel](image: PixelImage[Pixel], file: File)(implicit converter: BufferedImageConverter[Pixel]): Try[Unit] = {
-    val bufImage = converter.toBufferedImage(image)
-    file match {
-      case f if f.getAbsolutePath.toLowerCase.endsWith(".png") => Try(javax.imageio.ImageIO.write(bufImage, "png", file))
-      case f if f.getAbsolutePath.toLowerCase.endsWith(".jpg") => Try(javax.imageio.ImageIO.write(bufImage, "jpg", file))
-      case _ => Failure(new Exception("Unknown image format: " + file.getName))
-    }
-  }
-
 }

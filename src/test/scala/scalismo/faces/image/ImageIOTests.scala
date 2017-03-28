@@ -21,7 +21,7 @@ import java.io._
 import scalismo.faces.FacesTestSuite
 import scalismo.faces.color.ColorSpaceOperations.implicits._
 import scalismo.faces.color._
-import scalismo.faces.image.PixelImageConversion.BufferedImageConverter
+import scalismo.faces.io.PixelImageIO
 import scalismo.faces.utils.LanguageUtilities
 
 import scala.reflect.ClassTag
@@ -82,9 +82,9 @@ class ImageIOTests extends FacesTestSuite {
   /** perform a write-read cycle for an image */
   def writeReadStreamCycle[A](img: PixelImage[A])(implicit conv: BufferedImageConverter[A]): PixelImage[A] = {
     val os = new ByteArrayOutputStream()
-    PixelImageIO.write[A](img, os).get
+    PixelImageIO.writeToStream[A](img, os).get
     val is  = new ByteArrayInputStream(os.toByteArray)
-    PixelImageIO.read[A](is).get
+    PixelImageIO.readFromStream[A](is).get
   }
 
   describe("A random sRGB color image") {
