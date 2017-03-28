@@ -16,15 +16,14 @@
 
 package scalismo.faces.io
 
-import java.io.IOException
+import java.io.{File, IOException, InputStream, OutputStream}
 
 import scalismo.faces.image.{BufferedImageConverter, PixelImage}
 
 import scala.util.Try
 
-object PixelImageIO {
-  import java.io.{File, InputStream, OutputStream}
 
+object PixelImageIO {
   /** read image from stream */
   def readFromStream[Pixel](inputStream: InputStream)(implicit converter: BufferedImageConverter[Pixel]): Try[PixelImage[Pixel]] = Try {
     val img = javax.imageio.ImageIO.read(inputStream)

@@ -82,7 +82,7 @@ class ImageIOTests extends FacesTestSuite {
   /** perform a write-read cycle for an image */
   def writeReadStreamCycle[A](img: PixelImage[A])(implicit conv: BufferedImageConverter[A]): PixelImage[A] = {
     val os = new ByteArrayOutputStream()
-    PixelImageIO.writeToStream[A](img, os).get
+    assert(PixelImageIO.writeToStream[A](img, os).isSuccess)
     val is  = new ByteArrayInputStream(os.toByteArray)
     PixelImageIO.readFromStream[A](is).get
   }
