@@ -17,6 +17,7 @@
 package scalismo.faces.mesh
 
 import scalismo.faces.color.RGBA
+import scalismo.faces.render.Transform3D
 import scalismo.geometry.{Vector, _3D}
 import scalismo.mesh._
 
@@ -27,6 +28,11 @@ import scalismo.mesh._
   */
 case class ColorMesh3D(shape: TriangleMesh3D, color: MeshSurfaceProperty[RGBA]) {
   require(shape.triangulation == color.triangulation)
+
+  def transform(trafo: Transform3D): ColorMesh3D = {
+    val s = shape.transform{trafo(_)}
+    copy(shape = s)
+  }
 }
 
 /**
@@ -36,6 +42,11 @@ case class ColorMesh3D(shape: TriangleMesh3D, color: MeshSurfaceProperty[RGBA]) 
   */
 case class VertexColorMesh3D(shape: TriangleMesh3D, color: SurfacePointProperty[RGBA]) {
   require(shape.triangulation == color.triangulation)
+
+  def transform(trafo: Transform3D): VertexColorMesh3D = {
+    val s = shape.transform{trafo(_)}
+    copy(shape = s)
+  }
 }
 
 /**
@@ -48,6 +59,13 @@ case class ColorNormalMesh3D(shape: TriangleMesh3D, color: MeshSurfaceProperty[R
   // @todo wait for scalismo to fix issue #138
   //  require(shape.triangulation == color.triangulation)
   //  require(shape.triangulation == normals.triangulation)
+
+  def transform(trafo: Transform3D): ColorNormalMesh3D = {
+    val n = normals.map{trafo(_).normalize}
+    val s = shape.transform{trafo(_)}
+    copy(shape = s, normals = n)
+  }
+
   def withVertexNormals: ColorNormalMesh3D = copy(normals = shape.vertexNormals)
 
   def withFaceNormals: ColorNormalMesh3D = copy(normals = shape.cellNormals)
@@ -109,6 +127,12 @@ case class OptionalColorNormalMesh3D(shape: TriangleMesh3D,
     for {
       tex <- texture
     } yield TexturedMesh3D(shape, tex)
+  }
+
+  def transform(trafo: Transform3D): OptionalColorNormalMesh3D = {
+    val s = shape.transform{trafo(_)}
+    val n = for(norm <- normals) yield norm.map{trafo(_)}
+    copy(shape = s, normals = n)
   }
 }
 
