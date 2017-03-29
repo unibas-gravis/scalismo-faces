@@ -180,13 +180,13 @@ class MeshIOTests extends FacesTestSuite {
 
       it("with ply format") {
         val f = File.createTempFile("scalismo-faces-test-meshio", ".ply")
-        //f.deleteOnExit()
+        f.deleteOnExit()
         testWriteReadCycleWithTexture(rndMesh, f)
       }
 
       it("with msh format") {
         val f = File.createTempFile("scalismo-faces-test-meshio", ".msh.gz")
-        //f.deleteOnExit()
+        f.deleteOnExit()
         testWriteReadCycleWithTexture(rndMesh, f)
       }
     }
