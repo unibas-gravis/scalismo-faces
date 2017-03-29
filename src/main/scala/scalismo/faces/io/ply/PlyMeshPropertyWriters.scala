@@ -18,9 +18,9 @@ package scalismo.faces.io.ply
 import java.io.{OutputStream, OutputStreamWriter}
 import java.nio.ByteOrder
 
+import scalismo.common.PointId
 import scalismo.faces.color.RGBA
 import scalismo.faces.mesh.VertexPropertyPerTriangle
-import scalismo.common.PointId
 import scalismo.geometry.{_2D, _}
 import scalismo.mesh.{BarycentricCoordinates, SurfacePointProperty, TriangleId, TriangleProperty}
 
@@ -33,8 +33,8 @@ import scalismo.mesh.{BarycentricCoordinates, SurfacePointProperty, TriangleId, 
   */
 object PlyMeshPropertyWriters {
 
-  import PlyHelpers._
   import PlyHelpers.PlyHeader._
+  import PlyHelpers._
   import PlyMeshHelper._
 
   trait IndexedProperty {

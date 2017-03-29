@@ -26,7 +26,6 @@ import scalismo.geometry._
 import scalismo.mesh._
 
 import scala.collection.mutable.ListBuffer
-import scala.util.Try
 import scala.util.control.NonFatal
 
 

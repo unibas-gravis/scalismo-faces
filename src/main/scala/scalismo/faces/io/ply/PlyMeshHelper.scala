@@ -16,7 +16,7 @@
 package scalismo.faces.io.ply
 
 import scalismo.common.PointId
-import scalismo.geometry.{Vector, Point, _2D, _3D}
+import scalismo.geometry.{Point, Vector, _2D, _3D}
 
 
 /**
