@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 University of Basel, Graphics and Vision Research Group
+ * Copyright University of Basel, Graphics and Vision Research Group
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,14 @@
  *  limitations under the License.
  */
 
-package scalismo.faces.image
+package scalismo.faces.io
 
 import java.io._
 
 import scalismo.faces.FacesTestSuite
 import scalismo.faces.color.ColorSpaceOperations.implicits._
 import scalismo.faces.color._
-import scalismo.faces.io.PixelImageIO
+import scalismo.faces.image.{BufferedImageConverter, PixelImage}
 import scalismo.faces.utils.LanguageUtilities
 
 import scala.reflect.ClassTag

@@ -32,7 +32,6 @@ class ImagePyramidTests extends FacesTestSuite {
       ops.normSq(ops.add(l,ops.scale(r,-1.0))) should be < threshold
     }
   }
-
   def doubleImages = Seq(
     chessBoard(white = randomDouble, black = randomDouble),
     chessBoard(64, 8, randomDouble, randomDouble),

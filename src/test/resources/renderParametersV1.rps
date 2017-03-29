@@ -1,0 +1,41 @@
+{
+   "camera" : {
+      "far" : 100000.0,
+      "focalLength" : 50.0,
+      "near" : 1.0,
+      "orthographic" : false,
+      "pitch" : 0.75,
+      "principlePoint" : [ 2.0, -4.0 ],
+      "roll" : -0.125,
+      "sensorSize" : [ 36.0, 24.0 ],
+      "skewFactor" : 1.0,
+      "translation" : [ 10.0, 20.0, 2000.0 ],
+      "yaw" : 1.5
+   },
+   "color" : {
+      "gain" : [ 1.0, 0.5, 0.25 ],
+      "gamma" : 1.0,
+      "offset" : [ 0.25, 0.125, 0.75 ]
+   },
+   "directionalLight" : {
+      "ambient" : [ 1.0, 1.0, 1.0 ],
+      "diffuse" : [ 0.0, 0.0, 0.0 ],
+      "direction" : [ 0.0, 0.0, 1.0 ],
+      "specular" : [ 0.0, 0.0, 0.0]
+   },
+   "image" : [ 480, 720 ],
+   "morphableModel" : {
+      "colorCoefficients" : [1.0, 0.0, 0.5],
+      "modelURI" : "modelPath1",
+      "shapeCoefficients" : [-1.0, 0.5, -0.25],
+      "shininess" : 20.0
+   },
+   "pose" : {
+      "pitch" : 0.25,
+      "roll" : 0.125,
+      "scaling" : 1.0,
+      "translation" : [ 0.0, 0.0, -1000.0 ],
+      "yaw" : -0.125
+   },
+   "sphericalHarmonicsLight" : [[0.5, 0.25, 0.125], [0.5, 0.125, 0.25], [0.125, 0.25, 0.5], [0.25, 0.5, 0.125]]
+}
