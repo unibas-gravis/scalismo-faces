@@ -1,0 +1,42 @@
+{
+  "pose": {
+    "scaling": 1.0,
+    "translation": [0.0, 0.0, -1000.0],
+    "roll": 0.125,
+    "yaw": -0.125,
+    "pitch": 0.25
+  },
+  "camera": {
+    "far": 100000.0,
+    "focalLength": 50.0,
+    "near": 1.0,
+    "orthographic": false,
+    "pitch": 0.75,
+    "principalPoint": [2.0, -4.0],
+    "roll": -0.125,
+    "sensorSize": [36.0, 24.0],
+    "skewFactor": 1.0,
+    "translation": [10.0, 20.0, 2000.0],
+    "yaw": 1.5
+  },
+  "illumination": {
+    "coefficients": [[0.5, 0.25, 0.125], [0.125, 0.25, 0.5], [0.25, 0.5, 0.125], [0.5, 0.125, 0.25]],
+    "@type": "SphericalHarmonicsLight"
+  },
+  "renderObject": {
+    "shape": [-1.0, 0.5, -0.25],
+    "color": [1.0, 0.0, 0.5],
+    "modelURI": "modelPath1",
+    "@type": "MoMoInstance"
+  },
+  "image": {
+    "height": 480,
+    "width": 720
+  },
+  "color": {
+    "gain": [1.0, 0.5, 0.25],
+    "colorContrast": 1.0,
+    "offset": [0.25, 0.125, 0.75]
+  },
+  "version": "V2.0"
+}
