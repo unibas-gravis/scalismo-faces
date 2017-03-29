@@ -62,7 +62,7 @@ object PLYMesh {
   def writePLY(mesh: VertexColorMesh3D,
                fileURL: String,
                plyFormat: PlyFormat,
-               headerFormat: PlyHeader) = {
+               headerFormat: PlyHeader): Unit = {
     val points = mesh.shape.pointSet.points.toIndexedSeq
     val triangles = mesh.shape.triangulation.triangles.map(_.toIntVector3D)
     val colors = mesh.color
@@ -80,7 +80,7 @@ object PLYMesh {
   def writePLY(mesh: ColorNormalMesh3D,
                fileURL: String,
                plyFormat: PlyFormat,
-               headerFormat: PlyHeader) = {
+               headerFormat: PlyHeader): Unit = {
     val points = mesh.shape.pointSet.points.toIndexedSeq
     val triangles = mesh.shape.triangulation.triangles.map(_.toIntVector3D)
     val colors = mesh.color

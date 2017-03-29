@@ -52,8 +52,8 @@ private[io] case class PlyMeshWriter(url: String,
                                      plyFormat: PlyFormat = PlyFormat.ASCII,
                                      headerFormat: PlyHeader = PlyHeader.meshlab) {
 
-  val nVertices = vertices.map(_.length).getOrElse(-1)
-  val nFaces = faces.map(_.length).getOrElse(-1)
+  val nVertices: Int = vertices.map(_.length).getOrElse(-1)
+  val nFaces: Int = faces.map(_.length).getOrElse(-1)
   val (hasTextures, hasMultipleTextures) = checkTextures
 
   val vertexProperties: IndexedSeq[IndexedProperty] = getVertexProperties

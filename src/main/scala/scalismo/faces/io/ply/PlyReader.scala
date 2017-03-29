@@ -167,7 +167,7 @@ object PlyReader {
   private def parseElementsInHeader(header: List[String]): List[(String, PlyElementReader)] = {
     val startingElement = header.dropWhile(l => !l.startsWith(PLY.element))
     val elements = parseElementFromListStart(startingElement)
-    elements.map(headerPartToReader).flatten
+    elements.flatMap(headerPartToReader)
   }
 
 
