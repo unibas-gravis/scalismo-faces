@@ -46,8 +46,9 @@ class LaplacePyramid[A: ClassTag](val imagePyramid: ImagePyramid[A], val expand:
   def reconstruct: PixelImage[A] = level.init.foldRight(level.last)((diff, combined) => expand(combined) + diff)
 }
 
-object LaplacePyramid {
 
+
+object LaplacePyramid {
 
   /**
     * Standard filter to be used to upscale the image.
