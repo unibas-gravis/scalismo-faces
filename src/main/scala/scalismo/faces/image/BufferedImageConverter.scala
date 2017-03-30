@@ -19,7 +19,7 @@ package scalismo.faces.image
 import java.awt.Color
 import java.awt.image.BufferedImage
 
-import scalismo.faces.color.{RGB, RGBA, SRGB, SRGBA}
+import scalismo.faces.color.{RGB, RGBA}
 
 /** convert between PixelImage and BufferedImage */
 trait BufferedImageConverter[Pixel] {
@@ -43,16 +43,6 @@ object BufferedImageConverter {
   /** convert between PixelImage[RGBA] and BufferedImage */
   implicit object ConverterRGBA extends BufferedImageConverter[RGBA] {
     override def toBufferedImage(image: PixelImage[RGBA]): BufferedImage = {
-      ConverterSRGBA.toBufferedImage(image.map(_.toSRGBA))
-    }
-    override def toPixelImage(image: BufferedImage): PixelImage[RGBA] = {
-      ConverterSRGBA.toPixelImage(image).map(_.toRGBA)
-    }
-  }
-
-  /** convert between PixelImage[SRGBA] and BufferedImage */
-  implicit object ConverterSRGBA extends BufferedImageConverter[SRGBA] {
-    override def toBufferedImage(image: PixelImage[SRGBA]): BufferedImage = {
 
       def readIndexed8bitColor(x: Int, y: Int): Int = {
         def toInt(d: Double): Int = (d * 255.0).toInt
@@ -72,17 +62,17 @@ object BufferedImageConverter {
       bufImg
     }
 
-    override def toPixelImage(image: BufferedImage): PixelImage[SRGBA] = {
+    override def toPixelImage(image: BufferedImage): PixelImage[RGBA] = {
       val w = image.getWidth
       val h = image.getHeight
 
-      val buffer = ImageBuffer.makeInitializedBuffer(w, h)(SRGBA.BlackTransparent)
+      val buffer = ImageBuffer.makeInitializedBuffer(w, h)(RGBA.BlackTransparent)
 
       // not super fast but ensures a correct mapping between location and pointId, works for col and row major storage
-      def readIndexedColor(x: Int, y: Int): SRGBA = {
+      def readIndexedColor(x: Int, y: Int): RGBA = {
         def toD(i: Int): Double = i / 255.0
         val c: Color = new Color(image.getRGB(x, y), true)
-        SRGBA(toD(c.getRed), toD(c.getGreen), toD(c.getBlue), toD(c.getAlpha))
+        RGBA(toD(c.getRed), toD(c.getGreen), toD(c.getBlue), toD(c.getAlpha))
       }
       for (
         x <- 0 until w;
@@ -92,21 +82,9 @@ object BufferedImageConverter {
     }
   }
 
-  /** converter between PixelImage[RGB] and BufferedImage */
+  /** convert between PixelImage[RGB] and BufferedImage */
   implicit object ConverterRGB extends BufferedImageConverter[RGB] {
     override def toBufferedImage(image: PixelImage[RGB]): BufferedImage = {
-      ConverterSRGB.toBufferedImage(image.map(_.toSRGB))
-    }
-
-    override def toPixelImage(image: BufferedImage): PixelImage[RGB] = {
-      val buffedImage = ConverterSRGB.toPixelImage(image)
-      buffedImage.map(_.toRGB)
-    }
-  }
-
-  /** convert between PixelImage[SRGB] and BufferedImage */
-  implicit object ConverterSRGB extends BufferedImageConverter[SRGB] {
-    override def toBufferedImage(image: PixelImage[SRGB]): BufferedImage = {
 
       def readIndexed8bitColor(x: Int, y: Int): Int = {
         def toInt(d: Double): Int = (d * 255.0).toInt
@@ -126,17 +104,17 @@ object BufferedImageConverter {
       bufImg
     }
 
-    override def toPixelImage(image: BufferedImage): PixelImage[SRGB] = {
+    override def toPixelImage(image: BufferedImage): PixelImage[RGB] = {
       val w = image.getWidth
       val h = image.getHeight
 
-      val buffer = ImageBuffer.makeInitializedBuffer(w, h)(SRGB.Black)
+      val buffer = ImageBuffer.makeInitializedBuffer(w, h)(RGB.Black)
 
       // not super fast but ensures a correct mapping between location and pointId, works for col and row major storage
-      def readIndexedColor(x: Int, y: Int): SRGB = {
+      def readIndexedColor(x: Int, y: Int): RGB = {
         def toD(i: Int): Double = i / 255.0
         val c: Color = new Color(image.getRGB(x, y))
-        SRGB(toD(c.getRed), toD(c.getGreen), toD(c.getBlue))
+        RGB(toD(c.getRed), toD(c.getGreen), toD(c.getBlue))
       }
 
       for (
