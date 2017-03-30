@@ -16,7 +16,7 @@
 
 package scalismo.faces.sampling.face.evaluators
 
-import scalismo.faces.landmarks.LandmarkDetectionMap$
+import scalismo.faces.landmarks.LandmarkDetectionMap
 import scalismo.faces.parameters.RenderParameter
 import scalismo.faces.sampling.face.ParametricLandmarksRenderer
 import scalismo.sampling.DistributionEvaluator
