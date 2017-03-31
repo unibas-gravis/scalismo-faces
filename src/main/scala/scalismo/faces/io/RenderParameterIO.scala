@@ -24,7 +24,7 @@ import scalismo.faces.parameters.RenderParameter
 import scalismo.faces.utils.ResourceManagement
 import spray.json._
 
-import RenderParameterJSONFormat.defaultFormat._
+import RenderParameterJSONFormat.renderParameterFormat
 
 import scala.util.Try
 

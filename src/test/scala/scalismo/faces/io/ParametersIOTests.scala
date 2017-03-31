@@ -388,6 +388,19 @@ class ParametersIOTests extends FacesTestSuite {
       v4Param shouldBe targetParam
     }
 
+    it("can read the correct version from the files content") {
+      Seq(
+        "/renderParametersV4.rps",
+        "/renderParametersV3.rps",
+        "/renderParametersV2.rps",
+        "/renderParametersV1.rps"
+      ) foreach { filename =>
+        val param = RenderParameterIO.read(new File(this.getClass.getResource(filename).getPath)).get
+        identical(param,targetParam)
+      }
+    }
+
+
     it("can be written to and read from a file") {
       val f = File.createTempFile("ParameterIOTest", ".rps")
       f.deleteOnExit()
