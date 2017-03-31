@@ -49,7 +49,6 @@ class LaplacePyramid[A: ClassTag](val imagePyramid: ImagePyramid[A], val expand:
 
 
 object LaplacePyramid {
-
   /**
     * Standard filter to be used to upscale the image.
     */
