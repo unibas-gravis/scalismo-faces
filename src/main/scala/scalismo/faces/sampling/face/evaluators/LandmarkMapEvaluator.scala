@@ -23,17 +23,15 @@ import scalismo.sampling.DistributionEvaluator
 import scalismo.sampling.evaluators.ProductEvaluator
 
 /** evaluate landmark positions in detection maps using a pre-convolved distance model */
-class LandmarkMapEvaluator(sdevNoiseModel: Double, maps: LandmarkDetectionMap, renderer: ParametricLandmarksRenderer) extends DistributionEvaluator[RenderParameter] {
-
-  private val precalculatedMap = maps.precalculateIsotropicGaussianNoise(sdevNoiseModel)
+case class LandmarkMapEvaluator(stdDevNoiseModel: Double, detectionMap: LandmarkDetectionMap, renderer: ParametricLandmarksRenderer) extends DistributionEvaluator[RenderParameter] {
 
   override def logValue(sample: RenderParameter): Double = {
-    val lm = renderer.renderLandmark(maps.tag,sample).get
+    val lm = renderer.renderLandmark(detectionMap.tag,sample).get
     val point = lm.point
     val x = point.x.toInt
     val y = point.y.toInt
-    if (precalculatedMap.domain.isDefinedAt(x, y)) {
-      precalculatedMap(x, y)
+    if (detectionMap.domain.isDefinedAt(x, y)) {
+      detectionMap(x, y)
     } else {
       Double.NegativeInfinity
     }
@@ -43,8 +41,8 @@ class LandmarkMapEvaluator(sdevNoiseModel: Double, maps: LandmarkDetectionMap, r
 
 object LandmarkMapEvaluator {
 
-  def apply(sdevNoiseModel: Double, maps: Seq[LandmarkDetectionMap], renderer: ParametricLandmarksRenderer): Unit = {
-    val mapEvaluators = maps.map(tm => new LandmarkMapEvaluator(sdevNoiseModel,tm,renderer))
+  def apply(sdevNoiseModel: Double, detectionMaps: Seq[LandmarkDetectionMap], renderer: ParametricLandmarksRenderer): DistributionEvaluator[RenderParameter] = {
+    val mapEvaluators = detectionMaps.map(detectionMap => new LandmarkMapEvaluator(sdevNoiseModel,detectionMap,renderer))
     ProductEvaluator(mapEvaluators:_*)
   }
 

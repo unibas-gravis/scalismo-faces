@@ -15,35 +15,48 @@
  */
 package scalismo.faces.landmarks
 
-import scalismo.faces.image.PixelImage
+import scalismo.faces.image.{PixelImage, PixelImageDomain}
 import scalismo.faces.image.filter.GeneralMaxConvolution
 import scalismo.faces.sampling.face.evaluators.PointEvaluators.IsotropicGaussianPointEvaluator
 import scalismo.geometry.{Point1D, _1D}
 
-class LandmarkDetectionMap(val tag: String, val map: PixelImage[Double]) {
 
-  def precalculateIsotropicGaussianNoise(stddevNoiseModel: Double) = {
-    GeneralMaxConvolution.separable2D(
-      map,
-      IsotropicGaussianPointEvaluator[_1D](stddevNoiseModel).toDistributionEvaluator(Point1D(0f))
-    )
-  }
+trait LandmarkDetectionMap extends ((Int,Int) => Double) {
+  def tag: String
+  def domain: PixelImageDomain
+}
 
+private class LandmarkDetectionMapImplementation(override val tag: String, private val detectionMap: PixelImage[Double]) extends LandmarkDetectionMap {
+  override def domain : PixelImageDomain = detectionMap.domain
+  def apply(x: Int, y:Int): Double = detectionMap(x,y)
 }
 
 object LandmarkDetectionMap {
 
-  def apply(tag: String, map: PixelImage[Double], fp: Double, fn: Double): LandmarkDetectionMap = {
-    val correctedMap = correctFpFnRates(map,fp,fn)
-    new LandmarkDetectionMap(tag,correctedMap)
+  def apply(tag: String, map: PixelImage[Double], stddevNoiseModel: Double, fp: Double, fn: Double): LandmarkDetectionMap = {
+    val correctedMap = correctFalsePositiveAndFalseNegativeRates(map,fp,fn)
+    val precalculatedMapIncludingNoiseModel = precalculateIsotropicGaussianNoise(correctedMap,stddevNoiseModel)
+    new LandmarkDetectionMapImplementation(tag,precalculatedMapIncludingNoiseModel)
   }
 
-  def fromCorrectedDetection(tag: String, map: PixelImage[Double]): LandmarkDetectionMap = {
-    new LandmarkDetectionMap(tag,map)
+  def fromCorrectedDetection(tag: String, correctedMap: PixelImage[Double], stddevNoiseModel: Double): LandmarkDetectionMap = {
+    val precalculatedMapIncludingNoiseModel = precalculateIsotropicGaussianNoise(correctedMap,stddevNoiseModel)
+    new LandmarkDetectionMapImplementation(tag,precalculatedMapIncludingNoiseModel)
   }
 
-  private def correctFpFnRates(in: PixelImage[Double], falsePositiveRate: Double, falseNegativeRate: Double): PixelImage[Double] = {
+  def fromCorrectedPrecalculatedMap(tag: String, precalculatedMapIncludingNoiseModel: PixelImage[Double]): LandmarkDetectionMap = {
+    new LandmarkDetectionMapImplementation(tag,precalculatedMapIncludingNoiseModel)
+  }
+
+  private def correctFalsePositiveAndFalseNegativeRates(in: PixelImage[Double], falsePositiveRate: Double, falseNegativeRate: Double): PixelImage[Double] = {
     in.map(e => e * (1.0 - (falsePositiveRate + falseNegativeRate)) + falseNegativeRate)
+  }
+
+  private def precalculateIsotropicGaussianNoise(detectionMap: PixelImage[Double], stddevNoiseModel: Double) = {
+    GeneralMaxConvolution.separable2D(
+      detectionMap,
+      IsotropicGaussianPointEvaluator[_1D](stddevNoiseModel).toDistributionEvaluator(Point1D(0f))
+    )
   }
 
 }
