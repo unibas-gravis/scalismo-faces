@@ -21,7 +21,7 @@ import java.net.URI
 import breeze.linalg.{DenseMatrix, DenseVector, qr}
 import org.scalatest._
 import scalismo.common.PointId
-import scalismo.faces.color.{RGB, RGBA, SRGB}
+import scalismo.faces.color.{RGB, RGBA}
 import scalismo.faces.image.PixelImage
 import scalismo.faces.mesh.{ColorNormalMesh3D, TextureMappedProperty, VertexColorMesh3D}
 import scalismo.faces.momo.MoMo
@@ -38,8 +38,6 @@ class FacesTestSuite extends FunSpec with Matchers {
   implicit val rnd = Random(43)
 
   def randomRGB = RGB(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
-
-  def randomSRGB: SRGB = SRGB(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
 
   def randomRGBA = RGBA(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
 

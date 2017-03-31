@@ -44,8 +44,8 @@ object PixelEvaluators {
       normalizer - 0.5f * d2/sdev/sdev
     }
     override def logValue(f: RGB, s: RGB): Double = {
-      val first = HSV(f.toSRGB)
-      val second = HSV(s.toSRGB)
+      val first = HSV(f)
+      val second = HSV(s)
       apply(first,second)
     }
   }
