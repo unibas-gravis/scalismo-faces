@@ -16,26 +16,32 @@
 
 package scalismo.faces.sampling.face.evaluators
 
+import scalismo.faces.image.PixelImage
+import scalismo.faces.image.filter.GeneralMaxConvolution
 import scalismo.faces.landmarks.LandmarkDetectionMap
 import scalismo.faces.parameters.RenderParameter
 import scalismo.faces.sampling.face.ParametricLandmarksRenderer
+import scalismo.faces.sampling.face.evaluators.PointEvaluators.IsotropicGaussianPointEvaluator
+import scalismo.geometry.{Point1D, _1D}
 import scalismo.sampling.DistributionEvaluator
 import scalismo.sampling.evaluators.ProductEvaluator
 
-/** The LandmarkMapEvaluator evaluates landmark positions by a simple look-up in a LandmarkDetectionMap. These
-  * maps usually include a noise-model through precomputation. */
+/**
+ * The LandmarkMapEvaluator evaluates landmark positions by a simple look-up in a LandmarkDetectionMap. These
+ * maps usually include a noise-model through precomputation.
+ */
 case class LandmarkMapEvaluator(
   detectionMap: LandmarkDetectionMap,
   renderer: ParametricLandmarksRenderer
 ) extends DistributionEvaluator[RenderParameter] {
 
   override def logValue(sample: RenderParameter): Double = {
-    val lm = renderer.renderLandmark(detectionMap.tag, sample).get
-    val point = lm.point
+    val landmarkPosition = renderer.renderLandmark(detectionMap.tag, sample).get
+    val point = landmarkPosition.point
     val x = point.x.toInt
     val y = point.y.toInt
-    if (detectionMap.domain.isDefinedAt(x, y)) {
-      detectionMap(x, y)
+    if (detectionMap.values.domain.isDefinedAt(x, y)) {
+      detectionMap.values(x, y)
     } else {
       Double.NegativeInfinity
     }
@@ -46,16 +52,38 @@ case class LandmarkMapEvaluator(
 object LandmarkMapEvaluator {
 
   /**
-    * Convenience constructor for combining multiple landmark map evaluators in a ProductEvaluator.
-    */
+   * Convenience constructor for combining multiple landmark map evaluators in a ProductEvaluator.
+   */
   def apply(
     detectionMaps: Seq[LandmarkDetectionMap],
-    renderer: ParametricLandmarksRenderer
+    renderer: ParametricLandmarksRenderer,
+    stddevNoiseModel: Double,
+    falsePositiveRate: Double,
+    falseNegativeRate: Double
   ): ProductEvaluator[RenderParameter] = {
     val mapEvaluators = detectionMaps.map { detectionMap =>
-      new LandmarkMapEvaluator( detectionMap, renderer)
+      val correctedDetections = correctFalsePositiveAndFalseNegativeRates(detectionMap.values, falseNegativeRate, falseNegativeRate)
+      val correctedDetectionsIncludingNoise = precalculateIsotropicGaussianNoise(correctedDetections, stddevNoiseModel)
+      new LandmarkMapEvaluator(LandmarkDetectionMap(detectionMap.tag, correctedDetectionsIncludingNoise), renderer)
     }
     ProductEvaluator(mapEvaluators: _*)
+  }
+
+  /**
+   * Correctes for the false-positive and false-negative rates of the detector in the detection map.
+   */
+  private def correctFalsePositiveAndFalseNegativeRates(in: PixelImage[Double], falsePositiveRate: Double, falseNegativeRate: Double): PixelImage[Double] = {
+    in.map(e => e * (1.0 - (falsePositiveRate + falseNegativeRate)) + falseNegativeRate)
+  }
+
+  /**
+   * Precalculates a new map with included isotropic Gaussian noise model.
+   */
+  private def precalculateIsotropicGaussianNoise(detectionMap: PixelImage[Double], stddevNoiseModel: Double) = {
+    GeneralMaxConvolution.separable2D(
+      detectionMap,
+      IsotropicGaussianPointEvaluator[_1D](stddevNoiseModel).toDistributionEvaluator(Point1D(0f))
+    )
   }
 
 }
