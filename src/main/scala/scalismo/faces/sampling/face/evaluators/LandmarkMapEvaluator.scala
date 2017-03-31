@@ -22,11 +22,15 @@ import scalismo.faces.sampling.face.ParametricLandmarksRenderer
 import scalismo.sampling.DistributionEvaluator
 import scalismo.sampling.evaluators.ProductEvaluator
 
-/** evaluate landmark positions in detection maps using a pre-convolved distance model */
-case class LandmarkMapEvaluator(stdDevNoiseModel: Double, detectionMap: LandmarkDetectionMap, renderer: ParametricLandmarksRenderer) extends DistributionEvaluator[RenderParameter] {
+/** The LandmarkMapEvaluator evaluates landmark positions by a simple look-up in a LandmarkDetectionMap. These
+  * maps usually include a noise-model through precomputation. */
+case class LandmarkMapEvaluator(
+  detectionMap: LandmarkDetectionMap,
+  renderer: ParametricLandmarksRenderer
+) extends DistributionEvaluator[RenderParameter] {
 
   override def logValue(sample: RenderParameter): Double = {
-    val lm = renderer.renderLandmark(detectionMap.tag,sample).get
+    val lm = renderer.renderLandmark(detectionMap.tag, sample).get
     val point = lm.point
     val x = point.x.toInt
     val y = point.y.toInt
@@ -41,9 +45,17 @@ case class LandmarkMapEvaluator(stdDevNoiseModel: Double, detectionMap: Landmark
 
 object LandmarkMapEvaluator {
 
-  def apply(sdevNoiseModel: Double, detectionMaps: Seq[LandmarkDetectionMap], renderer: ParametricLandmarksRenderer): DistributionEvaluator[RenderParameter] = {
-    val mapEvaluators = detectionMaps.map(detectionMap => new LandmarkMapEvaluator(sdevNoiseModel,detectionMap,renderer))
-    ProductEvaluator(mapEvaluators:_*)
+  /**
+    * Convenience constructor for combining multiple landmark map evaluators in a ProductEvaluator.
+    */
+  def apply(
+    detectionMaps: Seq[LandmarkDetectionMap],
+    renderer: ParametricLandmarksRenderer
+  ): ProductEvaluator[RenderParameter] = {
+    val mapEvaluators = detectionMaps.map { detectionMap =>
+      new LandmarkMapEvaluator( detectionMap, renderer)
+    }
+    ProductEvaluator(mapEvaluators: _*)
   }
 
 }
