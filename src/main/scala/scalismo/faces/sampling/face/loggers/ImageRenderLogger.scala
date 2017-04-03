@@ -74,39 +74,3 @@ class ImageRenderLogger(renderer: ParametricImageRenderer[RGBA],
 object ImageRenderLogger {
   def apply(renderer: ParametricImageRenderer[RGBA], path: File, fileNamePrefix: String) = new ImageRenderLogger(renderer, path, fileNamePrefix)
 }
-
-/** render images for logging, with segmentation mask */
-class LabeledImageRenderLogger(renderer: ParametricImageRenderer[RGBA],
-                               path: File,
-                               fileNamePrefix: String) extends ChainStateLogger[(RenderParameter, PixelImage[Int])] {
-  private var counter = 0
-
-  override def logState(sample: (RenderParameter, PixelImage[Int])): Unit = {
-    dumpImage(sample._1)
-    dumpMask(sample._2)
-    counter += 1
-  }
-
-  private def dumpImage(sample: RenderParameter) = {
-    val image = renderer.renderImage(sample)
-    PixelImageIO.write(image, new File(path, f"$fileNamePrefix$counter%08d.png")).get
-  }
-  private def dumpMask(sample: PixelImage[Int]) = {
-    val image = sample.map(f=>RGBA(f))
-    PixelImageIO.write(image, new File(path, f"$fileNamePrefix$counter%08d_mask.png")).get
-  }
-
-  def withBackground(background: PixelImage[RGBA]): LabeledImageRenderLogger = {
-    val overlayRenderer = new ParametricImageRenderer[RGBA] {
-      override def renderImage(sample: RenderParameter): PixelImage[RGBA] = {
-        val image = renderer.renderImage(sample.fitToImageSize(background.width, background.height))
-        PixelImage(image.domain, (x, y) => background(x, y).toRGB.blend(image(x, y))).map(_.toRGBA)
-      }
-    }
-    LabeledImageRenderLogger(overlayRenderer, path, fileNamePrefix)
-  }
-}
-
-object LabeledImageRenderLogger {
-  def apply(renderer: ParametricImageRenderer[RGBA], path: File, fileNamePrefix: String) = new LabeledImageRenderLogger(renderer, path, fileNamePrefix)
-}
