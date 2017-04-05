@@ -25,12 +25,12 @@ import java.util.Map.Entry
 import breeze.linalg.{DenseMatrix, DenseVector}
 import scalismo.common.{DiscreteDomain, PointId, Vectorizer}
 import scalismo.faces.color.RGB
-import scalismo.faces.momo.{MoMo, MoMoBasic, MoMoExpress}
+import scalismo.faces.momo.{MoMo, MoMoBasic, MoMoExpress, PancakeDLRGP}
 import scalismo.faces.utils.ResourceManagement
 import scalismo.geometry.{Landmark, Point, Vector, _3D}
 import scalismo.io.{HDF5File, HDF5Utils, LandmarkIO, NDArray}
 import scalismo.mesh.{TriangleCell, TriangleList, TriangleMesh3D}
-import scalismo.statisticalmodel.{ModelHelpers, PancakeDLRGP}
+import scalismo.statisticalmodel.ModelHelpers
 
 import scala.io.Source
 import scala.util.{Failure, Success, Try}

@@ -18,6 +18,7 @@ package scalismo.statisticalmodel
 import breeze.linalg.svd.SVD
 import breeze.linalg.{*, DenseMatrix, DenseVector}
 import scalismo.common.{DiscreteDomain, DiscreteField, PointId, Vectorizer}
+import scalismo.faces.momo.PancakeDLRGP
 import scalismo.geometry._
 import scalismo.mesh.TriangleMesh
 

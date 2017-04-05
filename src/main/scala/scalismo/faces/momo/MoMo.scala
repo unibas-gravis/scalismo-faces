@@ -516,9 +516,9 @@ case class MoMoExpress(override val referenceMesh: TriangleMesh3D,
     require(colorComps >= 0 && colorComps <= color.rank, "illegal number of reduced color components")
     require(expressComps >= 0 && expressComps <= expression.rank, "illegal number of reduced expression components")
 
-    val redShape = shape.copy(gpModel = ModelHelpers.truncateDLRGP(shape.gpModel, shapeComps))
-    val redColor = color.copy(gpModel = ModelHelpers.truncateDLRGP(color.gpModel, colorComps))
-    val redExpress = expression.copy(gpModel = ModelHelpers.truncateDLRGP(expression.gpModel, expressComps))
+    val redShape = PancakeDLRGP(ModelHelpers.truncateDLRGP(shape.gpModel, shapeComps), shape.noiseVariance)
+    val redColor = PancakeDLRGP(ModelHelpers.truncateDLRGP(color.gpModel, colorComps), color.noiseVariance)
+    val redExpress = PancakeDLRGP(ModelHelpers.truncateDLRGP(expression.gpModel, expressComps), expression.noiseVariance)
 
     MoMoExpress(referenceMesh, redShape, redColor, redExpress, landmarks)
   }
@@ -655,8 +655,8 @@ case class MoMoBasic(override val referenceMesh: TriangleMesh3D,
     require(colorComps >= 0 && colorComps <= color.rank, "illegal number of reduced color components")
 
     // @todo allow reduction with increasing noise to capture removed components
-    val redShape = shape.copy(gpModel = ModelHelpers.truncateDLRGP(shape.gpModel, shapeComps))
-    val redColor = color.copy(gpModel = ModelHelpers.truncateDLRGP(color.gpModel, colorComps))
+    val redShape = PancakeDLRGP(ModelHelpers.truncateDLRGP(shape.gpModel, shapeComps), shape.noiseVariance)
+    val redColor = PancakeDLRGP(ModelHelpers.truncateDLRGP(color.gpModel, colorComps), color.noiseVariance)
 
     MoMoBasic(referenceMesh, redShape, redColor, landmarks)
   }
