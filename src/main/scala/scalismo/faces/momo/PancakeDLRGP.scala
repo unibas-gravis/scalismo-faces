@@ -96,7 +96,7 @@ case class PancakeDLRGP[D <: Dim: NDSpace, Value](gpModel: DiscreteLowRankGaussi
   // e.g. Nystroem bases are not orthonormal w.r.t the matrix
   private lazy val Minv: DenseMatrix[Double] = {
     breeze.linalg.inv(
-      ((U.t * U) * diag(S :* S)) + diag(DenseVector.ones[Double](rank) :* totalNoiseVariance)
+      ((U.t * U) * diag(S :* S)) + DenseMatrix.eye[Double](rank) :* totalNoiseVariance
     )
   }
 
