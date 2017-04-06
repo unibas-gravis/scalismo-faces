@@ -24,10 +24,10 @@ import scalismo.common.PointId
 import scalismo.faces.color.{RGB, RGBA}
 import scalismo.faces.image.PixelImage
 import scalismo.faces.mesh.{ColorNormalMesh3D, TextureMappedProperty, VertexColorMesh3D}
-import scalismo.faces.momo.MoMo
+import scalismo.faces.momo.{MoMo, PancakeDLRGP}
 import scalismo.geometry.{Landmark, Point, Vector, Vector3D, _2D, _3D}
 import scalismo.mesh.{SurfacePointProperty, TriangleCell, TriangleList, TriangleMesh3D}
-import scalismo.statisticalmodel.{ModelHelpers, PancakeDLRGP}
+import scalismo.statisticalmodel.ModelHelpers
 import scalismo.utils.Random
 
 import scala.collection.mutable.ArrayBuffer

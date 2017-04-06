@@ -14,12 +14,14 @@
  *  limitations under the License.
  */
 
-package scalismo.statisticalmodel
+package scalismo.faces.momo
 
 import breeze.linalg.{DenseMatrix, DenseVector, diag}
 import breeze.stats.distributions.Gaussian
 import scalismo.common._
-import scalismo.geometry.{Dim, NDSpace}
+import scalismo.geometry.{Dim, NDSpace, Point}
+import scalismo.kernels.{DiscreteMatrixValuedPDKernel, MatrixValuedPDKernel}
+import scalismo.statisticalmodel._
 import scalismo.utils.Random
 
 /**
@@ -32,11 +34,16 @@ import scalismo.utils.Random
   * @tparam Value value type of model
   */
 case class PancakeDLRGP[D <: Dim: NDSpace, Value](gpModel: DiscreteLowRankGaussianProcess[D, Value],
-                                                  noiseVariance: Double)
-                                                 (implicit vec: Vectorizer[Value])
-  extends DiscreteGaussianProcess[D, Value](gpModel.mean, gpModel.cov) {
-
+                                                  noiseVariance: Double) {
   require(noiseVariance >= 0.0, "noise variance cannot be negative")
+
+  implicit val vectorizer: Vectorizer[Value] = gpModel.vectorizer
+
+  /** output dimension of GP, same as underlying */
+  val outputDim: Int = gpModel.outputDim
+
+  /** domain where this Gaussian Process is defined (same as underling process) */
+  val domain: DiscreteDomain[D] = gpModel.domain
 
   private val totalNoiseVariance = math.max(noiseVariance, PancakeDLRGP.numericalNoiseVariance)
 
@@ -48,6 +55,37 @@ case class PancakeDLRGP[D <: Dim: NDSpace, Value](gpModel: DiscreteLowRankGaussi
   /** See [[DiscreteLowRankGaussianProcess.rank]] */
   val rank: Int = gpModel.rank
 
+  /** mean field */
+  val mean: DiscreteField[D, Value] = gpModel.mean
+
+  /** covariance of this Gaussian Process: underlying GP + local uncorrelated noise */
+  val cov: DiscreteMatrixValuedPDKernel[D] = new DiscreteMatrixValuedPDKernel[D](
+    domain,
+    (pt1, pt2) => gpModel.cov(pt1, pt2) + noiseDistribution.cov,
+    outputDim
+  )
+
+  /** this process as a DiscreteGaussianProcess, full rank */
+  def toDiscreteGaussianProcess: DiscreteGaussianProcess[D, Value] = DiscreteGaussianProcess(mean, cov)
+
+  /** interpolate this process with nearest neighbours */
+  def interpolateNearestNeighbor: GaussianProcess[D, Value] = {
+    val meanNN = Field(RealSpace[D], (pt: Point[D]) => mean(domain.findClosestPoint(pt).id))
+    val covNN = new MatrixValuedPDKernel[D] {
+      override protected def k(x: Point[D], y: Point[D]): DenseMatrix[Double] = {
+        val xId = gpModel.domain.findClosestPoint(x).id
+        val yId = gpModel.domain.findClosestPoint(y).id
+        cov.k(xId, yId)
+      }
+
+      override def outputDim: Int = gpModel.outputDim
+
+      override def domain: Domain[D] = RealSpace[D]
+    }
+
+    GaussianProcess(meanNN, covNN)
+  }
+
   // model matrices as needed by coefficients
   private val D: DenseVector[Double] = gpModel.variance
   private val S: DenseVector[Double] = breeze.numerics.sqrt(D)
@@ -58,7 +96,7 @@ case class PancakeDLRGP[D <: Dim: NDSpace, Value](gpModel: DiscreteLowRankGaussi
   // e.g. Nystroem bases are not orthonormal w.r.t the matrix
   private lazy val Minv: DenseMatrix[Double] = {
     breeze.linalg.inv(
-      ((U.t * U) * diag(S :* S)) + diag(DenseVector.ones[Double](rank) :* totalNoiseVariance)
+      ((U.t * U) * diag(S :* S)) + (DenseMatrix.eye[Double](rank) :* totalNoiseVariance)
     )
   }
 
@@ -90,21 +128,9 @@ case class PancakeDLRGP[D <: Dim: NDSpace, Value](gpModel: DiscreteLowRankGaussi
   def instanceAtPoint(c: DenseVector[Double], pid: PointId): Value = gpModel.instanceAtPoint(c, pid)
 
   /**
-    * Returns the probability density of the instance produced by the x coefficients
-    */
-  def pdf(coefficients: DenseVector[Double]): Double = gpModel.pdf(coefficients)
-
-  /**
-    * Returns the log of the probability density of the instance produced by the x coefficients.
-    *
-    * If you are interested in ordinal comparisons of PDFs, use this as it is numerically more stable
-    */
-  def logpdf(coefficients: DenseVector[Double]): Double = gpModel.logpdf(coefficients)
-
-  /**
     * Returns the probability density of the given instance, takes spherical noise term into account
     */
-  override def pdf(instance: DiscreteField[D, Value]): Double = pdf(coefficients(instance))
+  def pdf(instance: DiscreteField[D, Value]): Double = coefficientsDistribution.pdf(coefficients(instance))
 
   /**
     * Returns the log of the probability density of the instance
@@ -112,16 +138,16 @@ case class PancakeDLRGP[D <: Dim: NDSpace, Value](gpModel: DiscreteLowRankGaussi
     * If you are interested in ordinal comparisons of PDFs, use this as it is numerically more stable,
     * takes spherical noise term into account
     */
-  override def logpdf(instance: DiscreteField[D, Value]): Double = logpdf(coefficients(instance))
+  def logpdf(instance: DiscreteField[D, Value]): Double = coefficientsDistribution.logpdf(coefficients(instance))
 
   /**
     * Draw a sample from the model, includes noise(!) (use underlying gpModel without noise)
     */
-  override def sample()(implicit rnd: Random): DiscreteField[D, Value] = {
+  def sample()(implicit rnd: Random): DiscreteField[D, Value] = {
     val coeffs: DenseVector[Double] = coefficientsDistribution.sample()
     val componentNoise = Gaussian(0.0, totalNoiseVariance)
-    val instVal = gpModel.instanceVector(coeffs).map{v => v + componentNoise.sample()}
-    DiscreteField.createFromDenseVector[D, Value](gpModel.domain, instVal)
+    val gpInst = gpModel.instance(coeffs)
+    DiscreteField(gpInst.domain, gpInst.data.map{d => vectorizer.unvectorize(vectorizer.vectorize(d) + noiseDistribution.sample())})
   }
 
   /**
@@ -134,7 +160,7 @@ case class PancakeDLRGP[D <: Dim: NDSpace, Value](gpModel: DiscreteLowRankGaussi
   /**
     * Project the sample into this model, best reconstruction
     */
-  override def project(s: DiscreteField[D, Value]): DiscreteField[D, Value] = instance(coefficients(s))
+  def project(s: DiscreteField[D, Value]): DiscreteField[D, Value] = instance(coefficients(s))
 
   /**
     * Get the low-rank expansion coefficients of a sample, respects model noise
@@ -167,13 +193,13 @@ case class PancakeDLRGP[D <: Dim: NDSpace, Value](gpModel: DiscreteLowRankGaussi
       MultivariateNormalDistribution(mvn1.mean + mvn2.mean, mvn1.cov + mvn2.cov)
     }
     val newTD = trainingData.map{ case (ptId, value, uncertainty) => (ptId, value, addMVN(noiseDistribution, uncertainty))}
-    PancakeDLRGP(DiscreteLowRankGaussianProcess.regression(gpModel, trainingData), noiseVariance)
+    PancakeDLRGP(DiscreteLowRankGaussianProcess.regression(gpModel, newTD), noiseVariance)
   }
 
   /**
     * Calculate the marginal distribution on a set of points
     * */
-  override def marginal(pointIds: Seq[PointId])(implicit domainCreator: UnstructuredPointsDomain.Create[D]): PancakeDLRGP[D, Value] = {
+  def marginal(pointIds: Seq[PointId])(implicit domainCreator: UnstructuredPointsDomain.Create[D]): PancakeDLRGP[D, Value] = {
     val gpMarginal = gpModel.marginal(pointIds)
     PancakeDLRGP(gpMarginal, noiseVariance)
   }
@@ -181,5 +207,8 @@ case class PancakeDLRGP[D <: Dim: NDSpace, Value](gpModel: DiscreteLowRankGaussi
 
 object PancakeDLRGP {
   val numericalNoiseVariance = 1e-15
-  def apply[D <: Dim: NDSpace, Value](gpModel: DiscreteLowRankGaussianProcess[D, Value])(implicit vec: Vectorizer[Value]) = new PancakeDLRGP(gpModel, numericalNoiseVariance)
+
+  /** create a PancakeDLRGP with minimal numeric noise variance */
+  def apply[D <: Dim: NDSpace, Value](gpModel: DiscreteLowRankGaussianProcess[D, Value])
+                                     (implicit vec: Vectorizer[Value]) = new PancakeDLRGP(gpModel, numericalNoiseVariance)
 }

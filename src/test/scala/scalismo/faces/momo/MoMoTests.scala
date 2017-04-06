@@ -23,7 +23,6 @@ import breeze.stats.distributions.Gaussian
 import scalismo.faces.FacesTestSuite
 import scalismo.faces.io.MoMoIO
 import scalismo.faces.mesh.VertexColorMesh3D
-import scalismo.statisticalmodel.PancakeDLRGP
 
 class MoMoTests extends FacesTestSuite {
 
