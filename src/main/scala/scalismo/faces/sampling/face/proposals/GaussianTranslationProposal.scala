@@ -18,15 +18,15 @@ package scalismo.faces.sampling.face.proposals
 
 import scalismo.faces.parameters.Pose
 import scalismo.geometry._
+import scalismo.sampling.{ProposalGenerator, SymmetricTransitionRatio, TransitionProbability}
 import scalismo.sampling.evaluators.GaussianEvaluator
-import scalismo.sampling.{ProposalGenerator, SymmetricTransition}
 import scalismo.utils.Random
 
 
 /**
   * Trait for translation proposals.
   */
-trait GaussianTranslationProposal extends ProposalGenerator[Pose] with SymmetricTransition[Pose]
+trait GaussianTranslationProposal extends ProposalGenerator[Pose] with SymmetricTransitionRatio[Pose] with TransitionProbability[Pose]
 
 /**
   * Gaussian translation proposal for changing a Pose.
@@ -68,8 +68,8 @@ private[proposals] case class Gaussian3DTranslationProposalConstantZ(sdev: Vecto
       Double.NegativeInfinity
     else {
       val diff = to.translation - from.translation
-      val px = GaussianEvaluator.probability(diff.x, 0, sdev.x)
-      val py = GaussianEvaluator.probability(diff.y, 0, sdev.y)
+      val px = GaussianEvaluator.logDensity(diff.x, 0, sdev.x)
+      val py = GaussianEvaluator.logDensity(diff.y, 0, sdev.y)
       px + py
     }
   }
@@ -93,9 +93,9 @@ private[proposals] case class Gaussian3DTranslationProposal(sdev: Vector[_3D])(i
       Double.NegativeInfinity
     else {
       val diff = to.translation - from.translation
-      val px = GaussianEvaluator.probability(diff.x, 0, sdev.x)
-      val py = GaussianEvaluator.probability(diff.y, 0, sdev.y)
-      val pz = GaussianEvaluator.probability(diff.z, 0, sdev.z)
+      val px = GaussianEvaluator.logDensity(diff.x, 0, sdev.x)
+      val py = GaussianEvaluator.logDensity(diff.y, 0, sdev.y)
+      val pz = GaussianEvaluator.logDensity(diff.z, 0, sdev.z)
       px + py + pz
     }
   }

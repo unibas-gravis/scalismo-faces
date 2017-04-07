@@ -94,7 +94,7 @@ object DiscreteLaplaceBeltrami {
         builderCOT.add(tr.ptId3.id, tr.ptId1.id, cotB)
       })
       val COT = builderCOT.result
-      (COT + COT.t) :* 2.0
+      (COT + COT.t) *:* 2.0
     }
     val cot = cotangentWeightMatrix(ref)
     (i: PointId, j: PointId) => cot(i.id, j.id)

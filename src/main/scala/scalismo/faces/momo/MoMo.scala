@@ -516,11 +516,12 @@ case class MoMoExpress(override val referenceMesh: TriangleMesh3D,
     require(colorComps >= 0 && colorComps <= color.rank, "illegal number of reduced color components")
     require(expressComps >= 0 && expressComps <= expression.rank, "illegal number of reduced expression components")
 
-    val redShape = PancakeDLRGP(ModelHelpers.truncateDLRGP(shape.gpModel, shapeComps), shape.noiseVariance)
-    val redColor = PancakeDLRGP(ModelHelpers.truncateDLRGP(color.gpModel, colorComps), color.noiseVariance)
-    val redExpress = PancakeDLRGP(ModelHelpers.truncateDLRGP(expression.gpModel, expressComps), expression.noiseVariance)
-
-    MoMoExpress(referenceMesh, redShape, redColor, redExpress, landmarks)
+    MoMoExpress(
+      referenceMesh,
+      shape.truncate(shapeComps),
+      color.truncate(colorComps),
+      expression.truncate(expressComps),
+      landmarks)
   }
 
   // converters to deal with discrete fields
@@ -655,10 +656,11 @@ case class MoMoBasic(override val referenceMesh: TriangleMesh3D,
     require(colorComps >= 0 && colorComps <= color.rank, "illegal number of reduced color components")
 
     // @todo allow reduction with increasing noise to capture removed components
-    val redShape = PancakeDLRGP(ModelHelpers.truncateDLRGP(shape.gpModel, shapeComps), shape.noiseVariance)
-    val redColor = PancakeDLRGP(ModelHelpers.truncateDLRGP(color.gpModel, colorComps), color.noiseVariance)
-
-    MoMoBasic(referenceMesh, redShape, redColor, landmarks)
+    MoMoBasic(
+      referenceMesh,
+      shape.truncate(shapeComps),
+      color.truncate(colorComps),
+      landmarks)
   }
 
   // converters to deal with discrete fields

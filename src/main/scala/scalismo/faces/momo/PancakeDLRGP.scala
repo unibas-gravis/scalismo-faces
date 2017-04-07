@@ -96,7 +96,7 @@ case class PancakeDLRGP[D <: Dim: NDSpace, Value](gpModel: DiscreteLowRankGaussi
   // e.g. Nystroem bases are not orthonormal w.r.t the matrix
   private lazy val Minv: DenseMatrix[Double] = {
     breeze.linalg.inv(
-      ((U.t * U) * diag(S :* S)) + (DenseMatrix.eye[Double](rank) :* totalNoiseVariance)
+      ((U.t * U) * diag(S *:* S)) + (DenseMatrix.eye[Double](rank) *:* totalNoiseVariance)
     )
   }
 
@@ -178,7 +178,7 @@ case class PancakeDLRGP[D <: Dim: NDSpace, Value](gpModel: DiscreteLowRankGaussi
     */
   def posterior(trainingData: IndexedSeq[(PointId, Value)], sigma2: Double): PancakeDLRGP[D, Value] = {
     require(sigma2 >= 0.0)
-    val cov = MultivariateNormalDistribution(DenseVector.zeros[Double](outputDim), DenseMatrix.eye[Double](outputDim) :* (sigma2 + totalNoiseVariance))
+    val cov = MultivariateNormalDistribution(DenseVector.zeros[Double](outputDim), DenseMatrix.eye[Double](outputDim) *:* (sigma2 + totalNoiseVariance))
     val newtd = trainingData.map { case (ptId, df) => (ptId, df, cov) }
     posterior(newtd)
   }
@@ -202,6 +202,11 @@ case class PancakeDLRGP[D <: Dim: NDSpace, Value](gpModel: DiscreteLowRankGaussi
   def marginal(pointIds: Seq[PointId])(implicit domainCreator: UnstructuredPointsDomain.Create[D]): PancakeDLRGP[D, Value] = {
     val gpMarginal = gpModel.marginal(pointIds)
     PancakeDLRGP(gpMarginal, noiseVariance)
+  }
+
+  /** truncate the underlying low rank GP model (drops components, does not change noise) */
+  def truncate(rank: Int): PancakeDLRGP[D, Value] = {
+    PancakeDLRGP(gpModel.truncate(rank), noiseVariance)
   }
 }
 

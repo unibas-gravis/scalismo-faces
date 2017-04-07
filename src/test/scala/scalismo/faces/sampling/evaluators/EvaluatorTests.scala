@@ -25,7 +25,7 @@ class EvaluatorTests extends FacesTestSuite {
     it("returns the same density value as a Gaussian of the log") {
       val x = 0.5 + math.abs(rnd.scalaRandom.nextGaussian())
       val dlogN = LogNormalDistribution.logDensity(x, 0.0, 1.0)
-      val dGauss = GaussianEvaluator.probability(math.log(x), 0.0, 1.0)
+      val dGauss = GaussianEvaluator.logDensity(math.log(x), 0.0, 1.0)
       dlogN shouldBe dGauss +- 1e-5
     }
 
