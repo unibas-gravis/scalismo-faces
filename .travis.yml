@@ -7,6 +7,6 @@ scala:
   - 2.11.7
 
 script:
-  - sbt ++$TRAVIS_SCALA_VERSION update
-  - sbt ++$TRAVIS_SCALA_VERSION compile
-  - sbt ++$TRAVIS_SCALA_VERSION -Djava.awt.headless=true test
+  - jdk_switcher use oraclejdk8
+  - travis_wait sbt ++$TRAVIS_SCALA_VERSION update
+  - sbt ++$TRAVIS_SCALA_VERSION -Djava.awt.headless=true compile test

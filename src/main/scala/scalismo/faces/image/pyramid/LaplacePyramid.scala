@@ -37,18 +37,17 @@ class LaplacePyramid[A: ClassTag](val imagePyramid: ImagePyramid[A], val expand:
 
   override val level: Seq[PixelImage[A]] = {
     val images = imagePyramid.level
-    images.init.zip(images.tail).map(p => p._1 - expand(p._2)) :+ images.last
+    images.init.zip(images.tail).map(p => p._1 - expand.filter(p._2)) :+ images.last
   }
 
   /**
     * Reconstructs the original image using the expand function and the addition of images based on the passed ColorSpaceOperations ops.
     */
-  def reconstruct: PixelImage[A] = level.init.foldRight(level.last)((diff, combined) => expand(combined) + diff)
+  def reconstruct: PixelImage[A] = level.init.foldRight(level.last)((diff, combined) => expand.filter(combined) + diff)
 }
 
 object LaplacePyramid {
-
-
+  
   /**
     * Standard filter to be used to upscale the image.
     */

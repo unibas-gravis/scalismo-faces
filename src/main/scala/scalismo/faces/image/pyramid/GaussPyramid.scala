@@ -49,7 +49,7 @@ class GaussPyramid[A: ClassTag](val image: PixelImage[A], val reduce: ImageFilte
   override val level: Seq[PixelImage[A]] = {
     def makeReducedImages(image: PixelImage[A], levels: Int): Seq[PixelImage[A]] = {
       if (levels == 0) Seq(image)
-      else image +: makeReducedImages(reduce(image), levels - 1)
+      else image +: makeReducedImages(reduce.filter(image), levels - 1)
     }
 
     makeReducedImages(image, maxReductions)
