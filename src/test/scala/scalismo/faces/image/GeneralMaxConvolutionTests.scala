@@ -18,12 +18,13 @@ package scalismo.faces.image
 
 import breeze.numerics.log
 import org.scalactic.Equality
-import org.scalatest.{FunSpec, Matchers}
+import scalismo.faces.FacesTestSuite
 import scalismo.faces.image.filter.GeneralMaxConvolution
 import scalismo.geometry._
 import scalismo.sampling.DistributionEvaluator
+import scala.language.reflectiveCalls
 
-class GeneralMaxConvolutionTests extends FunSpec with Matchers {
+class GeneralMaxConvolutionTests extends FacesTestSuite {
 
   new Equality[Double] {
     def areEqual(a: Double, b: Any): Boolean =

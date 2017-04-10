@@ -224,7 +224,7 @@ object PixelImage {
     import ColorSpaceOperations.implicits._
 
     // operators
-    class ImageWithOperators[A: ClassTag](image: PixelImage[A])(implicit ops: ColorSpaceOperations[A]) {
+    implicit class ImageWithOperators[A: ClassTag](image: PixelImage[A])(implicit ops: ColorSpaceOperations[A]) {
 
       private def applyOperation2[B, C: ClassTag](other: PixelImage[B])(f: (A, B) => C): PixelImage[C] = {
         require(image.domain.size == other.domain.size, "images must be of same size for math operations")
@@ -255,8 +255,6 @@ object PixelImage {
 
       def zero: PixelImage[A] = PixelImage.view(image.domain, (_, _) => ops.zero).withAccessMode(image.accessMode)
     }
-
-    implicit def imageWithOperators[A: ClassTag](image: PixelImage[A])(implicit ops: ColorSpaceOperations[A]) = new ImageWithOperators[A](image)
   }
 }
 
