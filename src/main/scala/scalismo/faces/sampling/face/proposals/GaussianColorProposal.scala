@@ -53,9 +53,9 @@ case class GaussianColorProposal(logSdevGain: RGB, logSdevColorContrast: Double,
       // contrast
       LogNormalDistribution.logDensity(to.colorContrast/from.colorContrast, 0.0, logSdevColorContrast) +
       // offset
-      GaussianEvaluator.probability(to.offset.r, from.offset.r, sdevOffset.r) +
-      GaussianEvaluator.probability(to.offset.g, from.offset.g, sdevOffset.g) +
-      GaussianEvaluator.probability(to.offset.b, from.offset.b, sdevOffset.b)
+      GaussianEvaluator.logDensity(to.offset.r, from.offset.r, sdevOffset.r) +
+      GaussianEvaluator.logDensity(to.offset.g, from.offset.g, sdevOffset.g) +
+      GaussianEvaluator.logDensity(to.offset.b, from.offset.b, sdevOffset.b)
   }
 
   override def toString: String = {

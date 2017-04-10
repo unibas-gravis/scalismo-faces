@@ -29,7 +29,7 @@ object LogNormalDistribution {
   /** log density value for LogNormal distribution */
   def logDensity(x: Double, logMean: Double, logSdev: Double): Double = {
     if (x > 0.0)
-      GaussianEvaluator.probability(math.log(x), logMean, logSdev)
+      GaussianEvaluator.logDensity(math.log(x), logMean, logSdev)
     else
       Double.NegativeInfinity
   }

@@ -283,13 +283,4 @@ object ModelHelpers {
     }
     X
   }
-
-
-  def truncateDLRGP[A](gp: DiscreteLowRankGaussianProcess[_3D, A], components: Int): DiscreteLowRankGaussianProcess[_3D, A] = {
-    implicit val vectorizer = gp.vectorizer
-    val variance = gp.variance(0 until components)
-    val basis = gp.basisMatrix(::, 0 until components)
-    ModelHelpers.buildFrom(gp.domain, gp.meanVector, variance, basis)
-  }
-
 }

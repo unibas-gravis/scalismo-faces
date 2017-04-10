@@ -217,7 +217,7 @@ trait RenderParameterJSONFormatV2 extends RenderParameterJSONFormatLegacy {
     override def write(vec: Point[_2D]): JsValue = JsArray(JsNumber(vec.x), JsNumber(vec.y))
 
     override def read(json: JsValue): Point[_2D] = json match {
-      case JsArray(List(JsNumber(x), JsNumber(y))) => Point(x.toDouble, y.toDouble)
+      case JsArray(Seq(JsNumber(x), JsNumber(y))) => Point(x.toDouble, y.toDouble)
       case _ => deserializationError("Expected Point[_2D], got:" + json)
     }
   }

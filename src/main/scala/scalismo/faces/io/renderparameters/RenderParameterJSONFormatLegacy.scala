@@ -33,7 +33,7 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
     override def write(vec: Vector[_1D]): JsValue = JsArray(JsNumber(vec.x))
 
     override def read(json: JsValue): Vector[_1D] = json match {
-      case JsArray(List(JsNumber(x))) => Vector(x.toDouble)
+      case JsArray(Seq(JsNumber(x))) => Vector(x.toDouble)
       case _ => deserializationError("Expected Vector[_1D], got:" + json)
     }
   }
@@ -42,7 +42,7 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
     override def write(vec: Vector[_2D]): JsValue = JsArray(JsNumber(vec.x), JsNumber(vec.y))
 
     override def read(json: JsValue): Vector[_2D] = json match {
-      case JsArray(List(JsNumber(x), JsNumber(y))) => Vector(x.toDouble, y.toDouble)
+      case JsArray(Seq(JsNumber(x), JsNumber(y))) => Vector(x.toDouble, y.toDouble)
       case _ => deserializationError("Expected Vector[_2D], got:" + json)
     }
   }
@@ -51,7 +51,7 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
     override def write(vec: Vector[_3D]): JsValue = JsArray(JsNumber(vec.x), JsNumber(vec.y), JsNumber(vec.z))
 
     override def read(json: JsValue): Vector[_3D] = json match {
-      case JsArray(List(JsNumber(x), JsNumber(y), JsNumber(z))) => Vector(x.toDouble, y.toDouble, z.toDouble)
+      case JsArray(Seq(JsNumber(x), JsNumber(y), JsNumber(z))) => Vector(x.toDouble, y.toDouble, z.toDouble)
       case _ => deserializationError("Expected Vector[_3D], got:" + json)
     }
   }
@@ -60,7 +60,7 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
     override def write(col: RGB): JsValue = JsArray(JsNumber(col.r), JsNumber(col.g), JsNumber(col.b))
 
     override def read(json: JsValue): RGB = json match {
-      case JsArray(List(JsNumber(r), JsNumber(g), JsNumber(b))) => RGB(r.toDouble, g.toDouble, b.toDouble)
+      case JsArray(Seq(JsNumber(r), JsNumber(g), JsNumber(b))) => RGB(r.toDouble, g.toDouble, b.toDouble)
       case _ => deserializationError(s"Expected RGB, got: $json")
     }
   }
@@ -69,7 +69,7 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
     override def write(col: RGBA): JsValue = JsArray(JsNumber(col.r), JsNumber(col.g), JsNumber(col.b), JsNumber(col.a))
 
     override def read(json: JsValue): RGBA = json match {
-      case JsArray(List(JsNumber(r), JsNumber(g), JsNumber(b), JsNumber(a))) => RGBA(r.toDouble, g.toDouble, b.toDouble, a.toDouble)
+      case JsArray(Seq(JsNumber(r), JsNumber(g), JsNumber(b), JsNumber(a))) => RGBA(r.toDouble, g.toDouble, b.toDouble, a.toDouble)
       case _ => deserializationError(s"Expected RGBA, got: $json")
     }
   }
@@ -77,7 +77,7 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
   implicit val uriFormat: JsonFormat[URI] = new JsonFormat[URI] {
     override def read(json: JsValue): URI = json match {
       case JsString(uri) => new URI(uri)
-      case _ => throw new DeserializationException(s"expected URI, got $json")
+      case _ => throw DeserializationException(s"expected URI, got $json")
     }
 
     override def write(obj: URI): JsValue = JsString(obj.toString)
@@ -173,7 +173,7 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
 
     override def read(json: JsValue): ImageSize = json match {
       // warning: order of width and height is not as expected!!
-      case JsArray(List(JsNumber(height), JsNumber(width))) => ImageSize(width.toInt, height.toInt)
+      case JsArray(Seq(JsNumber(height), JsNumber(width))) => ImageSize(width.toInt, height.toInt)
       case _ => deserializationError("Expected Image, got:" + json)
     }
   }
@@ -232,7 +232,7 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
         if (shl.isEmpty)
           shl
         else if (shl.size > 9)
-          throw new DeserializationException("SHL json reader (V1): cannot read more than 2 bands (9 coeffs), there is no conversion from jz to our format")
+          throw DeserializationException("SHL json reader (V1): cannot read more than 2 bands (9 coeffs), there is no conversion from jz to our format")
         else {
           // 1 - 0 coeffs
           val permutation = IndexedSeq(0, 2, 3, 1, 7, 5, 4, 6, 8).take(shl.size)
@@ -274,7 +274,7 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
       if (fields.contains("version")) {
         val version = fields("version").convertTo[String]
         if (version != "1.0")
-          throw new DeserializationException(s"V1 json reader expects V1.0 json file, got: $version")
+          throw DeserializationException(s"V1 json reader expects V1.0 json file, got: $version")
       }
 
       // parse illumination: SHL overrides directed light

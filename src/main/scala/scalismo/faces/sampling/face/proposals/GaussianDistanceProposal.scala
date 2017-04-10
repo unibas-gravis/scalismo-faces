@@ -19,14 +19,14 @@ package scalismo.faces.sampling.face.proposals
 import scalismo.faces.parameters.RenderParameter
 import scalismo.geometry.Vector
 import scalismo.sampling.evaluators.GaussianEvaluator
-import scalismo.sampling.{ProposalGenerator, SymmetricTransition}
+import scalismo.sampling.{ProposalGenerator, SymmetricTransitionRatio, TransitionProbability}
 import scalismo.utils.Random
 
 /** Gaussian proposal to vary the distance between the face and the camera with an optional scaling compensation
   * @param sdev standard deviation of Gaussian proposal, typically in mm
   * @param compensateScaling if true the focal length of the camera is adjusted to compensate for the apparent size change due to the distance change (isolated perspective change) */
 case class GaussianDistanceProposal(sdev: Double, compensateScaling: Boolean)(implicit rnd: Random)
-    extends ProposalGenerator[RenderParameter] with SymmetricTransition[RenderParameter] {
+    extends ProposalGenerator[RenderParameter] with SymmetricTransitionRatio[RenderParameter] with TransitionProbability[RenderParameter] {
   override def propose(current: RenderParameter): RenderParameter = {
     val cameraDistance = current.view.translation.z - current.pose.translation.z
 
@@ -44,7 +44,7 @@ case class GaussianDistanceProposal(sdev: Double, compensateScaling: Boolean)(im
   override def logTransitionProbability(from: RenderParameter, to: RenderParameter): Double = {
     if (to.copy(pose = from.pose, camera = from.camera) == from) {
       val diff: Double = to.pose.translation.z - from.pose.translation.z
-      GaussianEvaluator.probability(diff, 0.0, sdev)
+      GaussianEvaluator.logDensity(diff, 0.0, sdev)
     } else
       Double.NegativeInfinity
   }

@@ -20,12 +20,12 @@ import scalismo.faces.parameters.Pose
 import scalismo.faces.render.Rotation3D
 import scalismo.geometry.{Vector, _3D}
 import scalismo.sampling.evaluators.GaussianEvaluator
-import scalismo.sampling.{ProposalGenerator, SymmetricTransition}
+import scalismo.sampling.{ProposalGenerator, SymmetricTransitionRatio, TransitionProbability}
 import scalismo.utils.Random
 
 /** rotation with a random angle (Gaussian) angle around a given axis */
 case class GaussianRotationProposal(axis: Vector[_3D], sdev: Double)(implicit rnd: Random)
-    extends ProposalGenerator[Pose] with SymmetricTransition[Pose] {
+    extends ProposalGenerator[Pose] with SymmetricTransitionRatio[Pose] with TransitionProbability[Pose] {
 
   private val normAxis: Vector[_3D] = axis.normalize
 
@@ -53,7 +53,7 @@ case class GaussianRotationProposal(axis: Vector[_3D], sdev: Double)(implicit rn
       if (math.abs(rot.phi) > 1e-5 && (rot.axis dot axis) < 1.0 - 1e-4)
         Double.NegativeInfinity // wrong axis
       else {
-        GaussianEvaluator.probability(rot.phi, 0.0, sdev)
+        GaussianEvaluator.logDensity(rot.phi, 0.0, sdev)
       }
     }
   }

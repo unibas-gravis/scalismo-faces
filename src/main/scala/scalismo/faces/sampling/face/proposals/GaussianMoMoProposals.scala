@@ -19,12 +19,12 @@ package scalismo.faces.sampling.face.proposals
 import scalismo.faces.parameters.MoMoInstance
 import scalismo.faces.sampling.evaluators.LogNormalDistribution
 import scalismo.sampling.evaluators.GaussianEvaluator
-import scalismo.sampling.{ProposalGenerator, SymmetricTransition, TransitionProbability}
+import scalismo.sampling.{ProposalGenerator, SymmetricTransitionRatio, TransitionProbability}
 import scalismo.utils.Random
 
 /** Gaussian proposal on a sequence of numbers */
 case class GaussianParameterProposal(sdev: Double)(implicit rnd: Random)
-  extends ProposalGenerator[IndexedSeq[Double]] with SymmetricTransition[IndexedSeq[Double]] {
+  extends ProposalGenerator[IndexedSeq[Double]] with SymmetricTransitionRatio[IndexedSeq[Double]] with TransitionProbability[IndexedSeq[Double]] {
   override def propose(current: IndexedSeq[Double]): IndexedSeq[Double] = {
     require(current.nonEmpty, "cannot propose change on empty vector")
     current.map{ v => v + sdev * rnd.scalaRandom.nextGaussian()}
@@ -33,7 +33,7 @@ case class GaussianParameterProposal(sdev: Double)(implicit rnd: Random)
   override def logTransitionProbability(from: IndexedSeq[Double], to: IndexedSeq[Double]): Double = {
     require(from.nonEmpty, "cannot calculate transition on empty vector")
     require(from.length == to.length, "IndexedSeqs must be of same length")
-    to.toIterator.zip(from.toIterator).map{case (t, f) => GaussianEvaluator.probability(t, f, sdev)}.sum
+    to.toIterator.zip(from.toIterator).map{case (t, f) => GaussianEvaluator.logDensity(t, f, sdev)}.sum
   }
 }
 
@@ -69,7 +69,7 @@ case class LogNormalScalingParameterProposal(logSdev: Double)(implicit rnd: Rand
   * @param sdev standard deviation of proposal
   * */
 case class GaussianMoMoShapeProposal(sdev: Double)(implicit rnd: Random)
-  extends ProposalGenerator[MoMoInstance] with SymmetricTransition[MoMoInstance] {
+  extends ProposalGenerator[MoMoInstance] with SymmetricTransitionRatio[MoMoInstance] with TransitionProbability[MoMoInstance] {
 
   private val generator = GaussianParameterProposal(sdev)
 
@@ -87,7 +87,7 @@ case class GaussianMoMoShapeProposal(sdev: Double)(implicit rnd: Random)
   * @param sdev standard deviation of the proposal
   */
 case class GaussianMoMoColorProposal(sdev: Double)(implicit rnd: Random)
-  extends ProposalGenerator[MoMoInstance] with SymmetricTransition[MoMoInstance] {
+  extends ProposalGenerator[MoMoInstance] with SymmetricTransitionRatio[MoMoInstance] with TransitionProbability[MoMoInstance] {
 
   private val generator = GaussianParameterProposal(sdev)
 
@@ -106,7 +106,7 @@ case class GaussianMoMoColorProposal(sdev: Double)(implicit rnd: Random)
   * @param sdev standard deviation of proposal
   * */
 case class GaussianMoMoExpressionProposal(sdev: Double)(implicit rnd: Random)
-  extends ProposalGenerator[MoMoInstance] with SymmetricTransition[MoMoInstance] {
+  extends ProposalGenerator[MoMoInstance] with SymmetricTransitionRatio[MoMoInstance] with TransitionProbability[MoMoInstance] {
 
   private val generator = GaussianParameterProposal(sdev)
 

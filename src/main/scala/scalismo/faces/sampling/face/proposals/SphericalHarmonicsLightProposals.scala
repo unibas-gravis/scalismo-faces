@@ -22,7 +22,7 @@ import scalismo.faces.sampling.evaluators.LogNormalDistribution
 import scalismo.geometry.{Vector, _3D}
 import scalismo.mesh.{BarycentricCoordinates, TriangleId, TriangleMesh3D}
 import scalismo.sampling.evaluators.GaussianEvaluator
-import scalismo.sampling.{ProposalGenerator, SymmetricTransition, TransitionProbability}
+import scalismo.sampling.{ProposalGenerator, SymmetricTransitionRatio, TransitionProbability}
 import scalismo.utils.Random
 
 import scala.math._
@@ -48,7 +48,7 @@ object SphericalHarmonicsLightProposals {
 
   /** vary the color distribution of the illumination while keeping the intensity constant */
   case class SHLightColorProposal(sdev: Double)(implicit rnd: Random)
-    extends ProposalGenerator[SphericalHarmonicsLight] with SymmetricTransition[SphericalHarmonicsLight] {
+    extends ProposalGenerator[SphericalHarmonicsLight] with SymmetricTransitionRatio[SphericalHarmonicsLight] with TransitionProbability[SphericalHarmonicsLight] {
 
     override def propose(current: SphericalHarmonicsLight): SphericalHarmonicsLight = {
       val shift = Vector(
@@ -67,9 +67,9 @@ object SphericalHarmonicsLightProposals {
       val allShiftsEqual = shifts.forall(shift => (shift - shifts.head).norm2 < 1e-5)
       if (math.abs(from.energy - to.energy) < 1e-5 && allShiftsEqual) {
         val (t, f) = (to.coefficients.head, from.coefficients.head)
-        GaussianEvaluator.probability(t.x, f.x, sdev) +
-          GaussianEvaluator.probability(t.y, f.y, sdev) +
-          GaussianEvaluator.probability(t.z, f.z, sdev)
+        GaussianEvaluator.logDensity(t.x, f.x, sdev) +
+          GaussianEvaluator.logDensity(t.y, f.y, sdev) +
+          GaussianEvaluator.logDensity(t.z, f.z, sdev)
       }
       else
         Double.NegativeInfinity
@@ -80,7 +80,9 @@ object SphericalHarmonicsLightProposals {
     * @param sdev standard deviation of proposal per component
     * @param fixIntensity if true the intensity is perserved */
   case class SHLightPerturbationProposal(sdev: Double, fixIntensity: Boolean)(implicit rnd: Random)
-    extends ProposalGenerator[SphericalHarmonicsLight] with SymmetricTransition[SphericalHarmonicsLight] {
+    extends ProposalGenerator[SphericalHarmonicsLight] with
+      SymmetricTransitionRatio[SphericalHarmonicsLight] with
+      TransitionProbability[SphericalHarmonicsLight] {
 
     override def propose(current: SphericalHarmonicsLight): SphericalHarmonicsLight = {
       val proposal = current.copy(coefficients = current.coefficients.map(v => v + Vector(
@@ -99,9 +101,9 @@ object SphericalHarmonicsLightProposals {
       val intChange = math.sqrt(to.energy/from.energy)
       if (!fixIntensity || intChange < 1e-5)
         to.coefficients.zip(from.coefficients).map{case(t, f) =>
-          GaussianEvaluator.probability(t.x, f.x, sdev) +
-            GaussianEvaluator.probability(t.y, f.y, sdev) +
-            GaussianEvaluator.probability(t.z, f.z, sdev)
+          GaussianEvaluator.logDensity(t.x, f.x, sdev) +
+            GaussianEvaluator.logDensity(t.y, f.y, sdev) +
+            GaussianEvaluator.logDensity(t.z, f.z, sdev)
         }.sum
       else
         Double.NegativeInfinity

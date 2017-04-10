@@ -97,11 +97,11 @@ object IndependentPixelEvaluator {
     val pixelEvaluator: PairEvaluator[RGB] = new PairEvaluator[RGB] {
       override def logValue(first: RGB, second: RGB): Double = {
         val diff = (first - second).norm/sdev
-        GaussianEvaluator.probability(diff, 0.0, 1.0)
+        GaussianEvaluator.logDensity(diff, 0.0, 1.0)
       }
     }
     // background likelihood value at required distance in standard deviations
-    val bgValue = GaussianEvaluator.probability(bgSdev, 0.0, 1.0)
+    val bgValue = GaussianEvaluator.logDensity(bgSdev, 0.0, 1.0)
     val bgEval = PixelEvaluators.ConstantPixelEvaluator[RGB](bgValue)
     IndependentPixelEvaluator(targetImage, pixelEvaluator, bgEval)
   }
