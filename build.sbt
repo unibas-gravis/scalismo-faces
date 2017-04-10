@@ -6,7 +6,10 @@ scalaVersion  := "2.12.1"
 
 crossScalaVersions := Seq("2.12.1", "2.11.8")
 
-scalacOptions := Seq("-unchecked", "-deprecation", "-feature", "-opt:l:method")
+scalacOptions ++= (CrossVersion.partialVersion(scalaVersion.value) match {
+    case Some((2,  11)) =>  Seq("-deprecation", "-unchecked", "-feature")
+    case _ => Seq("-deprecation", "-unchecked", "-feature", "-opt:l:method")
+})
 
 resolvers += Resolver.jcenterRepo
 
