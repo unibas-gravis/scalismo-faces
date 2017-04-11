@@ -4,7 +4,7 @@ env:
  - SCALISMO_PLATFORM=linux64
 
 scala:
-  - 2.11.7
+  - 2.12.1
 
 script:
   - jdk_switcher use oraclejdk8
