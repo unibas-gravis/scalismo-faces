@@ -56,6 +56,13 @@ object PlyHelpers {
     val float = Value("float")
     val double = Value("double")
     val long = Value("long")
+    val int8 = Value("int8")
+    val uint8 = Value("uint8")
+    val int16 = Value("int16")
+    val int32 = Value("int32")
+    val int64 = Value("int64")
+    val float32 = Value("float32")
+    val float64 = Value("float64")
   }
 
   /**

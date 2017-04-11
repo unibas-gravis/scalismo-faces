@@ -27,23 +27,22 @@ import scalismo.faces.io.PixelImageIO
 import scala.collection.mutable.ListBuffer
 
 /**
-  * Reads a ply file based on its header. This class is independent of the mesh class and could be reused in other
-  * ply-readers.
-  *
-  */
+ * Reads a ply file based on its header. This class is independent of the mesh class and could be reused in other
+ * ply-readers.
+ *
+ */
 object PlyReader {
 
   import PlyHelpers._
 
-
   /**
-    * Read the ply file from the url. Returns a list of textures and a list of elements,
-    * where each element is a list of properties. This reflects the structure of elements
-    * and properties from the header.
-    *
-    * @param url File to read.
-    * @return
-    */
+   * Read the ply file from the url. Returns a list of textures and a list of elements,
+   * where each element is a list of properties. This reflects the structure of elements
+   * and properties from the header.
+   *
+   * @param url File to read.
+   * @return
+   */
   def read(url: String): (List[(String, List[(String, List[_])])], List[PixelImage[RGBA]]) = {
     val path = Paths.get(url)
     val plyFile = path.getFileName
@@ -53,7 +52,7 @@ object PlyReader {
     checkHeader(header)
 
     val plyFormat = parsePlyFormat(header)
-    val textures: List[PixelImage[RGBA]] = loadSpecifiedTextures(header,dir)
+    val textures: List[PixelImage[RGBA]] = loadSpecifiedTextures(header, dir)
     val elementReaders = parseElementsInHeader(header)
 
     // as we use buffered readers we need to reset the input stream
@@ -64,8 +63,7 @@ object PlyReader {
     (values, textures)
   }
 
-  private def readData(bis: BufferedInputStream, plyFormat: PlyFormat.PlyFormat, elementReaders: List[(String, PlyElementReader)])
-  : List[(String, List[(String, List[_])])] = {
+  private def readData(bis: BufferedInputStream, plyFormat: PlyFormat.PlyFormat, elementReaders: List[(String, PlyElementReader)]): List[(String, List[(String, List[_])])] = {
     plyFormat match {
       case PlyFormat.ASCII =>
         val scanner = new Scanner(bis)
@@ -102,7 +100,6 @@ object PlyReader {
     throw new IOException("Could not read until \"" + PLY.endHeader + "\".")
   }
 
-
   private def checkHeader(header: List[String]) = {
 
     if (header.head.trim != PLY.startHeader) {
@@ -114,7 +111,6 @@ object PlyReader {
     }
 
   }
-
 
   private def parsePlyFormat(header: List[String]) = {
 
@@ -136,7 +132,6 @@ object PlyReader {
     format.get
 
   }
-
 
   private def loadSpecifiedTextures(header: List[String], dir: Path): List[PixelImage[RGBA]] = {
 
@@ -163,13 +158,11 @@ object PlyReader {
     textureURLs.map(fn => PixelImageIO.read[RGBA](new File(fn.toString)).get)
   }
 
-
   private def parseElementsInHeader(header: List[String]): List[(String, PlyElementReader)] = {
     val startingElement = header.dropWhile(l => !l.startsWith(PLY.element))
     val elements = parseElementFromListStart(startingElement)
     elements.flatMap(headerPartToReader)
   }
-
 
   private def parseElementFromListStart(list: List[String]): List[List[String]] = {
     if (list.isEmpty || list.head == PLY.endHeader) return Nil
@@ -177,7 +170,6 @@ object PlyReader {
     val (eleBody, tailList) = list.tail.span(s => !s.startsWith(PLY.element) && !s.startsWith(PLY.endHeader))
     (eleStart :: eleBody) :: parseElementFromListStart(tailList)
   }
-
 
   private def headerPartToReader(list: List[String]): Option[(String, PlyElementReader)] = {
 
@@ -213,25 +205,25 @@ object PlyReader {
   private def makeReader(format: Seq[String]): PlyPropertyReader[_] = {
     if (format.size == 1) {
       PlyTypes.withName(format(0)) match {
-        case PlyTypes.char => new PlyPropertyReader(new FixedLengthSequenceReader[Char])
-        case PlyTypes.uchar => new PlyPropertyReader(new FixedLengthSequenceReader[Byte])
-        case PlyTypes.int => new PlyPropertyReader(new FixedLengthSequenceReader[Int])
-        case PlyTypes.long => new PlyPropertyReader(new FixedLengthSequenceReader[Long])
-        case PlyTypes.float => new PlyPropertyReader(new FixedLengthSequenceReader[Float])
-        case PlyTypes.double => new PlyPropertyReader(new FixedLengthSequenceReader[Double])
-        case PlyTypes.short => new PlyPropertyReader(new FixedLengthSequenceReader[Short])
+        case PlyTypes.char | PlyTypes.int8 => new PlyPropertyReader(new FixedLengthSequenceReader[Char])
+        case PlyTypes.uchar | PlyTypes.uint8 => new PlyPropertyReader(new FixedLengthSequenceReader[Byte])
+        case PlyTypes.int | PlyTypes.int32 => new PlyPropertyReader(new FixedLengthSequenceReader[Int])
+        case PlyTypes.long | PlyTypes.int64 => new PlyPropertyReader(new FixedLengthSequenceReader[Long])
+        case PlyTypes.float | PlyTypes.float32 | PlyTypes.float32 => new PlyPropertyReader(new FixedLengthSequenceReader[Float])
+        case PlyTypes.double | PlyTypes.float64 => new PlyPropertyReader(new FixedLengthSequenceReader[Double])
+        case PlyTypes.short | PlyTypes.int16 => new PlyPropertyReader(new FixedLengthSequenceReader[Short])
         case _ =>
           throw new IOException("Do not know how to read property type: " + format(0))
       }
     } else if (format.size == 3) {
       PlyTypes.withName(format(2)) match {
-        case PlyTypes.uchar => new PlyPropertyReader(new VariableLengthSequenceReader[Byte])
-        case PlyTypes.char => new PlyPropertyReader(new VariableLengthSequenceReader[Char])
-        case PlyTypes.short => new PlyPropertyReader(new VariableLengthSequenceReader[Short])
-        case PlyTypes.int => new PlyPropertyReader(new VariableLengthSequenceReader[Int])
-        case PlyTypes.long => new PlyPropertyReader(new VariableLengthSequenceReader[Long])
-        case PlyTypes.float => new PlyPropertyReader(new VariableLengthSequenceReader[Float])
-        case PlyTypes.double => new PlyPropertyReader(new VariableLengthSequenceReader[Double])
+        case PlyTypes.char | PlyTypes.int8 => new PlyPropertyReader(new VariableLengthSequenceReader[Char])
+        case PlyTypes.uchar | PlyTypes.uint8 => new PlyPropertyReader(new VariableLengthSequenceReader[Byte])
+        case PlyTypes.int | PlyTypes.int32 => new PlyPropertyReader(new VariableLengthSequenceReader[Int])
+        case PlyTypes.long | PlyTypes.int64 => new PlyPropertyReader(new VariableLengthSequenceReader[Long])
+        case PlyTypes.float | PlyTypes.float32 => new PlyPropertyReader(new VariableLengthSequenceReader[Float])
+        case PlyTypes.double | PlyTypes.float64 => new PlyPropertyReader(new VariableLengthSequenceReader[Double])
+        case PlyTypes.short | PlyTypes.int16 => new PlyPropertyReader(new VariableLengthSequenceReader[Short])
         case _ =>
           throw new IOException("Do not know how to read property type: " + format.mkString(" "))
       }
