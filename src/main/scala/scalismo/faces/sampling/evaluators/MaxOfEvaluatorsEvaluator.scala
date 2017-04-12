@@ -25,5 +25,4 @@ class MaxOfEvaluatorsEvaluator[A](evaluators: Seq[DistributionEvaluator[A]]) ext
 
 object MaxOfEvaluatorsEvaluator {
   def apply[A](evaluators: DistributionEvaluator[A]*) = new MaxOfEvaluatorsEvaluator[A](evaluators.toSeq)
-  def apply[A](evaluators: Seq[DistributionEvaluator[A]]) = new MaxOfEvaluatorsEvaluator[A](evaluators)
 }
