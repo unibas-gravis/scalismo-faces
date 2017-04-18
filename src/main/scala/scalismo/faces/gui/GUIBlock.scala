@@ -62,7 +62,7 @@ object GUIBlock {
   }
 
   /** GUI block: can display itself in a GUIFrame */
-  implicit class GUIBlock(val component: JComponent) {
+  implicit class RichGUIBlock(val component: JComponent) {
     @deprecated("displayIn(String) opens a new frame if there is no frame with the given title", "0.7")
     def displayInNewFrame(title: String): GUIFrame = displayIn(title)
 
@@ -87,7 +87,7 @@ object GUIBlock {
     }
   }
 
-  implicit class GUIMenu(val menu: JMenuBar) {
+  implicit class RichGUIMenu(val menu: JMenuBar) {
     def displayIn(frame: GUIFrame): Unit = frame.showMenu(menu)
 
     def displayIn(title: String): GUIFrame = {
