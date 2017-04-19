@@ -17,4 +17,14 @@ package scalismo.faces.landmarks
 
 import scalismo.faces.image.PixelImage
 
-case class LandmarkDetectionMap(tag: String, values: PixelImage[Double])
+/** LandmarkDetectionMap contains certainty of detecting a landmark at an image location (log certainty!) */
+case class LandmarkDetectionMap(tag: String, logValues: PixelImage[Double]) {
+
+  /** correct detection certainty to respect false positive and false negative rates */
+  def correctCertaintyForErrorRates(falsePositiveRate: Double, falseNegativeRate: Double): LandmarkDetectionMap = {
+    copy(logValues =
+      logValues.map{ logCertainty =>
+        math.log(math.exp(logCertainty) * (1.0 - falsePositiveRate - falseNegativeRate) + falseNegativeRate)
+      })
+  }
+}
