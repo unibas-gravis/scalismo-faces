@@ -130,6 +130,12 @@ object SphericalHarmonicsLight {
     ))
   }
 
+  def fromBreezeVector(dv: DenseVector[Double]): SphericalHarmonicsLight = {
+    require(dv.length % 3 == 0, "length of array to build SHLight must be a multiple of 3")
+    val grouped = dv.toArray.grouped(3).map(g => Vector[_3D](g)).toIndexedSeq
+    SphericalHarmonicsLight(grouped)
+  }
+
   /** Finds the principal light direction in the spherical harmonics with respect to light intensity.
     * lightIntensity(n) = \sum_{i=0} Y_i(n) * lambertKernel_i * ( shl_r(i) + shl_g(i) + shl_b(i) ) */
   def directionFromSHLightIntensity(shl: SphericalHarmonicsLight): Option[Vector[_3D]] = {

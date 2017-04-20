@@ -52,6 +52,18 @@ class SphericalHarmonicsLightTests extends FacesTestSuite {
       band0.coefficients(0) shouldBe sh.coefficients(0)
     }
 
+    it("SH to DenseVector and from DenseVector"){
+      val sh = SphericalHarmonicsLight.frontal
+      val shB = sh.toBreezeVector
+      val shN = SphericalHarmonicsLight.fromBreezeVector(shB)
+      sh.toBreezeVector.toArray should contain theSameElementsInOrderAs  shN.toBreezeVector.toArray
+
+      val bV =  DenseVector(Array.fill(27)(rnd.scalaRandom.nextGaussian()))
+      val shL = SphericalHarmonicsLight.fromBreezeVector(bV)
+      val nV = shL.toBreezeVector
+      bV.toArray should contain theSameElementsInOrderAs nV.toArray
+    }
+
     describe("To recover a principal direction of illumination, SphericalHarmonicsLight") {
       it("extracts consistently the direction from randomly generated directed spherical harmonics.") {
 
