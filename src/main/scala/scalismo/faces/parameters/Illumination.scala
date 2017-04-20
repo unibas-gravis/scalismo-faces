@@ -52,6 +52,8 @@ object DirectionalLight {
 
 /** Spherical Harmonics illumination parameters, environment map */
 case class SphericalHarmonicsLight(coefficients: IndexedSeq[Vector[_3D]]) extends Illumination {
+  require(coefficients.isEmpty || SphericalHarmonics.totalCoefficients(bands) == coefficients.length, "invalid length of coefficients to build SphericalHarmonicsLight")
+
   val nonEmpty: Boolean = coefficients.nonEmpty
 
   override def shader(worldMesh: ColorNormalMesh3D, eyePosition: Point[_3D]): SphericalHarmonicsLambertShader = shader(worldMesh)
@@ -128,6 +130,12 @@ object SphericalHarmonicsLight {
       (dir.z / n1 / lambertKernel(2)) *: diff,
       (dir.x / n1 / lambertKernel(3)) *: diff
     ))
+  }
+
+  def fromBreezeVector(dv: DenseVector[Double]): SphericalHarmonicsLight = {
+    require(dv.length % 3 == 0, "length of array to build SHLight must be a multiple of 3")
+    val grouped = dv.toArray.grouped(3).map(g => Vector[_3D](g)).toIndexedSeq
+    SphericalHarmonicsLight(grouped)
   }
 
   /** Finds the principal light direction in the spherical harmonics with respect to light intensity.

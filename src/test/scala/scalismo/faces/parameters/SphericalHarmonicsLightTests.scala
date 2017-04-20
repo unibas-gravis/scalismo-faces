@@ -16,6 +16,7 @@
 
 package scalismo.faces.parameters
 
+import breeze.linalg.DenseVector
 import scalismo.faces.FacesTestSuite
 import scalismo.faces.color.RGB
 import scalismo.geometry.{Vector, Vector3D, _3D}
@@ -28,7 +29,7 @@ class SphericalHarmonicsLightTests extends FacesTestSuite {
       sh5.bands shouldBe 5
       sh5.coefficients.length shouldBe SphericalHarmonicsLight.coefficientsInBands(5)
     }
-
+    
     it("can be rescaled to more components") {
       val sh = SphericalHarmonicsLight.frontal
       assert(sh.bands == 1)
@@ -50,6 +51,23 @@ class SphericalHarmonicsLightTests extends FacesTestSuite {
       band0.bands shouldBe 0
 
       band0.coefficients(0) shouldBe sh.coefficients(0)
+    }
+
+    it("SH to DenseVector and from DenseVector"){
+      val sh = SphericalHarmonicsLight.frontal
+      val shB = sh.toBreezeVector
+      val shN = SphericalHarmonicsLight.fromBreezeVector(shB)
+      sh shouldBe shN
+
+      val bV =  DenseVector(Array.fill(27)(rnd.scalaRandom.nextGaussian()))
+      val shL = SphericalHarmonicsLight.fromBreezeVector(bV)
+      val nV = shL.toBreezeVector
+      bV.toArray should contain theSameElementsInOrderAs nV.toArray
+    }
+
+    it("avoids building of invalid coefficients") {
+      val wrongLength = IndexedSeq.fill(2)(Vector3D.zero)
+      an [IllegalArgumentException] should be thrownBy  SphericalHarmonicsLight(wrongLength)
     }
 
     describe("To recover a principal direction of illumination, SphericalHarmonicsLight") {
