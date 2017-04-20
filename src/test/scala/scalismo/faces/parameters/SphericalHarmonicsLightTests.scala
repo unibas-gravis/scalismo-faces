@@ -29,6 +29,7 @@ class SphericalHarmonicsLightTests extends FacesTestSuite {
       sh5.bands shouldBe 5
       sh5.coefficients.length shouldBe SphericalHarmonicsLight.coefficientsInBands(5)
     }
+    
     it("can be rescaled to more components") {
       val sh = SphericalHarmonicsLight.frontal
       assert(sh.bands == 1)
