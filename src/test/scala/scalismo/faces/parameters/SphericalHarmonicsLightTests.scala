@@ -29,7 +29,6 @@ class SphericalHarmonicsLightTests extends FacesTestSuite {
       sh5.bands shouldBe 5
       sh5.coefficients.length shouldBe SphericalHarmonicsLight.coefficientsInBands(5)
     }
-
     it("can be rescaled to more components") {
       val sh = SphericalHarmonicsLight.frontal
       assert(sh.bands == 1)
@@ -63,6 +62,11 @@ class SphericalHarmonicsLightTests extends FacesTestSuite {
       val shL = SphericalHarmonicsLight.fromBreezeVector(bV)
       val nV = shL.toBreezeVector
       bV.toArray should contain theSameElementsInOrderAs nV.toArray
+    }
+
+    it("avoids building of invalid coefficients") {
+      val wrongLength = IndexedSeq.fill(2)(Vector3D.zero)
+      an [IllegalArgumentException] should be thrownBy  SphericalHarmonicsLight(wrongLength)
     }
 
     describe("To recover a principal direction of illumination, SphericalHarmonicsLight") {
