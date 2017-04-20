@@ -57,7 +57,7 @@ class SphericalHarmonicsLightTests extends FacesTestSuite {
       val sh = SphericalHarmonicsLight.frontal
       val shB = sh.toBreezeVector
       val shN = SphericalHarmonicsLight.fromBreezeVector(shB)
-      sh.toBreezeVector.toArray should contain theSameElementsInOrderAs  shN.toBreezeVector.toArray
+      sh shouldBe shN
 
       val bV =  DenseVector(Array.fill(27)(rnd.scalaRandom.nextGaussian()))
       val shL = SphericalHarmonicsLight.fromBreezeVector(bV)
