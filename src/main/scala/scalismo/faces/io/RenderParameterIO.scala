@@ -130,10 +130,10 @@ object RenderParameterIO {
 
   /** parse json from stream as abstract syntax tree (spray's JsValue) */
   def readASTFromStream(stream: InputStream): JsValue = {
-    val scanner = new Scanner(stream).useDelimiter("\\A")
-    val string = if(scanner.hasNext()) scanner.next() else ""
-    scanner.close()
-    string.parseJson
+    ResourceManagement.using(new Scanner(stream).useDelimiter("\\A")) { scanner =>
+      val string = if (scanner.hasNext()) scanner.next() else ""
+      string.parseJson
+    }
   }
 
   /** write an abstract syntax tree (spray's JsValue) to a file (pretty printed) */
