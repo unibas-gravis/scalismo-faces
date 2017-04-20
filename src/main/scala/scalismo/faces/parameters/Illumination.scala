@@ -53,10 +53,7 @@ object DirectionalLight {
 /** Spherical Harmonics illumination parameters, environment map */
 case class SphericalHarmonicsLight(coefficients: IndexedSeq[Vector[_3D]]) extends Illumination {
   require(coefficients.isEmpty || SphericalHarmonics.totalCoefficients(bands) == coefficients.length, "invalid length of IndexedSeq to build SphericalHarmonicsLight")
-
-  /** number of m values within a band l */
-  def coefficientsInBand(band: Int): Int = 2 * band + 1
-
+  
   val nonEmpty: Boolean = coefficients.nonEmpty
 
   override def shader(worldMesh: ColorNormalMesh3D, eyePosition: Point[_3D]): SphericalHarmonicsLambertShader = shader(worldMesh)
