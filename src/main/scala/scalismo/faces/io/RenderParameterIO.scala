@@ -132,6 +132,7 @@ object RenderParameterIO {
   def readASTFromStream(stream: InputStream): JsValue = {
     val scanner = new Scanner(stream).useDelimiter("\\A")
     val string = if(scanner.hasNext()) scanner.next() else ""
+    scanner.close()
     string.parseJson
   }
 
