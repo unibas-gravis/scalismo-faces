@@ -33,7 +33,7 @@ class ImageIOTests extends FacesTestSuite {
   /** reconstruction tolerance, IO is only 8 bit! */
   val tolerance = math.sqrt(4*math.pow(1.0/255.0,2.0)) // 8 bit write/read
 
-  val img = randomImage(37, 67)
+  val img = randomImageRGB(37, 67)
   val imgG = img.map(_.gray)
   val imgA = img.map(RGBA(_))
 
