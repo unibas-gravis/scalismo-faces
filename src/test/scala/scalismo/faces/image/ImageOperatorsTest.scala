@@ -27,8 +27,8 @@ class ImageOperatorsTest extends FacesTestSuite {
   val r = 4
 
   describe("A PixelImage[A] for A=RGB") {
-    val i1 = randomImage(w, h)
-    val i2 = randomImage(w, h)
+    val i1 = randomImageRGB(w, h)
+    val i2 = randomImageRGB(w, h)
     val f = PixelImage(w, h, (x, y) => rnd.scalaRandom.nextDouble())
 
     it("supports +") {

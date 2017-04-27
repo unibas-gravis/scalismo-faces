@@ -28,7 +28,7 @@ class PixelImageTests extends FacesTestSuite {
   val fixedImageCM = PixelImage(ColumnMajorImageDomain(2, 3), Array(1f, 2f, 3f, 4f, 5f, 6f))
   val fixedImageRM = PixelImage(RowMajorImageDomain(2, 3), Array(1f, 2f, 3f, 4f, 5f, 6f))
 
-  val rndImage: PixelImage[RGB] = randomImage(w, h)
+  val rndImage: PixelImage[RGB] = randomImageRGB(w, h)
 
   describe("A fixed PixelImage") {
     it("has the proper access pattern inside domain (column major)") {

@@ -16,18 +16,23 @@
 
 package scalismo.faces.render
 
+import java.io.File
+
 import scalismo.faces.FacesTestSuite
 import scalismo.faces.color.{RGB, RGBA}
 import scalismo.faces.image.InterpolationKernel.BilinearKernel
 import scalismo.faces.image.PixelImage
+import scalismo.faces.io.PixelImageIO
 import scalismo.faces.mesh.{ColorNormalMesh3D, TextureMappedProperty}
 import scalismo.faces.parameters.{Camera, Pose, RenderParameter}
 import scalismo.faces.render.PixelShaders.PropertyShader
 import scalismo.geometry.Vector
 import scalismo.mesh.{MeshSurfaceProperty, SurfacePointProperty, TriangleMesh3D}
+import scalismo.utils.Random
 
 class TextureExtractionTests extends FacesTestSuite {
   import scalismo.faces.image.PixelImage.implicits._
+  override  implicit val rnd = Random(43)
 
   val w = 100
   val h = 100
@@ -41,7 +46,7 @@ class TextureExtractionTests extends FacesTestSuite {
   val texture: TextureMappedProperty[RGBA] = gridMesh.color.asInstanceOf[TextureMappedProperty[RGBA]]
 
   val texImage: PixelImage[RGBA] = texture.texture
-  val rndTexture: PixelImage[RGBA] = PixelImage(texImage.width / 20, texImage.height / 20, (x, y) => randomRGBA).resample(texImage.width, texImage.height, BilinearKernel)
+  val rndTexture: PixelImage[RGBA] = randomImageRGBA(texImage.width / 20, texImage.height / 20).resample(texImage.width, texImage.height, BilinearKernel)
 
   val rps: RenderParameter = RenderParameter.default.copy(
     camera = Camera.for35mmFilm(focalLength = 100),
@@ -64,7 +69,7 @@ class TextureExtractionTests extends FacesTestSuite {
 
   describe("TextureExtractionTests") {
     // make random image
-    val rndImage: PixelImage[RGBA] = randomImage(rps.imageSize.width / 10, rps.imageSize.height / 10).resample(rps.imageSize.width, rps.imageSize.height).mapLazy(_.toRGBA)
+    val rndImage: PixelImage[RGBA] = randomImageRGBA(rps.imageSize.width / 10, rps.imageSize.height / 10).resample(rps.imageSize.width, rps.imageSize.height)
 
     // imageAsSurfaceProperty
     it("should extract and re-render an image as surface property consistently") {

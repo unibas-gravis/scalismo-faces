@@ -22,7 +22,7 @@ import breeze.linalg.{DenseMatrix, DenseVector, qr}
 import org.scalatest._
 import scalismo.common.PointId
 import scalismo.faces.color.{RGB, RGBA}
-import scalismo.faces.image.PixelImage
+import scalismo.faces.image.{AccessMode, PixelImage, PixelImageDomain}
 import scalismo.faces.mesh.{ColorNormalMesh3D, TextureMappedProperty, VertexColorMesh3D}
 import scalismo.faces.momo.{MoMo, PancakeDLRGP}
 import scalismo.geometry.{Landmark, Point, Vector, Vector3D, _2D, _3D}
@@ -37,21 +37,32 @@ class FacesTestSuite extends FunSpec with Matchers {
 
   implicit val rnd = Random(43)
 
-  def randomRGB = RGB(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
+  def randomRGB(implicit rnd: Random) = RGB(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
 
-  def randomRGBA = RGBA(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
+  def randomRGBA(implicit rnd: Random) = RGBA(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
 
-  def randomVector3D = Vector3D(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
+  def randomVector3D(implicit rnd: Random) = Vector3D(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
 
-  def randomDouble: Double = rnd.scalaRandom.nextDouble()
+  def randomDouble(implicit rnd: Random): Double = rnd.scalaRandom.nextDouble()
 
-  def randomImage(w: Int, h: Int): PixelImage[RGB] = PixelImage(w, h, (x, y) => randomRGB)
+  def randomImageRGB(w: Int, h: Int)(implicit rnd: Random): PixelImage[RGB] = {
+    val imageSeq = IndexedSeq.fill[RGB](w * h)(randomRGB)
+    val domain = PixelImageDomain(w, h)
+    PixelImage(domain, (x, y) => imageSeq(domain.index(x, y))).withAccessMode(AccessMode.Strict())
+  }
 
-  def randomInt(max: Int): Int = rnd.scalaRandom.nextInt(max)
+  def randomImageRGBA(w: Int, h: Int)(implicit rnd: Random): PixelImage[RGBA] = {
+    val imageSeq = IndexedSeq.fill[RGBA](w * h)(randomRGBA)
+    val domain = PixelImageDomain(w, h)
+    PixelImage(domain, (x, y) => imageSeq(domain.index(x, y))).withAccessMode(AccessMode.Strict())
+  }
 
-  def randomDirection: Vector[_2D] = Vector.fromPolar(1.0, rnd.scalaRandom.nextDouble() * 2.0 * math.Pi)
 
-  def randomGridMesh(cols: Int = 3, rows: Int = 3, sdev: Double = 0.25): VertexColorMesh3D = {
+  def randomInt(max: Int)(implicit rnd: Random): Int = rnd.scalaRandom.nextInt(max)
+
+  def randomDirection(implicit rnd: Random): Vector[_2D] = Vector.fromPolar(1.0, rnd.scalaRandom.nextDouble() * 2.0 * math.Pi)
+
+  def randomGridMesh(cols: Int = 3, rows: Int = 3, sdev: Double = 0.25)(implicit rnd: Random): VertexColorMesh3D = {
     val n = cols * rows
 
     val points = IndexedSeq.tabulate(n)(i => Point(i % cols, i / cols, 0f)).map(p => p + Vector(rnd.scalaRandom.nextGaussian(), rnd.scalaRandom.nextGaussian(), rnd.scalaRandom.nextGaussian()) * sdev)
@@ -74,13 +85,13 @@ class FacesTestSuite extends FunSpec with Matchers {
     )
   }
 
-  def randomGridMeshWithTexture(cols: Int = 3, rows: Int = 3, sdev: Double = 0.25): ColorNormalMesh3D = {
+  def randomGridMeshWithTexture(cols: Int = 3, rows: Int = 3, sdev: Double = 0.25)(implicit rnd: Random): ColorNormalMesh3D = {
     val vcMesh = randomGridMesh(cols, rows, sdev)
-    val centerPoints: IndexedSeq[Point[_2D]] = IndexedSeq.tabulate(cols*rows)(i => Point(i % cols, i / cols))
-    val uvCoords: IndexedSeq[Point[_2D]] = centerPoints.map{ pt => TextureMappedProperty.imageCoordinatesToUV(pt, cols, rows)}
+    val centerPoints: IndexedSeq[Point[_2D]] = IndexedSeq.tabulate(cols * rows)(i => Point(i % cols, i / cols))
+    val uvCoords: IndexedSeq[Point[_2D]] = centerPoints.map { pt => TextureMappedProperty.imageCoordinatesToUV(pt, cols, rows) }
 
     val texMap: SurfacePointProperty[Point[_2D]] = SurfacePointProperty(vcMesh.shape.triangulation, uvCoords)
-    val texture = TextureMappedProperty(vcMesh.shape.triangulation, texMap, PixelImage(cols, rows, (x, y) => randomRGBA))
+    val texture = TextureMappedProperty(vcMesh.shape.triangulation, texMap, randomImageRGBA(cols, rows))
     ColorNormalMesh3D(
       vcMesh.shape,
       texture,
@@ -88,15 +99,16 @@ class FacesTestSuite extends FunSpec with Matchers {
     )
   }
 
-
-  def randomString(length: Int): String = rnd.scalaRandom.alphanumeric.take(length).mkString
+  def randomString(length: Int)(implicit rnd: Random): String = rnd.scalaRandom.alphanumeric.take(length).mkString
 
   def randomURI(length: Int): URI = {
-    val string = randomString(length).filter{_.isLetterOrDigit}
+    val string = randomString(length).filter {
+      _.isLetterOrDigit
+    }
     new URI(string)
   }
 
-  def randomGridModel(rank: Int = 10, sdev: Double = 5.0, noise: Double = 0.05, cols: Int = 5, rows: Int = 5, orthogonalExpressions: Boolean = false): MoMo = {
+  def randomGridModel(rank: Int = 10, sdev: Double = 5.0, noise: Double = 0.05, cols: Int = 5, rows: Int = 5, orthogonalExpressions: Boolean = false)(implicit rnd: Random): MoMo = {
 
     val reference = randomGridMesh(cols, rows)
 
@@ -125,7 +137,7 @@ class FacesTestSuite extends FunSpec with Matchers {
     val expressionMean = DenseVector.fill[Double](expressionN)(rnd.scalaRandom.nextGaussian)
     val expressionPCABases =
       if (orthogonalExpressions)
-        fullShapeComponents(::, rank until 2*rank)
+        fullShapeComponents(::, rank until 2 * rank)
       else
         qr.reduced(DenseMatrix.fill[Double](expressionN, rank)(rnd.scalaRandom.nextGaussian)).q
     val expressionVariance = DenseVector.fill[Double](rank)(rnd.scalaRandom.nextDouble * sdev)
@@ -137,7 +149,7 @@ class FacesTestSuite extends FunSpec with Matchers {
     def randomName = randomString(10)
     def randomPointOnRef = reference.shape.pointSet.points.toIndexedSeq(rnd.scalaRandom.nextInt(reference.shape.pointSet.numberOfPoints))
     def randomLM: Landmark[_3D] = Landmark(randomName, randomPointOnRef)
-    val randomLandmarks = for(i <- 0 until 5) yield randomName -> randomLM
+    val randomLandmarks = for (i <- 0 until 5) yield randomName -> randomLM
 
     MoMo(reference.shape,
       PancakeDLRGP(shape, noise),
@@ -146,7 +158,7 @@ class FacesTestSuite extends FunSpec with Matchers {
       randomLandmarks.toMap)
   }
 
-  def randomGridModelExpress(rank: Int = 10, sdev: Double = 5.0, noise: Double = 0.05, cols: Int = 5, rows: Int = 5): PancakeDLRGP[_3D, Vector[_3D]] = {
+  def randomGridModelExpress(rank: Int = 10, sdev: Double = 5.0, noise: Double = 0.05, cols: Int = 5, rows: Int = 5)(implicit rnd: Random): PancakeDLRGP[_3D, Vector[_3D]] = {
 
     val reference = randomGridMesh(cols, rows)
     val expressionN = 3 * cols * rows

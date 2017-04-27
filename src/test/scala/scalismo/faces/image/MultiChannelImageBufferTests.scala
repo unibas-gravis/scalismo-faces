@@ -33,7 +33,7 @@ class MultiChannelImageBufferTests extends FacesTestSuite {
   val emptyBuffer: MultiChannelImageBuffer = MultiChannelImageBuffer(w, h, d)
   val randomBuffer = MultiChannelImageBuffer(w, h, d, Array.fill(w * h * d)(randomDouble))
 
-  val image: PixelImage[RGB] = randomImage(w, h)
+  val image: PixelImage[RGB] = randomImageRGB(w, h)
 
   describe("A MultiChannelImageBuffer") {
     it("has proper dimensions") {
