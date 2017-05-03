@@ -35,6 +35,8 @@ class ImageCenteredProposal(val proposal: ProposalGenerator[RenderParameter] wit
                             val lmRenderer: ParametricLandmarksRenderer)
   extends ProposalGenerator[RenderParameter] with TransitionProbability[RenderParameter] {
 
+  require(lmRenderer.hasLandmarkId(lmId), "landmark needs to be known for an ImageCenteredProposal")
+
   override def propose(current: RenderParameter): RenderParameter = {
     // render the landmark's image location before application of the proposal
     // keep track of the landmark position
@@ -48,15 +50,14 @@ class ImageCenteredProposal(val proposal: ProposalGenerator[RenderParameter] wit
 
     // shift back (compensate translation in image)
     val shift = lmCurrent.point - lmProposal.point
-    // strange shifting in y direction
+
+    // shifting by moving the principal point (normalized device coordinates [-1, 1], y axis upwards)
     val pp = Point(
       propSample.camera.principalPoint.x + 2 * shift.x / propSample.imageSize.width,
       propSample.camera.principalPoint.y - 2 * shift.y / propSample.imageSize.height
     )
 
-    propSample.copy(
-      camera = propSample.camera.copy(principalPoint = pp)
-    )
+    propSample.withCamera(propSample.camera.copy(principalPoint = pp))
   }
 
   /** rate of transition from to */
