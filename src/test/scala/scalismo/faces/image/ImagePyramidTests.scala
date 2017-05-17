@@ -34,35 +34,35 @@ class ImagePyramidTests extends FacesTestSuite {
   }
   def doubleImages = Seq(
     chessBoard(white = randomDouble, black = randomDouble),
-    chessBoard(64, 8, randomDouble, randomDouble),
+    chessBoard(71, 11, randomDouble, randomDouble),
     chessBoardWithMissingPixels(white = randomDouble, black = randomDouble, missing = randomDouble),
-    chessBoardWithMissingPixels(64, 8, Seq((5, 9), (17, 29)), randomDouble, randomDouble, randomDouble),
+    chessBoardWithMissingPixels(71, 11, Seq((5, 9), (17, 29)), randomDouble, randomDouble, randomDouble),
     peakImage(peakColor = randomDouble, fillColor = randomDouble),
-    peakImage(36, 28, peakColor = randomDouble, fillColor = randomDouble),
+    peakImage(43, 33, peakColor = randomDouble, fillColor = randomDouble),
     borderImage(borderColor = randomDouble, fillColor = randomDouble),
-    borderImage(36, 28, 8, borderColor = randomDouble, fillColor = randomDouble)
+    borderImage(43, 33, 8, borderColor = randomDouble, fillColor = randomDouble)
   )
 
   def rgbImages = Seq(
     chessBoard(white = randomRGB, black = randomRGB),
-    chessBoard(64, 8, randomRGB, randomRGB),
+    chessBoard(71, 11, randomRGB, randomRGB),
     chessBoardWithMissingPixels(white = randomRGB, black = randomRGB, missing = randomRGB),
-    chessBoardWithMissingPixels(64, 8, Seq((5, 9), (17, 29)), randomRGB, randomRGB, randomRGB),
+    chessBoardWithMissingPixels(71, 11, Seq((5, 9), (17, 29)), randomRGB, randomRGB, randomRGB),
     peakImage(peakColor = randomRGB, fillColor = randomRGB),
-    peakImage(36, 28, peakColor = randomRGB, fillColor = randomRGB),
+    peakImage(71, 33, peakColor = randomRGB, fillColor = randomRGB),
     borderImage(borderColor = randomRGB, fillColor = randomRGB),
-    borderImage(36, 28, 8, borderColor = randomRGB, fillColor = randomRGB)
+    borderImage(43, 33, 8, borderColor = randomRGB, fillColor = randomRGB)
   )
 
   def rgbaImages = Seq(
     chessBoard(white = randomRGBA, black = randomRGBA),
-    chessBoard(64, 8, randomRGBA, randomRGBA),
+    chessBoard(71, 11, randomRGBA, randomRGBA),
     chessBoardWithMissingPixels(white = randomRGBA, black = randomRGBA, missing = randomRGBA),
     chessBoardWithMissingPixels(64, 8, Seq((5, 9), (17, 29)), randomRGBA, randomRGBA, randomRGBA),
     peakImage(peakColor = randomRGBA, fillColor = randomRGBA),
-    peakImage(36, 28, peakColor = randomRGBA, fillColor = randomRGBA),
+    peakImage(43, 33, peakColor = randomRGBA, fillColor = randomRGBA),
     borderImage(borderColor = randomRGBA, fillColor = randomRGBA),
-    borderImage(36, 28, 8, borderColor = randomRGBA, fillColor = randomRGBA)
+    borderImage(43, 33, 8, borderColor = randomRGBA, fillColor = randomRGBA)
   )
 
   describe("A Gaussian Pyramid") {
@@ -82,32 +82,16 @@ class ImagePyramidTests extends FacesTestSuite {
       images.foreach(GaussPyramid(_))
     }
 
-    it("calculates the correct number of prime factors two") {
-
-      def generateNumbers(n: Int, N: Int) = {
-        val primeNumbersWihtoutTwo = Seq(3, 5, 7, 11, 13, 17, 19, 23, 29, 31)
-        val numberOfPrimes = primeNumbersWihtoutTwo.size
-        val partial = for (i <- 0 until N) yield {
-          val numberOfFactors = rnd.scalaRandom.nextInt(10)
-          val factors = for (j <- 0 until numberOfFactors) yield {
-            val idx = rnd.scalaRandom.nextInt(numberOfPrimes)
-            primeNumbersWihtoutTwo(idx)
-          }
-          factors.product
-        }
-        partial.map(_ * math.pow(2, n).toInt)
-      }
-
-      for (n <- 0 until 20) {
-        val numbers = generateNumbers(n, 20)
-        numbers.foreach { num =>
-          GaussPyramid.findNumberOfTwoInPrimFactorDecomposition(num) shouldBe n
-        }
+    it("calculates the correct number of levels") {
+      val image: PixelImage[Double] = chessBoard(1024, 128, 1.0, 0.0)
+      for( reductions <- 0 to 10 by 2) {
+        val pyramid = GaussPyramid(image,reductions)
+        pyramid.levels shouldBe (reductions+1)
       }
     }
 
-    it("calculates the correct number of levels") {
-      val image: PixelImage[Double] = chessBoard(1024, 128, 1.0, 0.0)
+    it("calculates the correct number of levels for uneven sized image") {
+      val image: PixelImage[Double] = chessBoard(1031, 131, 1.0, 0.0)
       for( reductions <- 0 to 10 by 2) {
         val pyramid = GaussPyramid(image,reductions)
         pyramid.levels shouldBe (reductions+1)

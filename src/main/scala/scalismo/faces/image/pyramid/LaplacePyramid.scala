@@ -29,7 +29,7 @@ import scala.reflect.ClassTag
   * @param expand A function that upscales the images.
   * @tparam A Pixel type of underlying images in the Pyramid.
   */
-class LaplacePyramid[A: ClassTag](val imagePyramid: ImagePyramid[A], val expand: ImageFilter[A, A])(implicit ops: ColorSpaceOperations[A])
+class LaplacePyramid[A: ClassTag](val imagePyramid: ImagePyramid[A], val expand: LaplacePyramid.ExpandFilter[A])(implicit ops: ColorSpaceOperations[A])
   extends ImagePyramid[A] {
   import PixelImage.implicits._
 
@@ -37,16 +37,20 @@ class LaplacePyramid[A: ClassTag](val imagePyramid: ImagePyramid[A], val expand:
 
   override val level: Seq[PixelImage[A]] = {
     val images = imagePyramid.level
-    images.init.zip(images.tail).map(p => p._1 - expand.filter(p._2)) :+ images.last
+    images.init.zip(images.tail).map(p => p._1 - expand.filter(p._2, p._1.width, p._1.height)) :+ images.last
   }
 
   /**
     * Reconstructs the original image using the expand function and the addition of images based on the passed ColorSpaceOperations ops.
     */
-  def reconstruct: PixelImage[A] = level.init.foldRight(level.last)((diff, combined) => expand.filter(combined) + diff)
+  def reconstruct: PixelImage[A] = level.init.foldRight(level.last)((diff, combined) => expand.filter(combined, diff.width, diff.height) + diff)
 }
 
 object LaplacePyramid {
+  /** Filters an image and considers size of next larger image in an image pyramid. */
+  trait ExpandFilter[A]{
+    def filter(image: PixelImage[A], upperWidth: Int, upperHeight: Int): PixelImage[A]
+  }
   
   /**
     * Standard filter to be used to upscale the image.
@@ -56,10 +60,20 @@ object LaplacePyramid {
   /**
     * Standard method to upscale an image.
     */
-  def expand[A: ClassTag](implicit ops: ColorSpaceOperations[A]) = new ImageFilter[A, A] {
-    override def filter(image: PixelImage[A]): PixelImage[A] = {
-      val w = image.width * 2
-      val h = image.height * 2
+  def expand[A: ClassTag](implicit ops: ColorSpaceOperations[A]) = new ExpandFilter[A] {
+    override def filter(image: PixelImage[A], upperWidth: Int, upperHeight: Int): PixelImage[A] = {
+      val w = {
+        val proposed = image.width * 2
+        if (upperWidth - proposed < 2)
+          upperWidth
+        else proposed
+      }
+      val h = {
+        val proposed = image.height * 2
+        if (upperHeight - proposed < 2)
+          upperHeight
+        else proposed
+      }
 
       import ColorSpaceOperations.implicits._
       ResampleFilter.resampleImage(image.withAccessMode(MirroredPositionFunctional((a:A, b:A)=>2*:a-b)), w, h, interpolationKernel)

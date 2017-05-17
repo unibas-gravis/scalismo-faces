@@ -24,21 +24,17 @@ import scala.reflect._
 
 /**
   * GaussPyramid implements the concept of images always reduced to half the size of the image.
-  * This implementation allows only to reduce the images as long as both side length have a prime factor 2.
   *
   * @param image image to build the pyramid with.
   * @param reduce the operation that reduces the image one level
-  * @param reductions the number of reductions that should be built. A negative number means as many as possible. (Could be less if the side length have less times 2 as prime factor.)
+  * @param reductions the number of reductions that should be built. A negative number means as many as possible.
   * @tparam A Pixel type of underlying images in the Pyramid.
   */
 class GaussPyramid[A: ClassTag](val image: PixelImage[A], val reduce: ImageFilter[A, A], val reductions: Int)(implicit ops: ColorSpaceOperations[A])
   extends ImagePyramid[A] {
 
   private val maxReductions: Int = {
-    val maxNumberOfReductions = min(
-      GaussPyramid.findNumberOfTwoInPrimFactorDecomposition(image.width),
-      GaussPyramid.findNumberOfTwoInPrimFactorDecomposition(image.height))
-
+    val maxNumberOfReductions = math.floor( math.log(math.min(image.width, image.height)) / math.log(2.0) ).toInt
     if (reductions >= 0 && reductions < maxNumberOfReductions) {
       reductions
     } else {
@@ -86,15 +82,5 @@ object GaussPyramid {
     */
   def apply[A: ClassTag](image: PixelImage[A], reductions: Int = -1)(implicit ops: ColorSpaceOperations[A]): GaussPyramid[A] = {
     new GaussPyramid[A](image, reduce, reductions)
-  }
-
-  /**
-    * Finds the amount of two occuring as prime factor.
-    */
-  private[image] def findNumberOfTwoInPrimFactorDecomposition(number: Int, alreadyFound: Int = 0): Int = {
-    if ((number / 2.0).isValidInt)
-      findNumberOfTwoInPrimFactorDecomposition(number / 2, alreadyFound + 1)
-    else
-      alreadyFound
   }
 }
