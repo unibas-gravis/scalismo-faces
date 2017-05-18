@@ -17,8 +17,8 @@ package scalismo.faces.image.pyramid
 
 import scalismo.faces.color.ColorSpaceOperations
 import scalismo.faces.image.AccessMode.MirroredPositionFunctional
+import scalismo.faces.image.filter.ResampleFilter
 import scalismo.faces.image.{InterpolationKernel, PixelImage}
-import scalismo.faces.image.filter.{ImageFilter, ResampleFilter}
 
 import scala.reflect.ClassTag
 
@@ -62,21 +62,8 @@ object LaplacePyramid {
     */
   def expand[A: ClassTag](implicit ops: ColorSpaceOperations[A]) = new ExpandFilter[A] {
     override def filter(image: PixelImage[A], upperWidth: Int, upperHeight: Int): PixelImage[A] = {
-      val w = {
-        val proposed = image.width * 2
-        if (upperWidth - proposed < 2)
-          upperWidth
-        else proposed
-      }
-      val h = {
-        val proposed = image.height * 2
-        if (upperHeight - proposed < 2)
-          upperHeight
-        else proposed
-      }
-
       import ColorSpaceOperations.implicits._
-      ResampleFilter.resampleImage(image.withAccessMode(MirroredPositionFunctional((a:A, b:A)=>2*:a-b)), w, h, interpolationKernel)
+      ResampleFilter.resampleImage(image.withAccessMode(MirroredPositionFunctional((a:A, b:A)=>2*:a-b)), upperWidth, upperHeight, interpolationKernel)
     }
   }
 

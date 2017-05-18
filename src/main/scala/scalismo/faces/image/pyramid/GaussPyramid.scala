@@ -16,10 +16,9 @@
 package scalismo.faces.image.pyramid
 
 import scalismo.faces.color.ColorSpaceOperations
-import scalismo.faces.image.{AccessMode, PixelImage}
 import scalismo.faces.image.filter.{ImageFilter, IsotropicGaussianFilter}
+import scalismo.faces.image.{AccessMode, PixelImage}
 
-import scala.math.min
 import scala.reflect._
 
 /**
@@ -33,22 +32,18 @@ import scala.reflect._
 class GaussPyramid[A: ClassTag](val image: PixelImage[A], val reduce: ImageFilter[A, A], val reductions: Int)(implicit ops: ColorSpaceOperations[A])
   extends ImagePyramid[A] {
 
-  private val maxReductions: Int = {
-    val maxNumberOfReductions = math.floor( math.log(math.min(image.width, image.height)) / math.log(2.0) ).toInt
-    if (reductions >= 0 && reductions < maxNumberOfReductions) {
-      reductions
-    } else {
-      maxNumberOfReductions.toInt
-    }
-  }
-
   override val level: Seq[PixelImage[A]] = {
     def makeReducedImages(image: PixelImage[A], levels: Int): Seq[PixelImage[A]] = {
       if (levels == 0) Seq(image)
-      else image +: makeReducedImages(reduce.filter(image), levels - 1)
+      else {
+        val reduced = reduce.filter(image)
+        if(reduced.width > 0 && reduced.height > 0)
+          image +: makeReducedImages(reduced, levels - 1)
+        else Seq()
+      }
     }
 
-    makeReducedImages(image, maxReductions)
+    makeReducedImages(image, reductions)
   }
 
   override val levels = level.size
@@ -64,14 +59,26 @@ object GaussPyramid {
   /**
     * Standard reduce operation dividing the image size along each dimension by 2.
     */
-  def reduce[A: ClassTag](implicit ops: ColorSpaceOperations[A]) = new ImageFilter[A, A] {
+  def reduce[A: ClassTag](implicit ops: ColorSpaceOperations[A]) = reduceScaled[A](0.5)
+
+  /**
+    * Reduces image according to supplied scaling factor.
+    * @param scale 1.0 > scale >= 0
+    * @param ops
+    */
+  def reduceScaled[A: ClassTag](scale: Double)(implicit ops: ColorSpaceOperations[A]) = new ImageFilter[A, A] {
+    require( scale < 1.0 && scale >=0, "scale must be on [0,1.0)" )
+
     import ColorSpaceOperations.implicits._
+
+    val invScale = 1.0/scale
+
     override def filter(img: PixelImage[A]): PixelImage[A] = {
-      val w = img.width / 2
-      val h = img.height / 2
-      val filteredImage = img.withAccessMode(AccessMode.MirroredPositionFunctional((a:A, b:A)=>2*:a-b)).filter(GaussPyramid.filter)
+      val w = (img.width * scale).toInt
+      val h = (img.height * scale).toInt
+      val filteredImage = img.withAccessMode(AccessMode.MirroredPositionFunctional((a: A, b: A) => 2 *: a - b)).filter(GaussPyramid.filter)
       val interpolatedImage = filteredImage.interpolate
-      PixelImage[A](w, h, (x: Int, y: Int) => filteredImage(x * 2 + 1, y * 2 + 1))
+      PixelImage[A](w, h, (x: Int, y: Int) => filteredImage((x * invScale).toInt + 1, (y * invScale).toInt + 1))
     }
   }
 

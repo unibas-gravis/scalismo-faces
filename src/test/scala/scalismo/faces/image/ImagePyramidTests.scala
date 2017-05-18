@@ -17,8 +17,9 @@
 package scalismo.faces.image
 
 import scalismo.faces.FacesTestSuite
-import scalismo.faces.color.ColorSpaceOperations
+import scalismo.faces.color.{ColorSpaceOperations, RGB, RGBA}
 import scalismo.faces.image.AccessMode.Strict
+import scalismo.faces.image.filter.ImageFilter
 import scalismo.faces.image.pyramid.{GaussPyramid, LaplacePyramid}
 
 import scala.reflect.ClassTag
@@ -98,6 +99,17 @@ class ImagePyramidTests extends FacesTestSuite {
       }
     }
 
+    it("calculates the correct number of levels for strange number of reductions") {
+      val image: PixelImage[Double] = chessBoard(1031, 131, 1.0, 0.0)
+      val pyramid = GaussPyramid(image,-1)
+      val maxReductions = pyramid.levels
+
+      for( reductions <- IndexedSeq( (-2, maxReductions), (-1,maxReductions), (maxReductions+10, maxReductions))) {
+        val pyramid = GaussPyramid(image,reductions._1)
+        pyramid.levels shouldBe (reductions._2)
+      }
+    }
+
   }
 
   describe("A Laplacian Pyramid") {
@@ -144,6 +156,14 @@ class ImagePyramidTests extends FacesTestSuite {
 
       rgbaImages.foreach { img =>
         compareImagesApproximately(img, LaplacePyramid(img).reconstruct)
+      }
+    }
+
+    it("has a expand function that is compatible with the reduce function of the GaussPyramid.") {
+      rgbImages.foreach{ (img: PixelImage[RGB]) =>
+        val gpy = new GaussPyramid[RGB](img, GaussPyramid.reduceScaled[RGB](1.0/3.0), -1)
+        val lpy = new LaplacePyramid(gpy, LaplacePyramid.expand[RGB])
+        compareImagesApproximately(img, lpy.reconstruct)
       }
     }
 
