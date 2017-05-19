@@ -62,22 +62,20 @@ object GaussPyramid {
   def reduce[A: ClassTag](implicit ops: ColorSpaceOperations[A]) = reduceScaled[A](0.5)
 
   /**
-    * Reduces image according to supplied scaling factor.
-    * @param scale 1.0 > scale >= 0
-    * @param ops
+    * Returns an image filter that reduces an image according to a scaling factor.
+    * @param scale 1.0 > scale > 0
     */
   def reduceScaled[A: ClassTag](scale: Double)(implicit ops: ColorSpaceOperations[A]) = new ImageFilter[A, A] {
-    require( scale < 1.0 && scale >=0, "scale must be on [0,1.0)" )
+    require( scale < 1.0 && scale > 0, "scale must be on (0,1.0)" )
 
     import ColorSpaceOperations.implicits._
 
-    val invScale = 1.0/scale
+    private val invScale = 1.0/scale
 
     override def filter(img: PixelImage[A]): PixelImage[A] = {
       val w = (img.width * scale).toInt
       val h = (img.height * scale).toInt
       val filteredImage = img.withAccessMode(AccessMode.MirroredPositionFunctional((a: A, b: A) => 2 *: a - b)).filter(GaussPyramid.filter)
-      val interpolatedImage = filteredImage.interpolate
       PixelImage[A](w, h, (x: Int, y: Int) => filteredImage((x * invScale).toInt + 1, (y * invScale).toInt + 1))
     }
   }
