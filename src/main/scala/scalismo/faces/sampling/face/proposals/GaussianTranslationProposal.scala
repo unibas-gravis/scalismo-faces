@@ -36,14 +36,14 @@ object GaussianTranslationProposal {
   /**
     * Constructs a translation proposal, which only shifts in the xy-plane and leaves the z-value constant.
     */
-  def apply(sdev: Vector2D)(implicit rnd: Random) : GaussianTranslationProposal = {
+  def apply(sdev: Vector2D) : GaussianTranslationProposal = {
     Gaussian3DTranslationProposalConstantZ(sdev)
   }
 
   /**
     * Constructs a full 3d translation proposal.
     */
-  def apply(sdev: Vector3D)(implicit rnd: Random) : GaussianTranslationProposal = {
+  def apply(sdev: Vector3D) : GaussianTranslationProposal = {
     Gaussian3DTranslationProposal(sdev)
   }
 
