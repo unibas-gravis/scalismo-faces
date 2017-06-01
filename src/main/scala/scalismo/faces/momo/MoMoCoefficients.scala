@@ -36,6 +36,9 @@ object MoMoCoefficients {
   def apply(shape: IndexedSeq[Double],
             color: IndexedSeq[Double]) = new MoMoCoefficients(DenseVector(shape.toArray), DenseVector(color.toArray), DenseVector.zeros[Double](0))
 
+  def apply(shape: DenseVector[Double],
+            color: DenseVector[Double]) = new MoMoCoefficients(shape, color, DenseVector.zeros[Double](0))
+
   /** get 0 coefficients of specified length */
   def zeros(shapeComponents: Int,
             colorComponents: Int,
