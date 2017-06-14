@@ -16,8 +16,8 @@
 
 package scalismo.faces.image.filter
 
-import scalismo.faces.image.AccessMode.{Repeat, Strict}
-import scalismo.faces.image.{ColumnMajorImageDomain, PixelImage, RowMajorImageDomain}
+import scalismo.faces.image.AccessMode._
+import scalismo.faces.image._
 
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
@@ -29,9 +29,10 @@ import scala.reflect.ClassTag
   */
 case class MorphologicalFilter[A: ClassTag](structuringElement: PixelImage[Boolean], windowFilter: (Seq[A]) => A) extends ImageFilter[A, A] {
   override def filter(image: PixelImage[A]): PixelImage[A] = {
-
     val width = structuringElement.width
     val height = structuringElement.height
+
+    require(image.width >= width && image.height >= height, "Filter window can't be bigger than filtered image")
 
     /** apply filter at position x, y */
     def perPixel(x: Int, y: Int): A = {
@@ -47,15 +48,21 @@ case class MorphologicalFilter[A: ClassTag](structuringElement: PixelImage[Boole
         }
         kx += 1
       }
-      windowFilter(kernelPixels)
+      if (kernelPixels.nonEmpty)
+        windowFilter(kernelPixels)
+      else
+        image(x, y)
     }
-    assert(image.width >= width && image.height >= height, "Filter window can't be bigger than filtered image")
 
     if(width <= 0 || height <= 0)
       image
     else
-      PixelImage(width, height, perPixel, Strict())
+      PixelImage(image.width, image.height, perPixel, Strict())
   }
+}
+
+object MorphologicalFilter {
+  def boxElement(size: Int): PixelImage[Boolean] = PixelImage.view(size, size, (x, y) => x >= 0 && x < size && y >= 0 && y < size)
 }
 
 /**
@@ -92,14 +99,17 @@ case class SeparableMorphologicalFilter[A: ClassTag](structuringElement: PixelIm
   }
 }
 
-object DilateFilter {
+object SeparableMorphologicalFilter {
+  def lineElement(size: Int): PixelImage[Boolean] = PixelImage.view(size, 1, (x, y) => x >= 0 && x < size)
+}
+
+object Dilation {
   /**
     * dilation filter with box element
     * @param size side length of box
     */
   def box(size: Int): SeparableMorphologicalFilter[Double] = {
-    val boxElement: PixelImage[Boolean] = PixelImage.view(size, 1, (x, y) => x >= 0 && x < size - 1 && y > 0 && y < size - 1)
-    SeparableMorphologicalFilter(boxElement, list => list.max)
+    SeparableMorphologicalFilter(SeparableMorphologicalFilter.lineElement(size), list => list.max)
   }
 
   /**
@@ -111,14 +121,13 @@ object DilateFilter {
   }
 }
 
-object ErodeFilter {
+object Erosion {
   /**
     * erosion filter with box element
     * @param size side length of box
     */
   def box(size: Int): SeparableMorphologicalFilter[Double] = {
-    val boxElement: PixelImage[Boolean] = PixelImage.view(size, 1, (x, y) => x >= 0 && x < size - 1 && y > 0 && y < size - 1)
-    SeparableMorphologicalFilter(boxElement, list => list.min)
+    SeparableMorphologicalFilter(SeparableMorphologicalFilter.lineElement(size), list => list.min)
   }
 
   /**
@@ -130,10 +139,11 @@ object ErodeFilter {
   }
 }
 
-object MedianFilter {
+object Median {
   // extract median value
   private def median(values: Seq[Double]): Double = {
-    if(values.length <= 1) values.head
+    if(values.length <= 1)
+      values.head
     else{
       val sorted = values.sorted
       (sorted(values.length/2) + sorted(values.length - values.length/2)) / 2
@@ -145,8 +155,15 @@ object MedianFilter {
     * @param size side length of the box
     */
   def box(size: Int): MorphologicalFilter[Double] = {
-    val boxElement: PixelImage[Boolean] = PixelImage.view(size, size, (x, y) => x >= 0 && x < size - 1 && y > 0 && y < size - 1)
-    MorphologicalFilter(boxElement, median)
+    MorphologicalFilter(MorphologicalFilter.boxElement(size), median)
+  }
+
+  /**
+    * approximate median filter with box as its structuring element, separable (not identical to box)
+    * @param size side length of the box
+    */
+  def separableBox(size: Int): SeparableMorphologicalFilter[Double] = {
+    SeparableMorphologicalFilter(SeparableMorphologicalFilter.lineElement(size), median)
   }
 
   /**
@@ -155,5 +172,49 @@ object MedianFilter {
     */
   def apply(structuringElement: PixelImage[Boolean]): MorphologicalFilter[Double] = {
     MorphologicalFilter[Double](structuringElement, median)
+  }
+}
+
+object Opening {
+  def box(size: Int): ImageFilter[Double, Double] = {
+    val eroder = Erosion.box(size)
+    val dilator = Dilation.box(size)
+    image => image.filter(eroder).withAccessMode(Repeat()).filter(dilator)
+  }
+
+  def apply(structuringElement: PixelImage[Boolean]): ImageFilter[Double, Double] = {
+    val eroder = Erosion(structuringElement)
+    val dilator = Dilation(structuringElement)
+    image => image.filter(eroder).withAccessMode(Repeat()).filter(dilator)
+  }
+}
+
+object Closing {
+  def box(size: Int): ImageFilter[Double, Double] = {
+    val eroder = Erosion.box(size)
+    val dilator = Dilation.box(size)
+    image => image.filter(dilator).withAccessMode(Repeat()).filter(eroder)
+  }
+
+  def apply(structuringElement: PixelImage[Boolean]): ImageFilter[Double, Double] = {
+    val eroder = Erosion(structuringElement)
+    val dilator = Dilation(structuringElement)
+    image => image.filter(dilator).withAccessMode(Repeat()).filter(eroder)
+  }
+}
+
+object MorphologicalGradient {
+  import PixelImage.implicits._
+
+  def box(size: Int): ImageFilter[Double, Double] = {
+    val eroder = Erosion.box(size)
+    val dilator = Dilation.box(size)
+    image => image.filter(dilator) - image.filter(eroder)
+  }
+
+  def apply(structuringElement: PixelImage[Boolean]): ImageFilter[Double, Double] = {
+    val eroder = Erosion(structuringElement)
+    val dilator = Dilation(structuringElement)
+    image => image.filter(dilator) - image.filter(eroder)
   }
 }
