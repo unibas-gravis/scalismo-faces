@@ -22,7 +22,8 @@ import scalismo.faces.image.PixelImage
 object Median {
   // extract median value
   private def median(values: Seq[Double]): Double = {
-    if(values.length <= 1)
+    require(values.nonEmpty, "median needs non-empty (pixel value) sequence")
+    if(values.length == 1)
       values.head
     else{
       val sorted = values.sorted
