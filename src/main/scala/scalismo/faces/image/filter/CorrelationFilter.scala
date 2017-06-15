@@ -17,7 +17,7 @@
 package scalismo.faces.image.filter
 
 import scalismo.faces.color.ColorSpaceOperations
-import scalismo.faces.image.{ColumnMajorImageDomain, PixelImage, RowMajorImageDomain}
+import scalismo.faces.image.PixelImage
 
 import scala.reflect.ClassTag
 
@@ -50,15 +50,4 @@ case class CorrelationFilter[@specialized A: ClassTag](kernel: PixelImage[Double
   }
 }
 
-case class SeparableCorrelationFilter[@specialized A: ClassTag](kernelRow: PixelImage[Double], kernelCol: PixelImage[Double])(implicit ops: ColorSpaceOperations[A]) extends ImageFilter[A, A] {
-  require(kernelCol.width == 1, "column filter is not a column")
-  require(kernelRow.height == 1, "row filter is not a row")
 
-  private val columnFilter = CorrelationFilter(kernelCol)
-  private val rowFilter = CorrelationFilter(kernelRow)
-
-  override def filter(image: PixelImage[A]): PixelImage[A] = image.domain match {
-    case _: ColumnMajorImageDomain => image.filter(columnFilter).filter(rowFilter)
-    case _: RowMajorImageDomain => image.filter(rowFilter).filter(columnFilter)
-  }
-}
