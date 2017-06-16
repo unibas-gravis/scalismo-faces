@@ -49,14 +49,14 @@ object SphericalHarmonics {
   val N2_0: Double = sqrt(5.0 / Pi) / 4.0
 
   val N3_3: Double = sqrt(35.0 / 2.0 / Pi) / 4.0
-  val N3_2: Double = sqrt(105.0 / Pi) / 2.0
+  val N3_2: Double = sqrt(105.0 / Pi) / 4.0
   val N3_1: Double = sqrt(21.0 / 2.0 / Pi) / 4.0
   val N3_0: Double = sqrt(7.0 / Pi) / 4.0
 
   val N4_4: Double = sqrt(35.0 / Pi) * 3.0 / 16.0
   val N4_3: Double = sqrt(35.0 / 2.0 / Pi) * 3.0 / 4.0
   val N4_2: Double = sqrt(5.0 / Pi) * 3.0 / 8.0
-  val N4_1: Double = sqrt(5.0 / 2.0 / Pi) * 3.0 / 8.0
+  val N4_1: Double = sqrt(5.0 / 2.0 / Pi) * 3.0 / 4.0
   val N4_0: Double = sqrt(1.0 / Pi) * 3.0 / 16.0
 
   //https://en.wikipedia.org/wiki/Table_of_spherical_harmonics#Real_spherical_harmonics
@@ -74,7 +74,7 @@ object SphericalHarmonics {
     SHIndex(2, 2) -> ((v: Vector[_3D]) => N2_2 * (v.x * v.x - v.y * v.y)),
 
     SHIndex(3, -3) -> ((v: Vector[_3D]) => N3_3 * (3 * v.x * v.x - v.y * v.y) * v.y),
-    SHIndex(3, -2) -> ((v: Vector[_3D]) => N3_2 * (v.x * v.y * v.z)),
+    SHIndex(3, -2) -> ((v: Vector[_3D]) => N3_2 * 2 * (v.x * v.y * v.z)),
     SHIndex(3, -1) -> ((v: Vector[_3D]) => N3_1 * (4 * v.z * v.z - v.x * v.x - v.y * v.y) * v.y),
     SHIndex(3, 0) -> ((v: Vector[_3D]) => N3_0 * (2 * v.z * v.z - 3 * v.x * v.x - 3 * v.y * v.y) * v.z),
     SHIndex(3, 1) -> ((v: Vector[_3D]) => N3_1 * (4 * v.z * v.z - v.x * v.x - v.y * v.y) * v.x),
@@ -180,7 +180,7 @@ object SphericalHarmonics {
       }
       case 3 => m match {
         case -3 => N3_3 * (3 * xx - yy) * y
-        case -2 => N3_2 * (x * y * z)
+        case -2 => N3_2 * 2 * (x * y * z)
         case -1 => N3_1 * (4 * zz - xx - yy) * y
         case 0 => N3_0 * (2 * zz - 3 * xx - 3 * yy) * z
         case 1 => N3_1 * (4 * zz - xx - yy) * x
