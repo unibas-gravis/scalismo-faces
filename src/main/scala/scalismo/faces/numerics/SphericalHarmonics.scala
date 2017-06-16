@@ -56,7 +56,7 @@ object SphericalHarmonics {
   val N4_4: Double = sqrt(35.0 / Pi) * 3.0 / 16.0
   val N4_3: Double = sqrt(35.0 / 2.0 / Pi) * 3.0 / 4.0
   val N4_2: Double = sqrt(5.0 / Pi) * 3.0 / 8.0
-  val N4_1: Double = sqrt(5.0 / 2.0 / Pi) * 3.0 / 8.0
+  val N4_1: Double = sqrt(5.0 / 2.0 / Pi) * 3.0 / 4.0
   val N4_0: Double = sqrt(1.0 / Pi) * 3.0 / 16.0
 
   //https://en.wikipedia.org/wiki/Table_of_spherical_harmonics#Real_spherical_harmonics
