@@ -27,12 +27,6 @@ libraryDependencies += "ch.unibas.cs.gravis" %% "scalismo-faces" % "0.4.1"
 resolvers += Resolver.bintrayRepo("unibas-gravis", "maven")
 ```
 
-Currently also add the scalismo native libs as an explicit dependency:
-
-```scala
-libraryDependencies += "ch.unibas.cs.gravis" % "scalismo-native-all" % "3.0.0"
-```
-
 ### Getting Started
 
 - Tutorial from the University of Basel: *coming soon*
