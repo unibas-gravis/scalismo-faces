@@ -16,12 +16,12 @@
 
 package scalismo.faces.color
 
-/** HSV color value (Hue, Saturation, Value) */
+/** HSV color value with Hue in [0.0,2*Pi), Saturation in [0.0,1.0] and Value in [0.0,1.0] */
 case class HSV(hue: Double, saturation: Double, value: Double) {
 
-  /** convert to RGB value.*/
+  /** convert to RGB value. May throw or result in undefined behaviour if values outside of ranges.*/
   def toRGB: RGB = {
-    val hs = hue / (math.Pi / 3.0) + math.Pi
+    val hs = hue / (math.Pi / 3.0)
     val h: Int = hs.toInt
     val f: Double = hs - h
     val p: Double = value * (1.0 - saturation)
@@ -35,7 +35,7 @@ case class HSV(hue: Double, saturation: Double, value: Double) {
       case 4 => RGB(t, p, value)
       case 5 => RGB(value, p, q)
       case 6 => RGB(value, t, p)
-      case _ => throw new RuntimeException("Invalid hue value in conversion.")
+      case _ => throw new RuntimeException(s"Invalid hue value (${h}) in conversion of color ${this}.")
     }
   }
 }
@@ -55,7 +55,7 @@ object HSV {
     }
     val s = if (maxCh > 0.0) (maxCh - minCh) / maxCh else 0.0
     val v = maxCh
-    HSV(h, s, v)
+    HSV( if(h<0) h+2.0*math.Pi else h, s, v)
   }
 
   /** ColorBlender for HSV colors */
