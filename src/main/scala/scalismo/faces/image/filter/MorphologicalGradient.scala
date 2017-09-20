@@ -25,12 +25,12 @@ object MorphologicalGradient {
   def box(size: Int): ImageFilter[Double, Double] = {
     val eroder = Erosion.box(size)
     val dilator = Dilation.box(size)
-    image => image.filter(dilator) - image.filter(eroder)
+    ImageFilter((image: PixelImage[Double]) => image.filter(dilator) - image.filter(eroder))
   }
 
   def apply(structuringElement: PixelImage[Boolean]): ImageFilter[Double, Double] = {
     val eroder = Erosion(structuringElement)
     val dilator = Dilation(structuringElement)
-    image => image.filter(dilator) - image.filter(eroder)
+    ImageFilter((image: PixelImage[Double]) => image.filter(dilator) - image.filter(eroder))
   }
 }

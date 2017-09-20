@@ -23,12 +23,12 @@ object Opening {
   def box(size: Int): ImageFilter[Double, Double] = {
     val eroder = Erosion.box(size)
     val dilator = Dilation.box(size)
-    image => image.filter(eroder).withAccessMode(Repeat()).filter(dilator)
+    ImageFilter((image: PixelImage[Double]) => image.filter(eroder).withAccessMode(Repeat()).filter(dilator))
   }
 
   def apply(structuringElement: PixelImage[Boolean]): ImageFilter[Double, Double] = {
     val eroder = Erosion(structuringElement)
     val dilator = Dilation(structuringElement)
-    image => image.filter(eroder).withAccessMode(Repeat()).filter(dilator)
+    ImageFilter((image: PixelImage[Double]) => image.filter(eroder).withAccessMode(Repeat()).filter(dilator))
   }
 }
