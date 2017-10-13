@@ -203,11 +203,9 @@ object PixelImageOperations {
       PixelImage(targetMC.width, targetMC.height, (x, y) => targetMC(x, y, i))
     }
   }
-
   /** Flips the target at the horizontally */
   def flipHorizontal[A](target: PixelImage[A]): PixelImage[A] = {
     PixelImage.view(target.width, target.height, (x, y) => target(target.width - x - 1, y))
-
   }
 
   /** Flips  the target at the vertically */
