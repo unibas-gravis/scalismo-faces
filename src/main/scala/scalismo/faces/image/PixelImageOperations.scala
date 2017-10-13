@@ -204,14 +204,15 @@ object PixelImageOperations {
     }
   }
 
-  /** Mirrors the target at the horizontally */
-  def mirrorHorizontal[A](target: PixelImage[A]): PixelImage[A] = {
-    PixelImage.view(target.width, target.height, (x, y) => target(x, target.height - y - 1))
+  /** Flips the target at the horizontally */
+  def flipHorizontal[A](target: PixelImage[A]): PixelImage[A] = {
+    PixelImage.view(target.width, target.height, (x, y) => target(target.width - x - 1, y))
+
   }
 
-  /** Mirrors the target at the vertically */
-  def mirrorVertical[A](target: PixelImage[A]): PixelImage[A] = {
-    PixelImage.view(target.width, target.height, (x, y) => target(target.width - x - 1, y))
+  /** Flips  the target at the vertically */
+  def flipVertical[A](target: PixelImage[A]): PixelImage[A] = {
+    PixelImage.view(target.width, target.height, (x, y) => target(x, target.height - y - 1))
   }
 
 
