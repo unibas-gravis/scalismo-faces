@@ -206,12 +206,12 @@ object PixelImageOperations {
 
   /** Mirrors the target at the horizontally */
   def mirrorHorizontal[Pixel](target: PixelImage[Pixel]): PixelImage[Pixel] = {
-    PixelImage(target.width, target.height, (x, y) => target(x, target.height-y))
+    PixelImage(target.width, target.height, (x, y) => target(x, target.height - y - 1))
   }
 
   /** Mirrors the target at the vertically */
   def mirrorVertical[Pixel](target: PixelImage[Pixel]): PixelImage[Pixel] = {
-    PixelImage(target.width, target.height, (x, y) => target(target.width-x, y))
+    PixelImage(target.width, target.height, (x, y) => target(target.width - x - 1, y))
   }
 
 
