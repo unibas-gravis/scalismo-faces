@@ -29,7 +29,7 @@ resolvers += Resolver.bintrayRepo("unibas-gravis", "maven")
 
 ### Getting Started
 
-- Tutorial from the University of Basel: *coming soon*
+- [Probabilistic Fitting Tutorial](http://gravis.dmi.unibas.ch/PMM/) from the University of Basel
 - Create a checkerboard image and save it to disk:
 
 ```scala
