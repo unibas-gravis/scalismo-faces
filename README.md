@@ -11,9 +11,7 @@ library for shape modelling. It originates from the [Graphics
 and Vision](http://gravis.cs.unibas.ch) research group at the [University of
 Basel](http://www.unibas.ch), Switzerland.
 
-The library contains tools for image processing, rendering and handling of the Morphable Model. A tutorial on how to use this software and about the concepts of Analysis-by-Synthesis face image analysis will soon be available from the University of Basel. Until then, enjoy the shape modelling online course about scalismo at http://shapemodelling.cs.unibas.ch/.
-
-The library is initially started at a very basic level. More contents will be added when the tutorial from the University of Basel will be available (expected Feb/Mar 2017). We will add rendering, handling of the Morphable Model and also model fitting capability. The current state is still under heavy development and subject to frequent changes. While being built up, we resort to a simple feature branching model and develop on the master branch with tagged releases.
+The library contains tools for image processing, rendering and handling of the Morphable Model. A tutorial on how to use this software and about the concepts of Analysis-by-Synthesis face image analysis is available from the University of Basel under http://gravis.dmi.unibas.ch/PMM/.
 
 Usage
 -----
