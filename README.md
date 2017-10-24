@@ -27,7 +27,6 @@ resolvers += Resolver.bintrayRepo("unibas-gravis", "maven")
 
 ### Getting Started
 
-- [Probabilistic Fitting Tutorial](http://gravis.dmi.unibas.ch/PMM/) from the University of Basel
 - Create a checkerboard image and save it to disk:
 
 ```scala
@@ -40,6 +39,12 @@ PixelImageIO.write(checkerboard, new File("checkerboard.png")).get
 ```
 (you can open an appropriate Scala REPL via `sbt console`)
 
+Documentation
+-------------
+
+- [Probabilistic Fitting Tutorial](http://gravis.dmi.unibas.ch/PMM/) from the University of Basel
+
+There is also a [scalismo-faces google group](https://groups.google.com/forum/#!forum/scalismo-faces) for general questions and discussion.
 
 Contributors
 ------------
@@ -53,7 +58,6 @@ Maintainers
 -----------
 
 - University of Basel, Graphics and Vision research: [@unibas-gravis](https://github.com/unibas-gravis), [homepage](http://gravis.cs.unibas.ch)
-- Sandro Schönborn, [@sschoenborn](https://github.com/sschoenborn)
 
 Contribution
 ------------
