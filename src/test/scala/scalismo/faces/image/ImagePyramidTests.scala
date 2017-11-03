@@ -27,6 +27,8 @@ import scala.reflect.ClassTag
 class ImagePyramidTests extends FacesTestSuite {
 
   def compareImagesApproximately[A: ClassTag](lhs: PixelImage[A], rhs: PixelImage[A], threshold: Double = 1.0e-6)(implicit ops: ColorSpaceOperations[A]): Unit = {
+    lhs.domain.width shouldBe rhs.domain.width
+    lhs.domain.height shouldBe rhs.domain.height
     lhs.values.zip(rhs.values).foreach{ pixels =>
       val l = pixels._1
       val r = pixels._2

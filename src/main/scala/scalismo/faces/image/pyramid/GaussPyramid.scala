@@ -16,8 +16,8 @@
 package scalismo.faces.image.pyramid
 
 import scalismo.faces.color.ColorSpaceOperations
-import scalismo.faces.image.filter.{ImageFilter, IsotropicGaussianFilter}
-import scalismo.faces.image.{AccessMode, PixelImage}
+import scalismo.faces.image.filter.{ImageFilter, IsotropicGaussianFilter, ResampleFilter}
+import scalismo.faces.image.{AccessMode, InterpolationKernel, PixelImage}
 
 import scala.reflect._
 
@@ -72,11 +72,17 @@ object GaussPyramid {
 
     private val invScale = 1.0/scale
 
+    def interpolationKernel = InterpolationKernel.BilinearKernel
+
     override def filter(img: PixelImage[A]): PixelImage[A] = {
       val w = (img.width * scale).toInt
       val h = (img.height * scale).toInt
       val filteredImage = img.withAccessMode(AccessMode.MirroredPositionFunctional((a: A, b: A) => 2 *: a - b)).filter(GaussPyramid.filter)
-      PixelImage[A](w, h, (x: Int, y: Int) => filteredImage((x * invScale).toInt + 1, (y * invScale).toInt + 1))
+      if ( w > 0 && h > 0) {
+        ResampleFilter.resampleImage(filteredImage,w,h,interpolationKernel)
+      } else {
+        PixelImage[A](0, h, (x: Int, y: Int) => throw new RuntimeException)
+      }
     }
   }
 
