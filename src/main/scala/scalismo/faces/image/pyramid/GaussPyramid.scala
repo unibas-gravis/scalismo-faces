@@ -59,24 +59,24 @@ object GaussPyramid {
   /**
     * Standard reduce operation dividing the image size along each dimension by 2.
     */
-  def reduce[A: ClassTag](implicit ops: ColorSpaceOperations[A]) = reduceScaled[A](0.5)
+  def reduce[A: ClassTag](implicit ops: ColorSpaceOperations[A]) = reduceScaled[A](1,2)
 
   /**
-    * Returns an image filter that reduces an image according to a scaling factor.
-    * @param scale 1.0 > scale > 0
+    * Returns an image filter that reduces an image according to a scaling factor. The scaling factor is computed as follows:
+    * scaleNumerator / scaleDenominator
+    * @param scaleNumerator <= scaleDenominator
+    * @param scaleDenominator
     */
-  def reduceScaled[A: ClassTag](scale: Double)(implicit ops: ColorSpaceOperations[A]) = new ImageFilter[A, A] {
-    require( scale < 1.0 && scale > 0, "scale must be on (0,1.0)" )
+  def reduceScaled[A: ClassTag](scaleNumerator: Int, scaleDenominator: Int)(implicit ops: ColorSpaceOperations[A]) = new ImageFilter[A, A] {
+    require( scaleNumerator <= scaleDenominator, "scale must be on (0,1.0). scale= scaleNumerator/scaleDenominator" )
 
     import ColorSpaceOperations.implicits._
-
-    private val invScale = 1.0/scale
 
     def interpolationKernel = InterpolationKernel.BilinearKernel
 
     override def filter(img: PixelImage[A]): PixelImage[A] = {
-      val w = (img.width * scale).toInt
-      val h = (img.height * scale).toInt
+      val w = (img.width * scaleNumerator.toDouble / scaleDenominator).toInt
+      val h = (img.height * scaleNumerator.toDouble / scaleDenominator).toInt
       val filteredImage = img.withAccessMode(AccessMode.MirroredPositionFunctional((a: A, b: A) => 2 *: a - b)).filter(GaussPyramid.filter)
       if ( w > 0 && h > 0) {
         ResampleFilter.resampleImage(filteredImage,w,h,interpolationKernel)

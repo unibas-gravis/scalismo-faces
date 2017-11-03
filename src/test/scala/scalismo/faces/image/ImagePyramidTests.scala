@@ -163,7 +163,7 @@ class ImagePyramidTests extends FacesTestSuite {
 
     it("has a expand function that is compatible with the reduce function of the GaussPyramid.") {
       rgbImages.foreach{ (img: PixelImage[RGB]) =>
-        val gpy = new GaussPyramid[RGB](img, GaussPyramid.reduceScaled[RGB](1.0/3.0), -1)
+        val gpy = new GaussPyramid[RGB](img, GaussPyramid.reduceScaled[RGB](1, 3), -1)
         val lpy = new LaplacePyramid(gpy, LaplacePyramid.expand[RGB])
         compareImagesApproximately(img, lpy.reconstruct)
       }
