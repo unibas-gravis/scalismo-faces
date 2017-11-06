@@ -33,10 +33,10 @@ object TLMSLandmarksIO {
 
   /** read TLMS 2D format from a stream (format: "id visible x y") */
   def read2DFromStream(stream: InputStream): Try[IndexedSeq[TLMSLandmark2D]] = Try {
-    val lines = Source.fromInputStream(stream).getLines()
+    val lines = Source.fromInputStream(stream).getLines().filter(!_.isEmpty)
     lines.map { line =>
       val fields = line.split("\\s+").map(_.trim)
-      require(fields.length == 4, "landmark file not in correct format, or empty line at end")
+      require(fields.length == 4, "landmark file not in correct format, expects name, visibility (0 or 1), x-coordinate, y-coordinate per line")
       val name = fields(0)
       val visibility: Boolean = fields(1).toInt > 0
       val x = fields(2).toFloat
@@ -52,10 +52,10 @@ object TLMSLandmarksIO {
 
   /** read TLMS 3D format from a stream (format: "id visible x y z") */
   def read3DFromStream(stream: InputStream): Try[IndexedSeq[TLMSLandmark3D]] = Try {
-    val lines = Source.fromInputStream(stream).getLines()
+    val lines = Source.fromInputStream(stream).getLines().filter(!_.isEmpty)
     lines.map { line =>
       val fields = line.split("\\s+").map(_.trim)
-      require(fields.length == 5, "landmark file not in correct format, or empty line at end")
+      require(fields.length == 5, "landmark file not in correct format, expects name, visibility (0 or 1), x-coordinate, y-coordinate, z-coordinate per line")
       val name = fields(0)
       val visibility: Boolean = fields(1).toInt > 0
       val x = fields(2).toFloat
