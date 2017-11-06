@@ -36,6 +36,7 @@ object TLMSLandmarksIO {
     val lines = Source.fromInputStream(stream).getLines()
     lines.map { line =>
       val fields = line.split("\\s+").map(_.trim)
+      require(fields.length == 4, "landmark file not in correct format, or empty line at end")
       val name = fields(0)
       val visibility: Boolean = fields(1).toInt > 0
       val x = fields(2).toFloat
@@ -54,6 +55,7 @@ object TLMSLandmarksIO {
     val lines = Source.fromInputStream(stream).getLines()
     lines.map { line =>
       val fields = line.split("\\s+").map(_.trim)
+      require(fields.length == 5, "landmark file not in correct format, or empty line at end")
       val name = fields(0)
       val visibility: Boolean = fields(1).toInt > 0
       val x = fields(2).toFloat
