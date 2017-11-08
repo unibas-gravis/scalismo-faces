@@ -18,10 +18,9 @@ package scalismo.faces.sampling.face.proposals
 
 import scalismo.faces.color.{RGB, RGBA}
 import scalismo.faces.deluminate.SphericalHarmonicsOptimizer
-import scalismo.faces.image.InterpolationKernel.GaussKernel
 import scalismo.faces.image.{AccessMode, PixelImage}
 import scalismo.faces.mesh.{MeshSurfaceSampling, VertexColorMesh3D}
-import scalismo.faces.parameters.{ParametricRenderer, RenderParameter, SphericalHarmonicsLight}
+import scalismo.faces.parameters.{RenderParameter, SphericalHarmonicsLight}
 import scalismo.faces.render.TextureExtraction
 import scalismo.faces.sampling.evaluators.LogNormalDistribution
 import scalismo.faces.sampling.face.{ParametricImageRenderer, ParametricModel}
@@ -293,8 +292,7 @@ object SphericalHarmonicsLightProposals {
                                           nSamplesIllumination: Int = 1000)(implicit rnd: Random)
     extends ProposalGenerator[(RenderParameter, PixelImage[Int])] with TransitionProbability[(RenderParameter, PixelImage[Int])] {
 
-    // the sampler to sample points on the surface
-    val sampler = MeshSurfaceSampling.sampleUniformlyOnSurface(nSamples)
+
 
     // the normalizer for the given pixel evaluator
     val normalizer = pixelEvaluator.logValue(RGB.White, RGB.White)
@@ -341,7 +339,6 @@ object SphericalHarmonicsLightProposals {
       // get renderParameters from tuple, the labels from PixelImage[Int] are not used
       val rps = current._1
 
-
       val mesh: VertexColorMesh3D = modelRenderer.instance(rps)
       val faceMask = modelRenderer.renderImage(rps)
       val faceMaskLabel: PixelImage[Int] = faceMask.map(p => if (p.a > 0.01) {
@@ -358,9 +355,8 @@ object SphericalHarmonicsLightProposals {
 
       // while iterations < k {
       for (counter <- 1 until iterations) {
-
-        // maybeinliers = n randomly selected values from data
-        val points: IndexedSeq[(TriangleId, BarycentricCoordinates)] = sampler(mesh.shape)
+        // the sampler to sample points on the surface
+        val points = MeshSurfaceSampling.sampleUniformlyOnSurface(nSamples)(mesh.shape)
 
         // maybemodel = model parameters fitted to maybeinliers
         val newLight = shOpt.optimize(rps, points)
@@ -369,13 +365,11 @@ object SphericalHarmonicsLightProposals {
 
         // do a full model estimation if the estimation based on few samples is good enough
         if (count > percentage) {
-          // the full model estimation takes 1000 instead of 100 samples but is restricted to estimated mask
+          // the full model estimation takes 1000 instead of 30 samples (with standard parameters) but is restricted to estimated mask
           val allPoints = maskedSampler(rps, thresholded)(mesh.shape)
           val betterModel = shOpt.optimize(rps, allPoints)
           val betterLight: RenderParameter = rps.copy(environmentMap = betterModel)
-          val t = measureModelQuality(betterLight)
-          val betterCount = t._1
-          val betterThresholded = t._2
+          val (betterCount, betterThresholded) = measureModelQuality(betterLight)
 
           // check if new estimate is better than so far best one
           if (betterCount > soFarBestModelQuality) {
