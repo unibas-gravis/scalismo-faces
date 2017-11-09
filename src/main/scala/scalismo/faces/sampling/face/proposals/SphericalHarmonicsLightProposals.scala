@@ -369,7 +369,7 @@ object SphericalHarmonicsLightProposals {
 
       val differenceImage = PixelImage(curSample.domain, diff, AccessMode.Strict[Double])
       val thresholded = differenceImage.map(d => if (Math.exp(d - normalizer) > threshold) 1 else 0)
-      val count: Double = thresholded.toArray.sum / counter
+      val count: Double = thresholded.values.sum.toDouble / counter
       (estimatedRps, count, thresholded)
     }
 
