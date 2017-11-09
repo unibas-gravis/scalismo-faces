@@ -75,7 +75,7 @@ object ResampleFilter {
           }
           kvsum / kSumX
         }
-        PixelImage(cols, image.height, f)
+        PixelImage(cols, image.height, f(_,_))
       }
     }
 
