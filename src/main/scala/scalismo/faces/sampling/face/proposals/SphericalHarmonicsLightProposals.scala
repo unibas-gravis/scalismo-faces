@@ -16,12 +16,18 @@
 
 package scalismo.faces.sampling.face.proposals
 
+import scalismo.faces.color.{RGB, RGBA}
 import scalismo.faces.deluminate.SphericalHarmonicsOptimizer
+import scalismo.faces.image.{AccessMode, PixelImage}
+import scalismo.faces.mesh.{MeshSurfaceSampling, VertexColorMesh3D}
 import scalismo.faces.parameters.{RenderParameter, SphericalHarmonicsLight}
+import scalismo.faces.render.TextureExtraction
 import scalismo.faces.sampling.evaluators.LogNormalDistribution
+import scalismo.faces.sampling.face.evaluators.PixelEvaluators.IsotropicGaussianPixelEvaluatorHSV
+import scalismo.faces.sampling.face.{ParametricImageRenderer, ParametricModel}
 import scalismo.geometry.{Vector, _3D}
-import scalismo.mesh.{BarycentricCoordinates, TriangleId, TriangleMesh3D}
-import scalismo.sampling.evaluators.GaussianEvaluator
+import scalismo.mesh._
+import scalismo.sampling.evaluators.{GaussianEvaluator, PairEvaluator}
 import scalismo.sampling.{ProposalGenerator, SymmetricTransitionRatio, TransitionProbability}
 import scalismo.utils.Random
 
@@ -260,8 +266,180 @@ object SphericalHarmonicsLightProposals {
     override def propose(current: RenderParameter): RenderParameter = current.copy(
       environmentMap = sphericalHarmonicsOptimizer.optimize(current, samplingFunction)
     )
+
     override def logTransitionProbability(from: RenderParameter, to: RenderParameter): Double = 0.0
 
     override def toString = s"SHLightSolverProposal($sphericalHarmonicsOptimizer)"
+  }
+
+  /** This proposal performs RANSAC to try to estimate illumination excluding outliers/occlusions
+    * The face model is used as appearance prior
+    *
+    * The procedure is explained in:
+    * Occlusion-aware 3D Morphable Face Models,
+    * Bernhard Egger, Andreas Schneider, Clemens Blumer, Andreas Morel-Forster, Sandro Schönborn, Thomas Vetter
+    * IN: British Machine Vision Conference (BMVC), September 2016
+    * https://dx.doi.org/10.5244/C.30.64
+    * */
+  case class  RobustSHLightSolverProposal(modelRenderer: ParametricImageRenderer[RGBA] with ParametricModel,
+                                          shOpt: SphericalHarmonicsOptimizer,
+                                          target: PixelImage[RGBA],
+                                          pixelEvaluator: PairEvaluator[RGB] = IsotropicGaussianPixelEvaluatorHSV(0.043f),
+                                          nSamples: Int = 30,
+                                          sigmaThreshold: Double = 2,
+                                          percentage: Double = 0.4,
+                                          iterations: Int = 500,
+                                          maxVarianceForMask: Double = 0.5,
+                                          nSamplesIllumination: Int = 1000)(implicit rnd: Random)
+    extends ProposalGenerator[RenderParameter] with TransitionProbability[RenderParameter] {
+
+    val proposal = RobustSHLightSolverProposalWithLabel(modelRenderer,
+      shOpt,
+      target,
+      pixelEvaluator,
+      nSamples,
+      sigmaThreshold,
+      percentage,
+      iterations,
+      maxVarianceForMask,
+      nSamplesIllumination)
+
+    val dummyImg = target.map(_ => 0)
+
+    // wrapping proposal with label
+    override def propose(current: RenderParameter): RenderParameter = {
+      proposal.propose(current,dummyImg)._1
+    }
+
+    override def logTransitionProbability(from: RenderParameter, to: RenderParameter): Double = 0.0
+
+    override def toString = s"" // keep empty since it is only wrapping RobustSHLightSolverProposalWithLabel
+  }
+
+  /** This proposal performs RANSAC to try to estimate illumination excluding outliers/occlusions
+    * The face model is used as appearance prior
+    *
+    * The procedure is explained in:
+    * Occlusion-aware 3D Morphable Face Models,
+    * Bernhard Egger, Andreas Schneider, Clemens Blumer, Andreas Morel-Forster, Sandro Schönborn, Thomas Vetter
+    * IN: British Machine Vision Conference (BMVC), September 2016
+    * https://dx.doi.org/10.5244/C.30.64
+    * */
+  case class  RobustSHLightSolverProposalWithLabel(modelRenderer: ParametricImageRenderer[RGBA] with ParametricModel,
+                                                   shOpt: SphericalHarmonicsOptimizer,
+                                                   target: PixelImage[RGBA],
+                                                   pixelEvaluator: PairEvaluator[RGB] = IsotropicGaussianPixelEvaluatorHSV(0.043f),
+                                                   nSamples: Int = 30,
+                                                   sigmaThreshold: Double = 2,
+                                                   percentage: Double = 0.4,
+                                                   iterations: Int = 500,
+                                                   maxVarianceForMask: Double = 0.5,
+                                                   nSamplesIllumination: Int = 1000)(implicit rnd: Random)
+    extends ProposalGenerator[(RenderParameter, PixelImage[Int])] with TransitionProbability[(RenderParameter, PixelImage[Int])] {
+
+    val normalizer = pixelEvaluator.logValue(RGB.White, RGB.White)
+    val threshold: Double = Math.exp(-0.5 * Math.pow(sigmaThreshold, 2) - normalizer)
+
+    /** this function optimizes the illumination parameters for a given set of points
+      * and measures the quality of those parameters.
+      * @param points a set of points the illumination should be optimized to
+      * @param rps the current renderparameters (illumination part is ignored)
+      * @return a copy of the input render parameters with the new estimated illumination
+      *         the quality of this estimation
+      *         an image indicating which parts of the image are consistent to this estimated illumination
+      * */
+    private def estimateAndEvaluate(points: IndexedSeq[(TriangleId, BarycentricCoordinates)], rps: RenderParameter): (RenderParameter, Double, PixelImage[Int]) = {
+      val estimatedLight = shOpt.optimize(rps, points)
+      val estimatedRps: RenderParameter = rps.copy(environmentMap = estimatedLight)
+
+      val curSample: PixelImage[RGBA] = modelRenderer.renderImage(estimatedRps).withAccessMode(AccessMode.Strict[RGBA])
+      var counter = 0
+
+      //calculating difference per pixel
+      val diff = (x: Int, y: Int) => {
+        val c = curSample(x,y)
+        if (c.a > 0  ) {
+          counter = counter + 1
+          pixelEvaluator.logValue(c.toRGB, target(x, y).toRGB)
+        }
+        else
+        // handling of pixels to in the face region to be above threshold
+          Math.log(threshold) - normalizer + 1
+      }
+
+      val differenceImage = PixelImage(curSample.domain, diff, AccessMode.Strict[Double])
+      val thresholded = differenceImage.map(d => if (Math.exp(d - normalizer) > threshold) 1 else 0)
+      val count: Double = thresholded.values.sum.toDouble / counter
+      (estimatedRps, count, thresholded)
+    }
+
+    // samples according to mask from image
+    private def maskedSampler(rps: RenderParameter, label: PixelImage[Int]) = {
+      val maskProp = labelAsSurfaceProperty(rps, label.withAccessMode(AccessMode.Strict[Int]))
+      MeshSurfaceSampling.sampleAccordingToMask(maskProp.map(v => v.getOrElse(0.0)), nSamplesIllumination) _
+    }
+
+    // puts the label from the image to the mesh as surface property
+    private def labelAsSurfaceProperty(rps: RenderParameter, label: PixelImage[Int]): MeshSurfaceProperty[Option[Double]] = {
+      TextureExtraction.imageAsSurfaceProperty(modelRenderer.instance(rps).shape, rps.pointShader, label.map(i => i.toDouble))
+    }
+
+
+    override def propose(current: (RenderParameter, PixelImage[Int])): (RenderParameter, PixelImage[Int]) = {
+
+      // get renderParameters from tuple, the labels from PixelImage[Int] are not used
+      val rps = current._1
+
+      val mesh: VertexColorMesh3D = modelRenderer.instance(rps)
+      val faceMask = modelRenderer.renderImage(rps)
+      val faceMaskLabel: PixelImage[Int] = faceMask.map(p => if (p.a > 0.01) {
+        1
+      } else {
+        0
+      })
+
+      // RANSAC is an iterative method, those variables are keeping track of the current best estimate
+      // the naming of the parameters is motivated by https://en.wikipedia.org/wiki/Random_sample_consensus
+      var soFarBestModelQuality = 0.0
+      var soFarBestLight: RenderParameter = rps
+      var label = faceMaskLabel
+
+      // while iterations < k {
+      for (counter <- 1 until iterations) {
+        // the sampler to sample points on the surface
+        val points = MeshSurfaceSampling.sampleUniformlyOnSurface(nSamples)(mesh.shape)
+
+        // maybemodel = model parameters fitted to maybeinliers
+        val (light, count, thresholded) = estimateAndEvaluate(points, rps)
+
+        // do a full model estimation if the estimation based on few samples is good enough
+        if (count > percentage) {
+          // the full model estimation takes 1000 instead of 30 samples (with standard parameters) but is restricted to estimated mask
+          val allPoints = maskedSampler(rps, thresholded)(mesh.shape)
+          val (betterLight, betterCount, betterThresholded) = estimateAndEvaluate(allPoints,rps)
+
+          // check if new estimate is better than so far best one
+          if (betterCount > soFarBestModelQuality) {
+            soFarBestLight = betterLight
+            soFarBestModelQuality = betterCount
+            label = betterThresholded
+          }
+        }
+      }
+
+      // update environmentMap in parameters
+      val parameters = rps.copy(environmentMap = {
+        val points = maskedSampler(rps, label)(mesh.shape)
+        shOpt.optimize(rps, points)
+      }
+
+      )
+      (parameters, label)
+    }
+
+
+    override def logTransitionProbability(from: (RenderParameter, PixelImage[Int]), to: (RenderParameter, PixelImage[Int])): Double = 0.0
+
+    override def toString = s"RobustSHLightSolverProposalWithLabel($shOpt)"
   }
 }

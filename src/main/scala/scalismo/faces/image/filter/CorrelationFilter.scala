@@ -46,7 +46,7 @@ case class CorrelationFilter[@specialized A: ClassTag](kernel: PixelImage[Double
       kvsum
     }
 
-    PixelImage(image.width, image.height, perPixel)
+    PixelImage(image.width, image.height, perPixel(_,_))
   }
 }
 

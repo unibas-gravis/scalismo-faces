@@ -44,35 +44,35 @@ class PixelImage[@specialized A](val domain: PixelImageDomain, val accessMode: A
   }
 
   /**
-   * Nearest neighbouring cell value is chosen for interpolation.
-   * Interpolate the image, cell-based: origin at top left (0.0, 0.0), first pixel (0, 0) at (0.5, 0.5)
-   */
+    * Nearest neighbouring cell value is chosen for interpolation.
+    * Interpolate the image, cell-based: origin at top left (0.0, 0.0), first pixel (0, 0) at (0.5, 0.5)
+    */
   def interpolateNearestNeighbour: NearestNeighbourPixelImage[A] = NearestNeighbourPixelImage(this)
 
   /**
-   * resample the image with cols columns and rows, using an interpolation kernel
-   *
-   * @param cols Number of samples in x direction (new width)
-   * @param rows Number of samples in y direction (new height)
-   */
+    * resample the image with cols columns and rows, using an interpolation kernel
+    *
+    * @param cols Number of samples in x direction (new width)
+    * @param rows Number of samples in y direction (new height)
+    */
   def resample(cols: Int, rows: Int, kernel: InterpolationKernel = InterpolationKernel.BilinearKernel)(implicit ops: ColorSpaceOperations[A], tag: ClassTag[A]): PixelImage[A] = interpolate(kernel).sample(cols, rows)
 
   /**
-   * resample the image with cols columns and rows, using the bilinear interpolation kernel
-   *
-   * @param cols Number of samples in x direction (new width)
-   * @param rows Number of samples in y direction (new height)
-   */
+    * resample the image with cols columns and rows, using the bilinear interpolation kernel
+    *
+    * @param cols Number of samples in x direction (new width)
+    * @param rows Number of samples in y direction (new height)
+    */
   def resample(cols: Int, rows: Int)(implicit ops: ColorSpaceOperations[A], tag: ClassTag[A]): PixelImage[A] = resample(cols, rows, InterpolationKernel.BilinearKernel)
 
   /**
-   * Resamples by taking the nearest neighbour cells for the interpolated value.
-   * ColorSpaceOperations are thus not necessary and not needed for this special case of resampling,
-   * because no new values have to be created.
-   *
-   * @param cols Number of samples in x direction (new width)
-   * @param rows Number of samples in y direction (new height)
-   */
+    * Resamples by taking the nearest neighbour cells for the interpolated value.
+    * ColorSpaceOperations are thus not necessary and not needed for this special case of resampling,
+    * because no new values have to be created.
+    *
+    * @param cols Number of samples in x direction (new width)
+    * @param rows Number of samples in y direction (new height)
+    */
   def resampleNearestNeighbour(cols: Int, rows: Int)(implicit tag: ClassTag[A]): PixelImage[A] = NearestNeighbourPixelImage(this).sample(cols, rows)
 
 
@@ -171,6 +171,11 @@ object PixelImage {
     view(domain, f).buffer
   }
 
+  /** create a PixelImage from a function (creates buffered ArrayImage) */
+  def apply[A: ClassTag](domain: PixelImageDomain, f: (Int, Int) => A, accessMode: AccessMode[A]): PixelImage[A] = {
+    view(domain, f).buffer.withAccessMode(accessMode)
+  }
+
   /** create a PixelImage from a function (creates buffered ArrayImage), default domain */
   def apply[A: ClassTag](width: Int, height: Int, f: (Int, Int) => A): PixelImage[A] = {
     val domain = PixelImageDomain(width, height)
@@ -259,9 +264,9 @@ object PixelImage {
 }
 
 private class ArrayImage[A: ClassTag](override val domain: PixelImageDomain,
-  override val accessMode: AccessMode[A],
-  private val data: Array[A])
-    extends PixelImage[A](domain, accessMode, (x: Int, y: Int) => data(domain.index(x, y))) {
+                                      override val accessMode: AccessMode[A],
+                                      private val data: Array[A])
+  extends PixelImage[A](domain, accessMode, (x: Int, y: Int) => data(domain.index(x, y))) {
   require(data.length == domain.length, "domain and array differ in size")
 
   /** direct raw access of image value at (x, y) */
