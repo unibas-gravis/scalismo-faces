@@ -475,19 +475,4 @@ object LoopyBPSegmentation {
         UniformDist
     }
   }
-
-  def main(args: Array[String]): Unit = {
-
-    implicit val rnd = Random(37)
-
-    val image = PixelImageIO.read[RGB](new File("/home/eggebe01/facedb/sandro.png")).get.resample(256, 256)
-
-    val numLabels = 3
-    val initMask: PixelImage[Option[Label]] = PixelImage(image.width, image.height, { (x, y) => Some(Label((y.toDouble / image.height * numLabels).toInt)) })
-
-    val smoothnessDistribution = binDist(0.99, 3, image.width, image.height)
-
-    val segImage = segmentImage(image, initMask, smoothnessDistribution, 3, 100, true).map{_.maxLabel}
-
-  }
 }
