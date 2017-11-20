@@ -35,7 +35,7 @@ trait ColorDistribution {
 case class GaussianColorDistribution(mean: RGB, sdev: RGB) extends ColorDistribution {
   override def sample(implicit rnd: Random): RGB = {
     val r = RGB(rnd.scalaRandom.nextGaussian(), rnd.scalaRandom.nextGaussian(), rnd.scalaRandom.nextGaussian())
-    ((r x sdev) + mean).clamped
+    ((r x sdev) + mean)
   }
 
   override val normalizer = 1.0/math.pow(2*math.Pi, 1.5)/math.sqrt(sdev.toVector.norm2)

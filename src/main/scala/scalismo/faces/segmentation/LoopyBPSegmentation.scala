@@ -205,7 +205,7 @@ object LoopyBPSegmentation {
   }
 
   def visSampleImage(labelImage: PixelImage[LabelDistribution], colorDists: IndexedSeq[ColorDistribution]): PixelImage[RGB] = {
-    labelImage.map { labels => colorDists(labels.maxLabel).sample }
+    labelImage.map { labels => colorDists(labels.maxLabel).sample.clamped }
   }
 
   def colorMapImage(labelImage: PixelImage[LabelDistribution]): PixelImage[RGB] = {
