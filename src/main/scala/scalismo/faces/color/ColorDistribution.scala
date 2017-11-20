@@ -32,7 +32,7 @@ trait ColorDistribution {
   def evaluateLog(color: RGB): Double
 }
 
-case class GaussDist(mean: RGB, sdev: RGB) extends ColorDistribution {
+case class GaussianColorDistribution(mean: RGB, sdev: RGB) extends ColorDistribution {
   override def sample(implicit rnd: Random): RGB = {
     val r = RGB(rnd.scalaRandom.nextGaussian(), rnd.scalaRandom.nextGaussian(), rnd.scalaRandom.nextGaussian())
     ((r x sdev) + mean).clamped
@@ -50,19 +50,19 @@ case class GaussDist(mean: RGB, sdev: RGB) extends ColorDistribution {
   }
 }
 
-object GaussDist {
-  def apply(colors: IndexedSeq[RGB]): GaussDist = {
+object GaussianColorDistribution {
+  def apply(colors: IndexedSeq[RGB]): GaussianColorDistribution = {
     val n = colors.length
     val sum = colors.reduce {_ + _}
     val sqSum = colors.reduce((sum, a) => sum + a.map { x => x * x })
     val mean = sum / n
     val variance = sqSum / n - (mean x mean)
     val sdev = variance.map(math.sqrt)
-    GaussDist(mean, sdev)
+    GaussianColorDistribution(mean, sdev)
   }
 }
 
-case object UniformDist extends ColorDistribution {
+case object UniformColorDistribution extends ColorDistribution {
   override def sample(implicit rnd: Random): RGB = RGB(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
 
   override def normalizer: Double = 1.0

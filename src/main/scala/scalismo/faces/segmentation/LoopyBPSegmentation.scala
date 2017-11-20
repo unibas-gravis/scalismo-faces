@@ -19,7 +19,7 @@ package scalismo.faces.segmentation
 
 import java.io.File
 
-import scalismo.faces.color.{ColorDistribution, GaussDist, RGB, UniformDist}
+import scalismo.faces.color._
 import scalismo.faces.image.{ImageBuffer, PixelImage}
 import scalismo.faces.gui.GUIBlock._
 import scalismo.faces.gui.{GUIFrame, ImagePanel}
@@ -72,7 +72,7 @@ object LoopyBPSegmentation {
   /** binary distribution, local information */
   type BinaryLabelDistribution = PixelImage[(Label, Label) => Double]
 
-  private type MessageFieldBuf = ImageBuffer[Array[LabelDist]]
+  private type MessageFieldBuf = ImageBuffer[Array[LabelDistribution]]
 
   /** MRF segmentation with Loopy Belief Propagation
     * Builds simple Gaussian color models for each label iteratively
@@ -84,19 +84,20 @@ object LoopyBPSegmentation {
   def segmentImage(image: PixelImage[RGB],
                    labelInit: PixelImage[Option[Label]],
                    binaryDistribution: PixelImage[(Label, Label) => Double],
-                   numLabels: Int, numIterations: Int,
-                   gui: Boolean = false): PixelImage[LabelDist] = {
+                   numLabels: Int,
+                   numIterations: Int,
+                   gui: Boolean = false): PixelImage[LabelDistribution] = {
     require(labelInit.values.forall(i => i.forall(_.value < numLabels)))
 
     // init: color models and start labels
-    val initialSegmentation = labelInit.map{init => LabelDist.fromSingleLabel(init.getOrElse(Label(numLabels-1)), numLabels, 0.01)}
-    var colorDists = estimateColorDists(image, initialSegmentation)
+    val initialSegmentation = labelInit.map{init => LabelDistribution.fromSingleLabel(init.getOrElse(Label(numLabels-1)), numLabels, 0.01)}
+    var colorDistributions = estimateColorDistributions(image, initialSegmentation)
 
     // initialize message field: constant messages, unknown distributions yet
-    val messageField = ImageBuffer.makeInitializedBuffer(image.width, image.height)(Array.fill(Direction.allDirections.length)(LabelDist.constant(numLabels)))
+    val messageField = ImageBuffer.makeInitializedBuffer(image.width, image.height)(Array.fill(Direction.allDirections.length)(LabelDistribution.constant(numLabels)))
 
     // calculate local messages: according to color distributions
-    var localMessages = image.map{c => LabelDist(colorDists.map{dist => dist.evaluate(c)})}.map{_.normalized}
+    var localMessages = image.map{c => LabelDistribution(colorDistributions.map{ distribution => distribution.evaluate(c)})}.map{_.normalized}
     val counterLabel = label("init")
     val guiFrame = if (gui) {
       // init GUI
@@ -104,7 +105,7 @@ object LoopyBPSegmentation {
       stack(
         counterLabel,
         shelf(
-          ImagePanel(visSampleImage(localMessages, colorDists)),
+          ImagePanel(visSampleImage(localMessages, colorDistributions)),
           ImagePanel(visRGBSegImage(localMessages)),
           ImagePanel(visRGBSegImage(localMessages))
         )).displayIn("segmentation")
@@ -117,22 +118,22 @@ object LoopyBPSegmentation {
 
     // do message passing
     for(i <- 0 until numIterations) {
-      localMessages = image.map{c => LabelDist(colorDists.map{dist => dist.evaluate(c)})}.map{_.normalized}
+      localMessages = image.map{c => LabelDistribution(colorDistributions.map{ distribution => distribution.evaluate(c)})}.map{_.normalized}
       loopyBeliefPropagationPass(messageField, localMessages, binaryDistribution, numLabels)
       val belief = calculateBelief(unsafeMsgFieldView, localMessages)
 
       if(gui) {
         // gui update
         if (i%1 == 0) {
-          colorDists = estimateColorDists(image, belief)
-          println(colorDists)
+          colorDistributions = estimateColorDistributions(image, belief)
+          println(colorDistributions)
         }
 
         counterLabel.setText("iteration: " + i)
         stack(
           counterLabel,
           shelf(
-            ImagePanel(visSampleImage(belief, colorDists)),
+            ImagePanel(visSampleImage(belief, colorDistributions)),
             ImagePanel(visRGBSegImage(belief)),
             ImagePanel(visRGBSegImage(localMessages)))).displayIn(guiFrame)
       }
@@ -149,16 +150,16 @@ object LoopyBPSegmentation {
                            fgProb: PixelImage[Double],
                            binaryDistribution: PixelImage[(Label, Label) => Double],
                            numLabels: Int, numIterations:
-                           Int, gui: Boolean = false): PixelImage[LabelDist] = {
+                           Int, gui: Boolean = false): PixelImage[LabelDistribution] = {
     // init: color models and start labels
-    val initialSegmentation = labelInit.map{init => LabelDist.fromSingleLabel(init, numLabels, 0.01)}
-    var colorDists = estimateColorDists(image, initialSegmentation)
+    val initialSegmentation = labelInit.map{init => LabelDistribution.fromSingleLabel(init, numLabels, 0.01)}
+    var colorDists = estimateColorDistributions(image, initialSegmentation)
 
     // initialize message field: constant messages, unknown distributions yet
-    val messageField = ImageBuffer.makeInitializedBuffer(image.width, image.height)(Array.fill(Direction.allDirections.length)(LabelDist.constant(numLabels)))
+    val messageField = ImageBuffer.makeInitializedBuffer(image.width, image.height)(Array.fill(Direction.allDirections.length)(LabelDistribution.constant(numLabels)))
 
     // calculate local messages: according to color distributions
-    val localMessages: PixelImage[LabelDist] = bgProb.zip(fgProb).map(a => LabelDist(IndexedSeq(a._1, a._2))).map{_.normalized}
+    val localMessages: PixelImage[LabelDistribution] = bgProb.zip(fgProb).map(a => LabelDistribution(IndexedSeq(a._1, a._2))).map{_.normalized}
 
     // init GUI
     val counterLabel = label("init")
@@ -179,13 +180,13 @@ object LoopyBPSegmentation {
 
     // do message passing
     for(i <- 0 until numIterations) {
-      //localMessages = image.map{c => LabelDist(colorDists.map{dist => dist.evaluate(c)})}.map{_.normalized}
+      //localMessages = image.map{c => LabelDist(colorDists.map{distribution => distribution.evaluate(c)})}.map{_.normalized}
       loopyBeliefPropagationPass(messageField, localMessages, binaryDistribution, numLabels)
       val belief = calculateBelief(unsafeMsgFieldView, localMessages)
       if (gui){
         // gui update
         if (i%1 == 0) {
-          colorDists = estimateColorDists(image, belief)
+          colorDists = estimateColorDistributions(image, belief)
           println(colorDists)
         }
 
@@ -203,11 +204,11 @@ object LoopyBPSegmentation {
     calculateBelief(messageField.toImage, localMessages)
   }
 
-  def visSampleImage(labelImage: PixelImage[LabelDist], colorDists: IndexedSeq[ColorDistribution]): PixelImage[RGB] = {
+  def visSampleImage(labelImage: PixelImage[LabelDistribution], colorDists: IndexedSeq[ColorDistribution]): PixelImage[RGB] = {
     labelImage.map { labels => colorDists(labels.maxLabel).sample }
   }
 
-  def colorMapImage(labelImage: PixelImage[LabelDist]): PixelImage[RGB] = {
+  def colorMapImage(labelImage: PixelImage[LabelDistribution]): PixelImage[RGB] = {
     labelImage.map {
       _.maxLabel
     }.map {
@@ -219,7 +220,7 @@ object LoopyBPSegmentation {
     }
   }
 
-  def visRGBSegImage(labelImage: PixelImage[LabelDist]): PixelImage[RGB] = {
+  def visRGBSegImage(labelImage: PixelImage[LabelDistribution]): PixelImage[RGB] = {
     labelImage.map { l => l.length match {
       case 2 => RGB(l(Label(0)), l(Label(1)), 0)
       case _ => RGB(l(Label(0)), l(Label(1)), l(Label(2)))
@@ -228,8 +229,8 @@ object LoopyBPSegmentation {
   }
 
   // helper class to handle the distribution of the label per pixel
-  case class LabelDist(private val values: IndexedSeq[Double]) {
-    def toLogLabelDist: LogLabelDist = LogLabelDist(values.map(math.log))
+  case class LabelDistribution(private val values: IndexedSeq[Double]) {
+    def toLogLabelDistribution: LogLabelDistribution = LogLabelDistribution(values.map(math.log))
 
     def length = values.length
 
@@ -237,7 +238,7 @@ object LoopyBPSegmentation {
 
     def normalized = {
       val s = values.sum
-      LabelDist(values.map { v => v / s })
+      LabelDistribution(values.map { v => v / s })
     }
 
     def maxLabel = values.zipWithIndex.maxBy {
@@ -248,30 +249,30 @@ object LoopyBPSegmentation {
       normalized.values.zipWithIndex.map { case (v, i) => v * p(Label(i)) }.sum
     }
 
-    def *(other: LabelDist): LabelDist = {
-      require(other.length == length, "labeldist *")
-      LabelDist(values.zip(other.values).map { case (v, w) => v * w })
+    def *(other: LabelDistribution): LabelDistribution = {
+      require(other.length == length, "labeldiststribution *")
+      LabelDistribution(values.zip(other.values).map { case (v, w) => v * w })
     }
   }
 
-  object LabelDist {
-    def constant(numLabels: Int): LabelDist = LabelDist(IndexedSeq.fill(numLabels)(1.0 / numLabels))
+  object LabelDistribution {
+    def constant(numLabels: Int): LabelDistribution = LabelDistribution(IndexedSeq.fill(numLabels)(1.0 / numLabels))
 
-    def fromSingleLabel(l: Label, numLabels: Int, eps: Double = 1e-3): LabelDist = LabelDist(IndexedSeq.tabulate(numLabels) { j => if (j == l.value) 1.0 - numLabels * eps else eps })
+    def fromSingleLabel(l: Label, numLabels: Int, eps: Double = 1e-3): LabelDistribution = LabelDistribution(IndexedSeq.tabulate(numLabels) { j => if (j == l.value) 1.0 - numLabels * eps else eps })
 
-    def tabulate(numLabels: Int)(f: Label => Double): LabelDist = LabelDist(IndexedSeq.tabulate(numLabels) { l => f(Label(l)) })
+    def tabulate(numLabels: Int)(f: Label => Double): LabelDistribution = LabelDistribution(IndexedSeq.tabulate(numLabels) { l => f(Label(l)) })
   }
 
-  case class LogLabelDist(private val values: IndexedSeq[Double]) {
+  case class LogLabelDistribution(private val values: IndexedSeq[Double]) {
 
     def length = values.length
 
     def apply(label: Label) = values(label.value)
 
-    def normalized: LogLabelDist = {
+    def normalized: LogLabelDistribution = {
       val maxlog = values.max
       val logPTot = math.log(values.map(x => math.exp(x - maxlog)).sum) + maxlog
-      LogLabelDist(values.map(_ - logPTot))
+      LogLabelDistribution(values.map(_ - logPTot))
     }
 
     def maxLabel = values.zipWithIndex.maxBy {
@@ -288,78 +289,78 @@ object LoopyBPSegmentation {
       math.exp(math.log(normalized.values.zipWithIndex.map { case (v, i) => math.exp(v - maxlog) * p(Label(i)) }.sum) + maxlog)
     }
 
-    def toLabelDist: LabelDist = {
-      LabelDist(values.map(math.exp))
+    def toLabelDistribution: LabelDistribution = {
+      LabelDistribution(values.map(math.exp))
     }
 
-    def *(other: LogLabelDist): LogLabelDist = {
+    def *(other: LogLabelDistribution): LogLabelDistribution = {
       require(other.length == length, "length mult")
-      LogLabelDist(values.zip(other.values).map { case (v, w) => v + w })
+      LogLabelDistribution(values.zip(other.values).map { case (v, w) => v + w })
     }
 
-    def /(other: LogLabelDist): LogLabelDist = {
+    def /(other: LogLabelDistribution): LogLabelDistribution = {
       require(other.length == length, "length divide")
-      LogLabelDist(values.zip(other.values).map { case (v, w) => v - w })
+      LogLabelDistribution(values.zip(other.values).map { case (v, w) => v - w })
     }
   }
 
-  object LogLabelDist {
-    def apply(labelDist: LabelDist): LogLabelDist = labelDist.toLogLabelDist
+  object LogLabelDistribution {
+    def apply(labelDistribution: LabelDistribution): LogLabelDistribution = labelDistribution.toLogLabelDistribution
 
-    def constant(numLabels: Int): LogLabelDist = LogLabelDist(IndexedSeq.fill(numLabels)(1.0 / numLabels))
+    def constant(numLabels: Int): LogLabelDistribution = LogLabelDistribution(IndexedSeq.fill(numLabels)(1.0 / numLabels))
 
-    def fromSingleLabel(l: Label, numLabels: Int, eps: Double = 1e-3): LogLabelDist = LabelDist.fromSingleLabel(l, numLabels, eps).toLogLabelDist
+    def fromSingleLabel(l: Label, numLabels: Int, eps: Double = 1e-3): LogLabelDistribution = LabelDistribution.fromSingleLabel(l, numLabels, eps).toLogLabelDistribution
 
-    def tabulate(numLabels: Int)(f: Label => Double): LogLabelDist = LogLabelDist(IndexedSeq.tabulate(numLabels) { l => f(Label(l)) })
+    def tabulate(numLabels: Int)(f: Label => Double): LogLabelDistribution = LogLabelDistribution(IndexedSeq.tabulate(numLabels) { l => f(Label(l)) })
 
   }
 
-  def binDist(pEqual: Double, numLabels: Int, width: Int, height: Int): BinaryLabelDistribution = {
+  def binDistribution(pEqual: Double, numLabels: Int, width: Int, height: Int): BinaryLabelDistribution = {
     val pElse = (1 - pEqual) / (numLabels - 1)
-    def binDist(k: Label, l: Label) = if (k == l) pEqual else pElse
-    PixelImage.view(width, height, (x, y) => binDist)
+    def binDistribution(k: Label, l: Label) = if (k == l) pEqual else pElse
+    PixelImage.view(width, height, (x, y) => binDistribution)
   }
 
 
-  type RegionTypeDist = LabelDist
-  type LogRegionTypeDist = LogLabelDist
+  type RegionTypeDistribution = LabelDistribution
+  type LogRegionTypeDistribution = LogLabelDistribution
 
 
   /** message field update, single iteration, includes all directions */
   private def loopyBeliefPropagationPass(messageField: MessageFieldBuf,
-                                         localMessages: PixelImage[LabelDist],
-                                         binaryDist: BinaryLabelDistribution,
+                                         localMessages: PixelImage[LabelDistribution],
+                                         binaryDistribution: BinaryLabelDistribution,
                                          numLabels: Int): MessageFieldBuf = {
 
     // 4 passes: right, left, down, up
-    messagePass(messageField, localMessages, binaryDist, numLabels, Right)
-    messagePass(messageField, localMessages, binaryDist, numLabels, Left)
-    messagePass(messageField, localMessages, binaryDist, numLabels, Down)
-    messagePass(messageField, localMessages, binaryDist, numLabels, Up)
+    messagePass(messageField, localMessages, binaryDistribution, numLabels, Right)
+    messagePass(messageField, localMessages, binaryDistribution, numLabels, Left)
+    messagePass(messageField, localMessages, binaryDistribution, numLabels, Down)
+    messagePass(messageField, localMessages, binaryDistribution, numLabels, Up)
     messageField
   }
 
 
   /** message field update with prior, single iteration, includes all directions and prior */
   private def loopyBeliefPropagationPassWithPrior(messageField: MessageFieldBuf,
-                                                  localMessages: PixelImage[LabelDist],
-                                                  incomingRegionPriorMessages: ImageBuffer[RegionTypeDist],
-                                                  outgoingRegionPriorMessages: ImageBuffer[LabelDist],
-                                                  binaryDist: BinaryLabelDistribution,
+                                                  localMessages: PixelImage[LabelDistribution],
+                                                  incomingRegionPriorMessages: ImageBuffer[RegionTypeDistribution],
+                                                  outgoingRegionPriorMessages: ImageBuffer[LabelDistribution],
+                                                  binaryDistribution: BinaryLabelDistribution,
                                                   numLabels: Int,
-                                                  regionPrior: IndexedSeq[PixelImage[LabelDist]]): Unit = {
-    loopyBeliefPropagationPass(messageField, localMessages, binaryDist, numLabels)
+                                                  regionPrior: IndexedSeq[PixelImage[LabelDistribution]]): Unit = {
+    loopyBeliefPropagationPass(messageField, localMessages, binaryDistribution, numLabels)
     priorMessagePass(incomingRegionPriorMessages, outgoingRegionPriorMessages,  messageField, localMessages, regionPrior, numLabels)
   }
 
   /** calculate a belief update message in given direction */
   private def calculateMessage(messageField: MessageFieldBuf,
-                               localMessages: PixelImage[LabelDist],
-                               binaryDist: BinaryLabelDistribution,
+                               localMessages: PixelImage[LabelDistribution],
+                               binaryDistribution: BinaryLabelDistribution,
                                numLabels: Int,
                                x: Int,
                                y: Int,
-                               direction: Direction): LabelDist = {
+                               direction: Direction): LabelDistribution = {
     // gather all incoming messages: ignore the one from the current direction
     val incomingDirections = Direction.allDirections.filter {
       _ != direction
@@ -368,41 +369,41 @@ object LoopyBPSegmentation {
     // product of all incoming messages
     val prodMsg = msgs.foldLeft(localMessages(x, y)) { (prod, msg) => prod * msg }
     // marginalize with binary distribution here, for each label -> outgoing message
-    val outMessage = LabelDist.tabulate(numLabels) { label => prodMsg.marginalize(binaryDist(x, y)(label, _)) }
+    val outMessage = LabelDistribution.tabulate(numLabels) { label => prodMsg.marginalize(binaryDistribution(x, y)(label, _)) }
     outMessage
   }
 
   /** calculate the belief from a message field */
-  private def calculateBelief(messageField: PixelImage[Array[LabelDist]], localMessages: PixelImage[LabelDist]): PixelImage[LabelDist] = {
+  private def calculateBelief(messageField: PixelImage[Array[LabelDistribution]], localMessages: PixelImage[LabelDistribution]): PixelImage[LabelDistribution] = {
     messageField.zip(localMessages).map{case(msgs, local) =>
       msgs.foldLeft(local){(prod, msg) => prod * msg}.normalized
     }
   }
 
   /** calculate the belief from a message field including prior messages*/
-  private def calculateBeliefWithPrior(messageField: PixelImage[Array[LabelDist]],
-                                       incomingRegionPriorMessages: PixelImage[RegionTypeDist],
-                                       outgoingRegionPriorMessages: PixelImage[LabelDist],
-                                       localMessages: PixelImage[LabelDist]): (PixelImage[LabelDist], RegionTypeDist) = {
-    val labelDist = messageField.zip(localMessages).zip(outgoingRegionPriorMessages)map { case ((msgs, local),regionPrior) =>
+  private def calculateBeliefWithPrior(messageField: PixelImage[Array[LabelDistribution]],
+                                       incomingRegionPriorMessages: PixelImage[RegionTypeDistribution],
+                                       outgoingRegionPriorMessages: PixelImage[LabelDistribution],
+                                       localMessages: PixelImage[LabelDistribution]): (PixelImage[LabelDistribution], RegionTypeDistribution) = {
+    val labelDistribution = messageField.zip(localMessages).zip(outgoingRegionPriorMessages)map { case ((msgs, local),regionPrior) =>
       msgs.foldLeft(local) { (prod, msg) => prod * msg * regionPrior }.normalized
     }
-    val priorIncomingProduct: RegionTypeDist = incomingRegionPriorMessages.values.map(_.toLogLabelDist).reduce(_ * _).normalized.toLabelDist
+    val priorIncomingProduct: RegionTypeDistribution = incomingRegionPriorMessages.values.map(_.toLogLabelDistribution).reduce(_ * _).normalized.toLabelDistribution
 
 
-    (labelDist, priorIncomingProduct)
+    (labelDistribution, priorIncomingProduct)
   }
 
   /** passes the message of the prior per label, the prior acts as regionprior*/
-  private def priorMessagePass(incomingRegionPriorMessages: ImageBuffer[RegionTypeDist],
-                               outgoingRegionPriorMessages: ImageBuffer[LabelDist],
+  private def priorMessagePass(incomingRegionPriorMessages: ImageBuffer[RegionTypeDistribution],
+                               outgoingRegionPriorMessages: ImageBuffer[LabelDistribution],
                                messageField: MessageFieldBuf,
-                               localMessages: PixelImage[LabelDist],
-                               regionPrior: IndexedSeq[PixelImage[LabelDist]],
+                               localMessages: PixelImage[LabelDistribution],
+                               regionPrior: IndexedSeq[PixelImage[LabelDistribution]],
                                numLabels: Int): Unit = {
 
 
-    val numBeards = regionPrior.length
+    val numPriors = regionPrior.length
 
     // calculcate messages sent to prior
     // collect all incoming messages from neighbours
@@ -414,65 +415,65 @@ object LoopyBPSegmentation {
 
     // marginalize over all possible segmentation labels and normalize
     incomingRegionPriorMessages.transformWithIndexParallel { (x, y, _) =>
-      LabelDist.tabulate(numBeards) { (c: Label) =>
+      LabelDistribution.tabulate(numPriors) { (c: Label) =>
         allMessages(x, y).marginalize((z: Label) => regionPrior(c.value)(x, y)(z))
       }.normalized
     }
 
     // multiply all messages (leaf one out is done by dividing later)
-    val allRegionProduct: LogRegionTypeDist = incomingRegionPriorMessages.toUnsafeImage.values.map(_.toLogLabelDist).reduce(_ * _).normalized
+    val allRegionProduct: LogRegionTypeDistribution = incomingRegionPriorMessages.toUnsafeImage.values.map(_.toLogLabelDistribution).reduce(_ * _).normalized
 
 
     outgoingRegionPriorMessages.transformWithIndexParallel { (x, y, _) =>
-      val incomingMessages: LogRegionTypeDist = allRegionProduct / incomingRegionPriorMessages(x, y).toLogLabelDist
-      LabelDist.tabulate(numLabels) { (z: Label) =>
+      val incomingMessages: LogRegionTypeDistribution = allRegionProduct / incomingRegionPriorMessages(x, y).toLogLabelDistribution
+      LabelDistribution.tabulate(numLabels) { (z: Label) =>
         incomingMessages.marginalize((c: Label) => regionPrior(c.value)(x, y)(z))
       }.normalized
     }
   }
 
   /** a single message pass in given direction */
-  private def messagePass(messageField: MessageFieldBuf, localMessages: PixelImage[LabelDist], binaryDist: BinaryLabelDistribution, numLabels: Int, direction: Direction): Unit = {
+  private def messagePass(messageField: MessageFieldBuf, localMessages: PixelImage[LabelDistribution], binaryDistribution: BinaryLabelDistribution, numLabels: Int, direction: Direction): Unit = {
     direction match {
       case Right => // do rows in parallel, sequential along row
         for {row <- (0 until messageField.height).par
              x <- 0 until messageField.width - 1} {
           // store message: is incoming from the left in next node
-          messageField(x + 1, row)(Left.toInt) = calculateMessage(messageField, localMessages, binaryDist, numLabels, x, row, Right)
+          messageField(x + 1, row)(Left.toInt) = calculateMessage(messageField, localMessages, binaryDistribution, numLabels, x, row, Right)
         }
       case Left => // do rows in parallel, sequential along row
         for {row <- (0 until messageField.height).par
              x <- messageField.width - 1 to 1 by -1} {
-          messageField(x - 1, row)(Right.toInt) = calculateMessage(messageField, localMessages, binaryDist, numLabels, x, row, Left)
+          messageField(x - 1, row)(Right.toInt) = calculateMessage(messageField, localMessages, binaryDistribution, numLabels, x, row, Left)
         }
       case Down => // do columns in parallel, sequential along column
         for {col <- (0 until messageField.width).par
              y <- 0 until messageField.height - 1} {
-          messageField(col, y + 1)(Up.toInt) = calculateMessage(messageField, localMessages, binaryDist, numLabels, col, y, Down)
+          messageField(col, y + 1)(Up.toInt) = calculateMessage(messageField, localMessages, binaryDistribution, numLabels, col, y, Down)
         }
       case Up => // do columns in parallel, sequential along column
         for {col <- (0 until messageField.width).par
              y <- messageField.height - 1 to 1 by -1} {
-          messageField(col, y - 1)(Down.toInt) = calculateMessage(messageField, localMessages, binaryDist, numLabels, col, y, Up)
+          messageField(col, y - 1)(Down.toInt) = calculateMessage(messageField, localMessages, binaryDistribution, numLabels, col, y, Up)
         }
     }
   }
 
-  def estimateColorDists(image: PixelImage[RGB], labelDist: PixelImage[LabelDist]): IndexedSeq[ColorDistribution] = {
+  def estimateColorDistributions(image: PixelImage[RGB], labelDistribution: PixelImage[LabelDistribution]): IndexedSeq[ColorDistribution] = {
     // max only estimation currently
-    val maxLabels = labelDist.map {
+    val maxLabels = labelDistribution.map {
       _.maxLabel
     }
-    val maxLabel: Int = labelDist.map {
+    val maxLabel: Int = labelDistribution.map {
       _.length
     }.values.max
     // estimate for each label
     IndexedSeq.tabulate(maxLabel) { n =>
       val colors = image.zip(maxLabels).values.collect { case (color, label) if label == n => color }.toIndexedSeq
       if (colors.nonEmpty)
-        GaussDist(colors)
+        GaussianColorDistribution(colors)
       else
-        UniformDist
+        UniformColorDistribution
     }
   }
 }
