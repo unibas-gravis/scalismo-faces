@@ -21,7 +21,8 @@ import scalismo.faces.image.{PixelImage, PixelImageDomain}
 import scalismo.faces.parameters.{ParametricRenderer, RenderParameter}
 import scalismo.faces.render.TriangleRenderer
 import scalismo.geometry.{Point, Point2D, Vector, _2D}
-import scalismo.mesh.{Interpolator, SurfacePointProperty, TriangleMesh3D}
+import scalismo.mesh.{SurfacePointProperty, TriangleMesh3D}
+import scalismo.numerics.ValueInterpolator
 
 /** render manipulations of face meshes */
 class ManipulationRenderer {
@@ -78,8 +79,8 @@ class ManipulationRenderer {
     }
 
     // interpolator is required to render warp field as surface property
-    implicit def warpInterpolator(implicit vecBlender: Interpolator[Vector[_2D]], doubleBlender: Interpolator[Double]) =
-      new Interpolator[WarpVector] {
+    implicit def warpInterpolator(implicit vecBlender: ValueInterpolator[Vector[_2D]], doubleBlender: ValueInterpolator[Double]) =
+      new ValueInterpolator[WarpVector] {
         override def blend(obj1: WarpVector, obj2: WarpVector, l: Double): WarpVector = {
           WarpVector(
             vecBlender.blend(obj1.vector, obj2.vector, l),

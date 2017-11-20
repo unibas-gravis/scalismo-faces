@@ -17,6 +17,7 @@ package scalismo.faces.sampling.proposals
 
 import scalismo.sampling.{ProposalGenerator, SymmetricTransitionRatio}
 import scalismo.utils.Random
+import scalismo.utils.Random.implicits._
 
 
 

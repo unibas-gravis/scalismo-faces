@@ -25,6 +25,7 @@ import scalismo.faces.mesh._
 import scalismo.faces.parameters._
 import scalismo.geometry._
 import scalismo.mesh._
+import scalismo.numerics.ValueInterpolator
 import spray.json._
 
 import scala.reflect.ClassTag
@@ -117,7 +118,7 @@ trait RenderParameterJSONFormatV2 extends RenderParameterJSONFormatLegacy {
     override def write(obj: TriangleCell): JsValue = JsArray(obj.ptId1.id.toJson, obj.ptId2.id.toJson, obj.ptId3.id.toJson)
   }
 
-  implicit def surfacePointPropertyFormat[A](implicit formatA: JsonFormat[A], interpolator: Interpolator[A]): RootJsonFormat[SurfacePointProperty[A]] = new RootJsonFormat[SurfacePointProperty[A]] {
+  implicit def surfacePointPropertyFormat[A](implicit formatA: JsonFormat[A], interpolator: ValueInterpolator[A]): RootJsonFormat[SurfacePointProperty[A]] = new RootJsonFormat[SurfacePointProperty[A]] {
     override def read(json: JsValue): SurfacePointProperty[A] = {
       val fields = json.asJsObject(s"expected SurfacePointProperty, got $json").fields
 
@@ -165,7 +166,7 @@ trait RenderParameterJSONFormatV2 extends RenderParameterJSONFormatLegacy {
     }
   }
 
-  implicit def vertexPropertyPerTriangleFormat[A](implicit formatA: JsonFormat[A], interpolator: Interpolator[A]): RootJsonFormat[VertexPropertyPerTriangle[A]] = new RootJsonFormat[VertexPropertyPerTriangle[A]] {
+  implicit def vertexPropertyPerTriangleFormat[A](implicit formatA: JsonFormat[A], interpolator: ValueInterpolator[A]): RootJsonFormat[VertexPropertyPerTriangle[A]] = new RootJsonFormat[VertexPropertyPerTriangle[A]] {
     override def read(json: JsValue): VertexPropertyPerTriangle[A] = {
       val fields = json.asJsObject(s"expected VertexPropertyPerTriangle, got $json").fields
 
@@ -231,7 +232,7 @@ trait RenderParameterJSONFormatV2 extends RenderParameterJSONFormatLegacy {
     override def zero: Point[_2D] = Point2D.origin
   }
 
-  implicit def textureMappedPropertyFormat[A: ClassTag](implicit formatA: JsonFormat[A], interpolator: Interpolator[A], colorSpaceOperations: ColorSpaceOperations[A]): RootJsonFormat[TextureMappedProperty[A]] = new RootJsonFormat[TextureMappedProperty[A]] {
+  implicit def textureMappedPropertyFormat[A: ClassTag](implicit formatA: JsonFormat[A], interpolator: ValueInterpolator[A], colorSpaceOperations: ColorSpaceOperations[A]): RootJsonFormat[TextureMappedProperty[A]] = new RootJsonFormat[TextureMappedProperty[A]] {
     override def read(json: JsValue): TextureMappedProperty[A] = {
       val fields = json.asJsObject(s"expected TextureMappedProperty, got $json").fields
 
@@ -252,7 +253,7 @@ trait RenderParameterJSONFormatV2 extends RenderParameterJSONFormatLegacy {
     )
   }
 
-  implicit def indirectPropertyFormat[A: ClassTag](implicit formatA: JsonFormat[A], interpolator: Interpolator[A], colorSpaceOperations: ColorSpaceOperations[A]): RootJsonFormat[IndirectProperty[A]] = new RootJsonFormat[IndirectProperty[A]] {
+  implicit def indirectPropertyFormat[A: ClassTag](implicit formatA: JsonFormat[A], interpolator: ValueInterpolator[A], colorSpaceOperations: ColorSpaceOperations[A]): RootJsonFormat[IndirectProperty[A]] = new RootJsonFormat[IndirectProperty[A]] {
     override def read(json: JsValue): IndirectProperty[A] = {
       val fields = json.asJsObject(s"expected IndirectProperty, got $json").fields
 
@@ -274,7 +275,7 @@ trait RenderParameterJSONFormatV2 extends RenderParameterJSONFormatLegacy {
   }
 
 
-  implicit def meshSurfaceProperty[A: ClassTag](implicit formatA: JsonFormat[A], interpolator: Interpolator[A], colorSpaceOperations: ColorSpaceOperations[A]): RootJsonFormat[MeshSurfaceProperty[A]] = new RootJsonFormat[MeshSurfaceProperty[A]] {
+  implicit def meshSurfaceProperty[A: ClassTag](implicit formatA: JsonFormat[A], interpolator: ValueInterpolator[A], colorSpaceOperations: ColorSpaceOperations[A]): RootJsonFormat[MeshSurfaceProperty[A]] = new RootJsonFormat[MeshSurfaceProperty[A]] {
     override def read(json: JsValue): MeshSurfaceProperty[A] = {
       val fields = json.asJsObject(s"expected MeshSurfaceProperty, got: $json").fields
       fields("@type") match {

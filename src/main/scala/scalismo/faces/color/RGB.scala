@@ -23,7 +23,7 @@ import scalismo.faces.common.ComponentRepresentation
 import scalismo.common.Vectorizer
 import scalismo.geometry.Vector._
 import scalismo.geometry.{Vector, _3D}
-import scalismo.mesh.Interpolator
+import scalismo.numerics.ValueInterpolator
 
 import scala.annotation.switch
 
@@ -165,7 +165,7 @@ object RGB {
     override val dimensionality = 3
   }
 
-  implicit object RGBInterpolator extends Interpolator[RGB] {
+  implicit object RGBInterpolator extends ValueInterpolator[RGB] {
     override def blend(obj1: RGB, obj2: RGB, l: Double): RGB = RGB(
       obj1.r * l + (1f - l) * obj2.r,
       obj1.g * l + (1f - l) * obj2.g,
