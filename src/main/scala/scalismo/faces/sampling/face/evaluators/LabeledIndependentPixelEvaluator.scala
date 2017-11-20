@@ -24,7 +24,9 @@ import scalismo.sampling.evaluators.PairEvaluator
 
 /**
   * evaluate each pixel independently, uses alpha channel to determine between foreground,
-  *  background and label to destinguish between face and occlusion/non-face
+  *  background and label to destinguish between face and occlusion/non-face.
+  *
+  *  The face region is labeled as 1 (according to the following publication)
   *
   *  This evaluator is an implementation of Equation 2, 4, 5 and 7 of:
   *  Occlusion-aware 3D Morphable Face Models,
