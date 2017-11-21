@@ -29,7 +29,13 @@ import scalismo.utils.Random
 import scala.collection.immutable.IndexedSeq
 
 
-// an implementation of loopy belief propagation for segmentation
+/* an implementation of loopy belief propagation with a sum product algorithm for segmentation
+   as proposed by:
+   Murphy KP, Weiss Y, Jordan MI (1999)
+   Loopy belief propagation for approximate inference: An empirical study.
+   In: Proceedings of the Fifteenth conference on Uncertainty in artificial intelligence
+ */
+
 object LoopyBPSegmentation {
 
 
