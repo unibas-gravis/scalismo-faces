@@ -18,6 +18,7 @@ package scalismo.faces.mesh
 
 import scalismo.geometry.{IntVector, _3D}
 import scalismo.mesh._
+import scalismo.numerics.ValueInterpolator
 
 import scala.reflect.ClassTag
 
@@ -26,7 +27,7 @@ case class VertexPropertyPerTriangle[A]
 (override val triangulation: TriangleList,
  triangleVertexIndex: IndexedSeq[IntVector[_3D]],
  vertexData: IndexedSeq[A])
-(implicit interpolator: Interpolator[A])
+(implicit interpolator: ValueInterpolator[A])
   extends MeshSurfaceProperty[A] {
 
   override def onSurface(triangleId: TriangleId, bcc: BarycentricCoordinates): A = {
@@ -49,18 +50,18 @@ case class VertexPropertyPerTriangle[A]
 }
 
 object VertexPropertyPerTriangle {
-  def fromPointProperty[A](property: SurfacePointProperty[A])(implicit interpolator: Interpolator[A]) = {
+  def fromPointProperty[A](property: SurfacePointProperty[A])(implicit interpolator: ValueInterpolator[A]) = {
     // point property: just rebuild a triangle-data-index
     val trIndex = property.triangulation.triangles.map(t => IntVector(t.ptId1.id, t.ptId2.id, t.ptId3.id))
     VertexPropertyPerTriangle(property.triangulation, trIndex, property.pointData)
   }
 
-  def fromTriangleProperty[A](property: TriangleProperty[A])(implicit interpolator: Interpolator[A]) = {
+  def fromTriangleProperty[A](property: TriangleProperty[A])(implicit interpolator: ValueInterpolator[A]) = {
     val trIndex = property.triangulation.triangleIds.map(t => IntVector(t.id, t.id, t.id))
     VertexPropertyPerTriangle(property.triangulation, trIndex, property.triangleData)
   }
 
-  def sampleSurfaceProperty[A](property: MeshSurfaceProperty[A])(implicit interpolator: Interpolator[A]) = {
+  def sampleSurfaceProperty[A](property: MeshSurfaceProperty[A])(implicit interpolator: ValueInterpolator[A]) = {
     val triangulation = property.triangulation
     val n = triangulation.triangleIds.size
     val data = new collection.mutable.ArrayBuffer[A](3 * n)
@@ -73,7 +74,7 @@ object VertexPropertyPerTriangle {
     VertexPropertyPerTriangle(triangulation, trIndex, data.toIndexedSeq)
   }
 
-  def fromSurfaceProperty[A](property: MeshSurfaceProperty[A])(implicit interpolator: Interpolator[A]) = property match {
+  def fromSurfaceProperty[A](property: MeshSurfaceProperty[A])(implicit interpolator: ValueInterpolator[A]) = property match {
     case pp: SurfacePointProperty[A] => fromPointProperty(pp)
     case tp: TriangleProperty[A] => fromTriangleProperty(tp)
     case tvp: VertexPropertyPerTriangle[A] => tvp

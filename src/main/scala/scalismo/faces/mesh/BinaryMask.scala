@@ -18,7 +18,7 @@ package scalismo.faces.mesh
 import java.io.File
 
 import scalismo.common.UnstructuredPointsDomain.Create
-import scalismo.common.{DiscreteField, PointId, UnstructuredPointsDomain}
+import scalismo.common.{DiscreteDomain, DiscreteField, PointId, UnstructuredPointsDomain}
 import scalismo.faces.io.GravisArrayIO
 import scalismo.geometry.{Dim, NDSpace, _3D}
 import scalismo.mesh.TriangleMesh
@@ -46,12 +46,12 @@ case class BinaryMask(entries: IndexedSeq[Boolean]) extends (PointId => Boolean)
   /**
     * Masks a DiscreteField according to the mask.
     */
-  def cut[D <: Dim : NDSpace,T](field: DiscreteField[D, T])(implicit creator: Create[D]): DiscreteField[D, T] = {
+  def cut[D <: Dim : NDSpace, DDomain <: DiscreteDomain[D], T](field: DiscreteField[D, DDomain, T])(implicit creator: Create[D]): DiscreteField[D, UnstructuredPointsDomain[D], T] = {
     require(field.domain.numberOfPoints == entries.size,
       "The domain of the field and the mask need to have the same length!!!")
     val maskedPoints = cut(field.domain.points.toIndexedSeq)
     val maskedData = cut(field.data)
-    DiscreteField(UnstructuredPointsDomain(maskedPoints),maskedData)
+    DiscreteField(UnstructuredPointsDomain(maskedPoints), maskedData)
   }
 
   /**

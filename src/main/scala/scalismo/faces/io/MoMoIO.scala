@@ -23,7 +23,7 @@ import java.util.Calendar
 import java.util.Map.Entry
 
 import breeze.linalg.{DenseMatrix, DenseVector}
-import scalismo.common.{DiscreteDomain, PointId, Vectorizer}
+import scalismo.common.{DiscreteDomain, PointId, UnstructuredPointsDomain, Vectorizer}
 import scalismo.faces.color.RGB
 import scalismo.faces.momo.{MoMo, MoMoBasic, MoMoExpress, PancakeDLRGP}
 import scalismo.faces.utils.ResourceManagement
@@ -306,8 +306,8 @@ object MoMoIO {
   /** read a statistical statismo model from a HDF5 file at path modelPath */
   private def readStatisticalModel3D[A](h5file: HDF5File,
                                         modelPath: String,
-                                        referencePoints: DiscreteDomain[_3D])
-                                       (implicit vectorizer: Vectorizer[A]): Try[PancakeDLRGP[_3D, A]] = {
+                                        referencePoints: UnstructuredPointsDomain[_3D])
+                                       (implicit vectorizer: Vectorizer[A]): Try[PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], A]] = {
     val path = StatisticalModelPathBuilder(modelPath)
 
     for {
@@ -382,7 +382,7 @@ object MoMoIO {
     h5file.writeNDArray[Int](s"$path/cells", NDArray(IndexedSeq(3, cells.size), cellData.toArray.map(_.id))).get
   }
 
-  private def writeStatisticalModel[A](model: PancakeDLRGP[_3D, A], h5file: HDF5File, modelPath: String): Try[Unit] = Try {
+  private def writeStatisticalModel[A](model: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], A], h5file: HDF5File, modelPath: String): Try[Unit] = Try {
     val path = StatisticalModelPathBuilder(modelPath)
     val mean = model.meanVector.map(_.toFloat)
     val variance = model.variance.map(_.toFloat)

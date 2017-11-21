@@ -19,10 +19,11 @@ package scalismo.faces.momo
 import scalismo.faces.color.RGBA
 import scalismo.faces.mesh.VertexColorMesh3D
 import scalismo.geometry.{Point, _3D}
+import scalismo.utils.Random
 
 import scala.util.Try
 
-object ModelMetrics {
+object ModelMetrics  {
 
   /*
   * The implementation of these metrices is inspired from :
@@ -51,7 +52,7 @@ object ModelMetrics {
    * calculates average distance between two color sequences
    * uses correspondence information
    */
-  def colorDistance(a: IndexedSeq[RGBA], b: IndexedSeq[RGBA]): Try[Double] = Try {
+  def colorDistance(a: IndexedSeq[RGBA], b: IndexedSeq[RGBA]) : Try[Double] = Try {
     require(a.length == b.length, "color sequences have to have same length")
     a.zip(b).map { case (aa, bb) => (aa.toRGB - bb.toRGB).norm }.sum / a.length
   }
@@ -69,7 +70,7 @@ object ModelMetrics {
    * Returns the specificity metric of the color part of the Momo, that is how close the model remains to the category of shapes it is supposed to represent
    * works on data in correspondence only
    */
-  def colorSpecificity(model: MoMo, data: Seq[VertexColorMesh3D], nbSamples: Int): Try[Double] = Try {
+  def colorSpecificity(model: MoMo, data: Seq[VertexColorMesh3D], nbSamples: Int) (implicit rnd: Random) : Try[Double] = Try {
 
     require(data.forall(f => f.color.triangulation.pointIds.size == model.referenceMesh.triangulation.pointIds.size), "reference and all meshes have to have same color length")
 
@@ -102,7 +103,7 @@ object ModelMetrics {
    * Returns the specificity metric of the shape part of the Momo, that is how close the model remains to the category of shapes it is supposed to represent
    * works on data in correspondence only
    */
-  def shapeSpecificity(model: MoMo, data: Seq[VertexColorMesh3D], nbSamples: Int): Try[Double] = Try {
+  def shapeSpecificity(model: MoMo, data: Seq[VertexColorMesh3D], nbSamples: Int) (implicit rnd: Random): Try[Double] = Try {
 
     require(data.forall(f => f.shape.position.triangulation.pointIds.size == model.referenceMesh.triangulation.pointIds.size), "reference and all meshes have to have same shape length")
 

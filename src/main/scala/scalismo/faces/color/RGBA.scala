@@ -21,7 +21,7 @@ import java.awt.Color
 import breeze.linalg.DenseVector
 import scalismo.faces.common.ComponentRepresentation
 import scalismo.common.Vectorizer
-import scalismo.mesh.Interpolator
+import scalismo.numerics.ValueInterpolator
 
 import scala.annotation.switch
 
@@ -172,7 +172,7 @@ object RGBA {
     override val dimensionality = 4
   }
 
-  implicit object RGBAInterpolator extends Interpolator[RGBA] {
+  implicit object RGBAInterpolator extends ValueInterpolator[RGBA] {
     override def blend(obj1: RGBA, obj2: RGBA, l: Double): RGBA = RGBA(
       obj1.r * l + (1.0 - l) * obj2.r,
       obj1.g * l + (1.0 - l) * obj2.g,

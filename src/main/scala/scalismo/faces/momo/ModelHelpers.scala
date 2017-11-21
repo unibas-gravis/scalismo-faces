@@ -17,7 +17,7 @@ package scalismo.statisticalmodel
 
 import breeze.linalg.svd.SVD
 import breeze.linalg.{*, DenseMatrix, DenseVector}
-import scalismo.common.{DiscreteDomain, DiscreteField, PointId, Vectorizer}
+import scalismo.common._
 import scalismo.faces.momo.PancakeDLRGP
 import scalismo.geometry._
 import scalismo.mesh.TriangleMesh
@@ -31,25 +31,25 @@ object ModelHelpers {
     * @param reference Reference used to map the deformation model to a point model.
     * @return DLRGP Point[_3D] model
     */
-  def vectorToPointDLRGP(model: DiscreteLowRankGaussianProcess[_3D, Vector[_3D]],
+  def vectorToPointDLRGP(model: DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]],
                          reference: TriangleMesh[_3D])
-  : DiscreteLowRankGaussianProcess[_3D, Point[_3D]] = {
-    def vectorFieldToPointField( pf: DiscreteField[_3D, Vector[_3D]],
+  : DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], Point[_3D]] = {
+    def vectorFieldToPointField( pf: DiscreteField[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]],
                                  f: (Vector[_3D], PointId) => Point[_3D]
-                               ) = new DiscreteField[_3D, Point[_3D]](
+                               ) = new DiscreteField[_3D, UnstructuredPointsDomain[_3D], Point[_3D]](
       pf.domain,
       pf.valuesWithIds.map{ case (v,i) =>f(v, i)}.toIndexedSeq
     )
 
     val newKLBasis = model.klBasis.map( b =>
-      DiscreteLowRankGaussianProcess.Eigenpair[_3D, Point[_3D]](
+      DiscreteLowRankGaussianProcess.Eigenpair[_3D, UnstructuredPointsDomain[_3D], Point[_3D]](
         b.eigenvalue,
         vectorFieldToPointField( b.eigenfunction, (v: Vector[_3D], _) => v.toPoint )
       )
     )
     val newMeanField = vectorFieldToPointField(model.mean, (v: Vector[_3D], i: PointId) => reference.pointSet.point(i)+v)
 
-    DiscreteLowRankGaussianProcess[_3D, Point[_3D]](newMeanField, newKLBasis)
+    DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], Point[_3D]](newMeanField, newKLBasis)
   }
 
   /**
@@ -58,32 +58,32 @@ object ModelHelpers {
     * @param reference Reference used to map the point model to a deformation model.
     * @return DLRGP Vector[_3D] model
     */
-  def pointToVectorDLRGP(model: DiscreteLowRankGaussianProcess[_3D, Point[_3D]], reference: TriangleMesh[_3D]): DiscreteLowRankGaussianProcess[_3D, Vector[_3D]] = {
-    def pointFieldToVectorField( pf: DiscreteField[_3D, Point[_3D]],
+  def pointToVectorDLRGP(model: DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], Point[_3D]], reference: TriangleMesh[_3D]): DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]] = {
+    def pointFieldToVectorField( pf: DiscreteField[_3D, UnstructuredPointsDomain[_3D], Point[_3D]],
                                  f: (Point[_3D], PointId) => Vector[_3D]
-                               ) = new DiscreteField[_3D, Vector[_3D]](
+                               ) = new DiscreteField[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]](
       pf.domain,
       pf.valuesWithIds.map{ case (v,i) =>f(v, i)}.toIndexedSeq
     )
 
     val newKLBasis = model.klBasis.map( b =>
-      DiscreteLowRankGaussianProcess.Eigenpair[_3D, Vector[_3D]](
+      DiscreteLowRankGaussianProcess.Eigenpair[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]](
         b.eigenvalue,
         pointFieldToVectorField( b.eigenfunction, (v: Point[_3D], _) => v.toVector )
       )
     )
     val newMeanField = pointFieldToVectorField(model.mean, (p: Point[_3D], i: PointId) => p-reference.pointSet.point(i) )
 
-    DiscreteLowRankGaussianProcess[_3D, Vector[_3D]](newMeanField, newKLBasis)
+    DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]](newMeanField, newKLBasis)
   }
 
   /**
     * Helper function to build a DLRGP. Simply provides access to the constructor.
     */
-  def buildFrom[D <: Dim : NDSpace, Value](domain: DiscreteDomain[D], meanVec: DenseVector[Double], d2: DenseVector[Double], U: DenseMatrix[Double])
+  def buildFrom[D <: Dim : NDSpace, DDomain <: DiscreteDomain[D], Value](domain: DDomain, meanVec: DenseVector[Double], d2: DenseVector[Double], U: DenseMatrix[Double])
                                           (implicit vectorizer: Vectorizer[Value])
-  : DiscreteLowRankGaussianProcess[D, Value] = {
-    new DiscreteLowRankGaussianProcess[D, Value](domain, meanVec, d2, U)
+  : DiscreteLowRankGaussianProcess[D, DDomain, Value] = {
+    new DiscreteLowRankGaussianProcess[D, DDomain, Value](domain, meanVec, d2, U)
   }
 
 
@@ -95,12 +95,12 @@ object ModelHelpers {
     * @param threshold      The minimal value to keep the basis.
     * @return A discrete low rank GP learned from the samples.
     */
-  def createUsingPCA[D <: Dim: NDSpace, Value](domain: DiscreteDomain[D],
-                                               discreteFields: Seq[DiscreteField[D, Value]],
+  def createUsingPCA[D <: Dim: NDSpace, DDomain <: DiscreteDomain[D], Value](domain: DDomain,
+                                               discreteFields: Seq[DiscreteField[D, DDomain, Value]],
                                                threshold: Double = 1.0e-8)
                                                (implicit vectorizer: Vectorizer[Value])
-  : DiscreteLowRankGaussianProcess[D,Value] = {
-    val X = buildDataMatrixWithSamplesInCols[D, Value](domain, discreteFields)
+  : DiscreteLowRankGaussianProcess[D, DDomain, Value] = {
+    val X = buildDataMatrixWithSamplesInCols[D, DDomain, Value](domain, discreteFields)
     val (basis, variance, mean) = calculatePPCABasis(X,0.0,threshold)
     DiscreteLowRankGaussianProcess(domain,mean,variance,basis)
   }
@@ -113,14 +113,14 @@ object ModelHelpers {
     * @param discreteFields The training samples.
     * @return A discrete low rank GP learned from the samples.
     */
-  def createUsingPPCA[D <: Dim: NDSpace, Value](domain: DiscreteDomain[D],
-                                                discreteFields: Seq[DiscreteField[D, Value]],
+  def createUsingPPCA[D <: Dim: NDSpace, DDomain <: DiscreteDomain[D], Value](domain: DDomain,
+                                                discreteFields: Seq[DiscreteField[D, DDomain, Value]],
                                                 noiseVariance: Double,
                                                 threshold: Double = 1.0e-8)
                                                (implicit vectorizer: Vectorizer[Value])
-  : PancakeDLRGP[D,Value] = {
+  : PancakeDLRGP[D, DDomain, Value] = {
 
-    val X = buildDataMatrixWithSamplesInCols[D, Value](domain, discreteFields)
+    val X = buildDataMatrixWithSamplesInCols[D, DDomain, Value](domain, discreteFields)
     val (basis, variance, mean) = calculatePPCABasis(X,noiseVariance,threshold)
     PancakeDLRGP(DiscreteLowRankGaussianProcess(domain,mean,variance,basis), noiseVariance)
   }
@@ -133,7 +133,7 @@ object ModelHelpers {
     * @param threshold Threshold for keeping components.
     * @return (basis,variance,mean)
     */
-  def calculatePPCABasis[D <: Dim : NDSpace, Value](X: DenseMatrix[Double],
+  def calculatePPCABasis[D <: Dim : NDSpace, DDomain <: DiscreteDomain[D], Value](X: DenseMatrix[Double],
                                                  noiseVariance: Double,
                                                  threshold: Double = 1.0e-8)
                                                 (implicit vectorizer: Vectorizer[Value])
@@ -232,7 +232,7 @@ object ModelHelpers {
   /**
     * Build matrix with the samples stored in rows.
     */
-  def buildDataMatrixWithSamplesInRows[D <: Dim : NDSpace, Value](domain: DiscreteDomain[D], discreteFields: Seq[DiscreteField[D, Value]])
+  def buildDataMatrixWithSamplesInRows[D <: Dim : NDSpace, DDomain <: DiscreteDomain[D], Value](domain: DiscreteDomain[D], discreteFields: Seq[DiscreteField[D, DDomain, Value]])
                                                                  (implicit vectorizer: Vectorizer[Value])
   : DenseMatrix[Double] = {
 
@@ -259,7 +259,7 @@ object ModelHelpers {
   /**
     * Build matrix with the samples stored in cols.
     */
-  def buildDataMatrixWithSamplesInCols[D <: Dim : NDSpace, Value](domain: DiscreteDomain[D], discreteFields: Seq[DiscreteField[D, Value]])
+  def buildDataMatrixWithSamplesInCols[D <: Dim : NDSpace, DDomain <: DiscreteDomain[D], Value](domain: DDomain, discreteFields: Seq[DiscreteField[D, DDomain, Value]])
                                                                  (implicit vectorizer: Vectorizer[Value])
   : DenseMatrix[Double] = {
 
