@@ -33,7 +33,7 @@ import scalismo.utils.Random
   * @tparam D dimensionality of domain
   * @tparam Value value type of model
   */
-case class PancakeDLRGP[D <: Dim: NDSpace, DDomain <: DiscreteDomain[D], Value](gpModel: DiscreteLowRankGaussianProcess[D, DDomain, Value],
+case class PancakeDLRGP[D <: Dim: NDSpace, +DDomain <: DiscreteDomain[D], Value](gpModel: DiscreteLowRankGaussianProcess[D, DDomain, Value],
                                                   noiseVariance: Double) {
   require(noiseVariance >= 0.0, "noise variance cannot be negative")
 
@@ -130,7 +130,7 @@ case class PancakeDLRGP[D <: Dim: NDSpace, DDomain <: DiscreteDomain[D], Value](
   /**
     * Returns the probability density of the given instance, takes spherical noise term into account
     */
-  def pdf(instance: DiscreteField[D, DDomain, Value]): Double = coefficientsDistribution.pdf(coefficients(instance))
+  def pdf(instance: DiscreteField[D, DiscreteDomain[D], Value]): Double = coefficientsDistribution.pdf(coefficients(instance))
 
   /**
     * Returns the log of the probability density of the instance
@@ -138,7 +138,7 @@ case class PancakeDLRGP[D <: Dim: NDSpace, DDomain <: DiscreteDomain[D], Value](
     * If you are interested in ordinal comparisons of PDFs, use this as it is numerically more stable,
     * takes spherical noise term into account
     */
-  def logpdf(instance: DiscreteField[D, DDomain, Value]): Double = coefficientsDistribution.logpdf(coefficients(instance))
+  def logpdf(instance: DiscreteField[D, DiscreteDomain[D], Value]): Double = coefficientsDistribution.logpdf(coefficients(instance))
 
   /**
     * Draw a sample from the model, includes noise(!) (use underlying gpModel without noise)
@@ -160,12 +160,12 @@ case class PancakeDLRGP[D <: Dim: NDSpace, DDomain <: DiscreteDomain[D], Value](
   /**
     * Project the sample into this model, best reconstruction
     */
-  def project(s: DiscreteField[D, DDomain, Value]): DiscreteField[D, DDomain, Value] = instance(coefficients(s))
+  def project(s: DiscreteField[D, DiscreteDomain[D], Value]): DiscreteField[D, DDomain, Value] = instance(coefficients(s))
 
   /**
     * Get the low-rank expansion coefficients of a sample, respects model noise
     */
-  def coefficients(s: DiscreteField[D, DDomain, Value]): DenseVector[Double] = {
+  def coefficients(s: DiscreteField[D, DiscreteDomain[D], Value]): DenseVector[Double] = {
     val instanceVector = DiscreteField.vectorize(s)
     assert(instanceVector.length == totalDim)
     Minv * (diag(S) * (U.t * (instanceVector - meanVector)))
@@ -176,7 +176,7 @@ case class PancakeDLRGP[D <: Dim: NDSpace, DDomain <: DiscreteDomain[D], Value](
     *
     * @param sigma2 observation noise of sample, *additional* (independent) to model noise
     */
-  def posterior(trainingData: IndexedSeq[(PointId, Value)], sigma2: Double): PancakeDLRGP[D, DDomain, Value] = {
+  def posterior(trainingData: IndexedSeq[(PointId, Value)], sigma2: Double): PancakeDLRGP[D, DiscreteDomain[D], Value] = {
     require(sigma2 >= 0.0)
     val cov = MultivariateNormalDistribution(DenseVector.zeros[Double](outputDim), DenseMatrix.eye[Double](outputDim) *:* (sigma2 + totalNoiseVariance))
     val newtd = trainingData.map { case (ptId, df) => (ptId, df, cov) }
@@ -188,7 +188,7 @@ case class PancakeDLRGP[D <: Dim: NDSpace, DDomain <: DiscreteDomain[D], Value](
     *
     * @param trainingData list of point observations (PointId, Value, Uncertainty), uncertainty is *additional* (independent) to model noise
     */
-  def posterior(trainingData: IndexedSeq[(PointId, Value, MultivariateNormalDistribution)]): PancakeDLRGP[D, DDomain, Value] = {
+  def posterior(trainingData: IndexedSeq[(PointId, Value, MultivariateNormalDistribution)]): PancakeDLRGP[D, DiscreteDomain[D], Value] = {
     def addMVN(mvn1: MultivariateNormalDistribution, mvn2: MultivariateNormalDistribution): MultivariateNormalDistribution = {
       MultivariateNormalDistribution(mvn1.mean + mvn2.mean, mvn1.cov + mvn2.cov)
     }
