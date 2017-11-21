@@ -17,13 +17,10 @@
 
 package scalismo.faces.segmentation
 
-import java.io.File
-
 import scalismo.faces.color._
 import scalismo.faces.image.{ImageBuffer, PixelImage}
 import scalismo.faces.gui.GUIBlock._
 import scalismo.faces.gui.{GUIFrame, ImagePanel}
-import scalismo.faces.io.PixelImageIO
 import scalismo.utils.Random
 
 import scala.collection.immutable.IndexedSeq
@@ -92,7 +89,7 @@ object LoopyBPSegmentation {
                    binaryDistribution: PixelImage[(Label, Label) => Double],
                    numLabels: Int,
                    numIterations: Int,
-                   gui: Boolean = false): PixelImage[LabelDistribution] = {
+                   gui: Boolean = false)(implicit rnd: Random): PixelImage[LabelDistribution] = {
     require(labelInit.values.forall(i => i.forall(_.value < numLabels)))
 
     // init: color models and start labels
@@ -156,7 +153,7 @@ object LoopyBPSegmentation {
                            fgProb: PixelImage[Double],
                            binaryDistribution: PixelImage[(Label, Label) => Double],
                            numLabels: Int, numIterations:
-                           Int, gui: Boolean = false): PixelImage[LabelDistribution] = {
+                           Int, gui: Boolean = false)(implicit rnd: Random): PixelImage[LabelDistribution] = {
     // init: color models and start labels
     val initialSegmentation = labelInit.map{init => LabelDistribution.fromSingleLabel(init, numLabels, 0.01)}
     var colorDists = estimateColorDistributions(image, initialSegmentation)
@@ -210,7 +207,7 @@ object LoopyBPSegmentation {
     calculateBelief(messageField.toImage, localMessages)
   }
 
-  def visSampleImage(labelImage: PixelImage[LabelDistribution], colorDists: IndexedSeq[ColorDistribution]): PixelImage[RGB] = {
+  def visSampleImage(labelImage: PixelImage[LabelDistribution], colorDists: IndexedSeq[ColorDistribution])(implicit rnd: Random): PixelImage[RGB] = {
     labelImage.map { labels => colorDists(labels.maxLabel).sample.clamped }
   }
 
