@@ -16,43 +16,34 @@
 package scalismo.faces.image.pyramid
 
 import scalismo.faces.color.ColorSpaceOperations
-import scalismo.faces.image.{AccessMode, PixelImage}
-import scalismo.faces.image.filter.{ImageFilter, IsotropicGaussianFilter}
+import scalismo.faces.image.filter.{ImageFilter, IsotropicGaussianFilter, ResampleFilter}
+import scalismo.faces.image.{AccessMode, InterpolationKernel, PixelImage}
 
-import scala.math.min
 import scala.reflect._
 
 /**
   * GaussPyramid implements the concept of images always reduced to half the size of the image.
-  * This implementation allows only to reduce the images as long as both side length have a prime factor 2.
   *
   * @param image image to build the pyramid with.
   * @param reduce the operation that reduces the image one level
-  * @param reductions the number of reductions that should be built. A negative number means as many as possible. (Could be less if the side length have less times 2 as prime factor.)
+  * @param reductions the number of reductions that should be built. A negative number means as many as possible.
   * @tparam A Pixel type of underlying images in the Pyramid.
   */
 class GaussPyramid[A: ClassTag](val image: PixelImage[A], val reduce: ImageFilter[A, A], val reductions: Int)(implicit ops: ColorSpaceOperations[A])
   extends ImagePyramid[A] {
 
-  private val maxReductions: Int = {
-    val maxNumberOfReductions = min(
-      GaussPyramid.findNumberOfTwoInPrimFactorDecomposition(image.width),
-      GaussPyramid.findNumberOfTwoInPrimFactorDecomposition(image.height))
-
-    if (reductions >= 0 && reductions < maxNumberOfReductions) {
-      reductions
-    } else {
-      maxNumberOfReductions.toInt
-    }
-  }
-
   override val level: Seq[PixelImage[A]] = {
     def makeReducedImages(image: PixelImage[A], levels: Int): Seq[PixelImage[A]] = {
       if (levels == 0) Seq(image)
-      else image +: makeReducedImages(reduce.filter(image), levels - 1)
+      else {
+        val reduced = reduce.filter(image)
+        if(reduced.width > 0 && reduced.height > 0)
+          image +: makeReducedImages(reduced, levels - 1)
+        else Seq()
+      }
     }
 
-    makeReducedImages(image, maxReductions)
+    makeReducedImages(image, reductions)
   }
 
   override val levels = level.size
@@ -68,14 +59,29 @@ object GaussPyramid {
   /**
     * Standard reduce operation dividing the image size along each dimension by 2.
     */
-  def reduce[A: ClassTag](implicit ops: ColorSpaceOperations[A]) = new ImageFilter[A, A] {
+  def reduce[A: ClassTag](implicit ops: ColorSpaceOperations[A]) = reduceScaled[A](0.5)
+
+  /**
+    * Returns an image filter that reduces an image according to a scaling factor. The scaling factor is computed as follows:
+    * scaleNumerator / scaleDenominator
+    * @param scale The reduction applied to each level. The number should lie in the range (0,1) and is approximated to the closest rational number corresponding to the size of neighboring levels.
+    */
+  def reduceScaled[A: ClassTag](scale: Double)(implicit ops: ColorSpaceOperations[A]) = new ImageFilter[A, A] {
+    require( scale>0.0 && scale <1.0, "scale must be on (0,1.0). scale= scaleNumerator/scaleDenominator" )
+
     import ColorSpaceOperations.implicits._
+
+    def interpolationKernel = InterpolationKernel.BilinearKernel
+
     override def filter(img: PixelImage[A]): PixelImage[A] = {
-      val w = img.width / 2
-      val h = img.height / 2
-      val filteredImage = img.withAccessMode(AccessMode.MirroredPositionFunctional((a:A, b:A)=>2*:a-b)).filter(GaussPyramid.filter)
-      val interpolatedImage = filteredImage.interpolate
-      PixelImage[A](w, h, (x: Int, y: Int) => filteredImage(x * 2 + 1, y * 2 + 1))
+      val w = (img.width * scale).toInt
+      val h = (img.height * scale).toInt
+      val filteredImage = img.withAccessMode(AccessMode.MirroredPositionFunctional((a: A, b: A) => 2 *: a - b)).filter(GaussPyramid.filter)
+      if ( w > 0 && h > 0) {
+        ResampleFilter.resampleImage(filteredImage,w,h,interpolationKernel)
+      } else {
+        PixelImage[A](0, h, (x: Int, y: Int) => throw new RuntimeException)
+      }
     }
   }
 
@@ -86,15 +92,5 @@ object GaussPyramid {
     */
   def apply[A: ClassTag](image: PixelImage[A], reductions: Int = -1)(implicit ops: ColorSpaceOperations[A]): GaussPyramid[A] = {
     new GaussPyramid[A](image, reduce, reductions)
-  }
-
-  /**
-    * Finds the amount of two occuring as prime factor.
-    */
-  private[image] def findNumberOfTwoInPrimFactorDecomposition(number: Int, alreadyFound: Int = 0): Int = {
-    if ((number / 2.0).isValidInt)
-      findNumberOfTwoInPrimFactorDecomposition(number / 2, alreadyFound + 1)
-    else
-      alreadyFound
   }
 }
