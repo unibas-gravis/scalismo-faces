@@ -70,7 +70,7 @@ object TLMSLandmarksIO {
     ResourceManagement.using(new PrintWriter(stream), (wr: PrintWriter) => wr.flush()) { writer =>
       landmarks.foreach{lm =>
         val visible = if (lm.visible) "1" else "0"
-        val line = f"${lm.id}%s $visible%s ${lm.point.x}%.17g ${lm.point.y}%.17g"
+        val line = "%s %s %.17g %.17g".formatLocal(java.util.Locale.US, lm.id, visible, lm.point.x,lm.point.y)
         writer.println(line)
       }
     }
@@ -86,7 +86,8 @@ object TLMSLandmarksIO {
     ResourceManagement.using(new PrintWriter(stream), (wr: PrintWriter) => wr.flush()) { writer =>
       landmarks.foreach { lm =>
         val visible = if (lm.visible) "1" else "0"
-        writer.println(f"${lm.id}%s $visible%s ${lm.point.x}%.17g ${lm.point.y}%.17g ${lm.point.z}%.17g")
+        val line = "%s %s %.17g %.17g %.17g".formatLocal(java.util.Locale.US, lm.id, visible, lm.point.x,lm.point.y,lm.point.z)
+        writer.println(line)
       }
     }
   }
