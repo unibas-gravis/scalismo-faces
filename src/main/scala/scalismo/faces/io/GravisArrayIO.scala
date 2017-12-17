@@ -123,7 +123,7 @@ object GravisArrayIO {
 
     override def parse(string: String): Float = string.toFloat
 
-    override def toString(data: Float): String = "%.10g".formatLocal(java.util.Locale.US, data)
+    override def toString(data: Float): String = "%.10f".formatLocal(java.util.Locale.US, data)
   }
 
   /** read and write Double in gravis-compatible format */
@@ -132,7 +132,7 @@ object GravisArrayIO {
 
     override def parse(string: String): Double = string.toDouble
 
-    override def toString(data: Double): String = "%.20g".formatLocal(java.util.Locale.US, data)
+    override def toString(data: Double): String = "%.20f".formatLocal(java.util.Locale.US, data)
   }
 
   /** read and write Tuple3 (Int, Int, Int) in gravis-compatible format */
@@ -156,7 +156,7 @@ object GravisArrayIO {
       RGB(values(0), values(1), values(2))
     }
 
-    override def toString(data: RGB): String = "%.20g, %20g, %20g".formatLocal(java.util.Locale.US, data.r, data.g, data.b)
+    override def toString(data: RGB): String = Seq( data.r, data.g, data.b).map(v => "%.20f".formatLocal(java.util.Locale.US,v)).mkString(", ")
   }
 
   /** read and write RGBA in gravis-compatible format */
@@ -168,7 +168,7 @@ object GravisArrayIO {
       RGBA(values(0), values(1), values(2), values(3))
     }
 
-    override def toString(data: RGBA): String = "%.20g, %20g, %20g, %20g".formatLocal(java.util.Locale.US, data.r, data.g, data.b, data.a)
+    override def toString(data: RGBA): String = Seq( data.r, data.g, data.b, data.a).map(v => "%.20f".formatLocal(java.util.Locale.US,v)).mkString(", ")
   }
 
 }
