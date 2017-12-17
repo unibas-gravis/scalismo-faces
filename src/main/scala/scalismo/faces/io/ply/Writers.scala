@@ -100,13 +100,13 @@ object StringWriter {
 
   implicit object FloatStringWriter extends StringWriter[Float] {
     def write(a: Iterable[Float], osw: OutputStreamWriter): Unit = {
-      osw.write(a.mkString(" "))
+      osw.write(a.map(f => "%.8g".formatLocal(java.util.Locale.US, f)).mkString(" "))
     }
   }
 
   implicit object DoubleStringWriter extends StringWriter[Double] {
     def write(a: Iterable[Double], osw: OutputStreamWriter): Unit = {
-      osw.write(a.mkString(" "))
+      osw.write(a.map(d => "%.17g".formatLocal(java.util.Locale.US, d)).mkString(" "))
     }
   }
 
