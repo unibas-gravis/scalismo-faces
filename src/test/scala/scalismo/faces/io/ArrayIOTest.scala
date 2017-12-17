@@ -19,8 +19,8 @@ package scalismo.faces.io
 import java.io.File
 
 import scalismo.faces.FacesTestSuite
-import scalismo.faces.color.RGB
-import scalismo.faces.io.GravisArrayIO.GravisTypeIO
+import scalismo.faces.color.{RGB, RGBA}
+import scalismo.faces.io.GravisArrayIO.{GravisTypeIO, RGBAIO}
 
 import scala.reflect.ClassTag
 
@@ -35,8 +35,20 @@ class ArrayIOTest extends FacesTestSuite {
 
   describe("Array IO") {
 
+    def checkSameElementsSameOrder[A](a:Seq[A],b:Seq[A]): Unit = {
+      a.zip(b).zipWithIndex.foreach { case ((x, y), i) =>
+        y match {
+          case RGBA =>
+            if (x != y) println(s"${i}: $x, $y ${y.toString()} ${RGBAIO.parse(y.toString)}")
+          case _ =>
+            if (x != y) println(s"${i}: $x, $y ${y.toString()}")
+        }
+      }
+    }
+
     it("can write and read a random sequence for A=Double") {
       val seq = IndexedSeq.fill(25)(randomDouble)
+      checkSameElementsSameOrder(writeReadSeq(seq),seq)
       writeReadSeq(seq) should contain theSameElementsInOrderAs seq
     }
 
@@ -62,11 +74,13 @@ class ArrayIOTest extends FacesTestSuite {
 
     it("can write and read a random sequence for A=RGB") {
       val seq = IndexedSeq.fill(25)(randomRGB)
+      checkSameElementsSameOrder(writeReadSeq(seq),seq)
       writeReadSeq(seq) should contain theSameElementsInOrderAs seq
     }
 
     it("can write and read a random sequence for A=RGBA") {
       val seq = IndexedSeq.fill(25)(randomRGBA)
+      checkSameElementsSameOrder(writeReadSeq(seq),seq)
       writeReadSeq(seq) should contain theSameElementsInOrderAs seq
     }
 
