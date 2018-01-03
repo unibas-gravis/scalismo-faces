@@ -289,7 +289,6 @@ object SphericalHarmonicsLightProposals {
                                           sigmaThreshold: Double = 2,
                                           percentage: Double = 0.4,
                                           iterations: Int = 500,
-                                          maxVarianceForMask: Double = 0.5,
                                           nSamplesIllumination: Int = 1000)(implicit rnd: Random)
     extends ProposalGenerator[RenderParameter] with TransitionProbability[RenderParameter] {
 
@@ -301,7 +300,6 @@ object SphericalHarmonicsLightProposals {
       sigmaThreshold,
       percentage,
       iterations,
-      maxVarianceForMask,
       nSamplesIllumination)
 
     val dummyImg = target.map(_ => 0)
@@ -333,7 +331,6 @@ object SphericalHarmonicsLightProposals {
                                                    sigmaThreshold: Double = 2,
                                                    percentage: Double = 0.4,
                                                    iterations: Int = 500,
-                                                   maxVarianceForMask: Double = 0.5,
                                                    nSamplesIllumination: Int = 1000)(implicit rnd: Random)
     extends ProposalGenerator[(RenderParameter, PixelImage[Int])] with TransitionProbability[(RenderParameter, PixelImage[Int])] {
 
