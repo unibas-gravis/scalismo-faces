@@ -17,7 +17,7 @@
 package scalismo.faces.sampling.face.evaluators
 
 import scalismo.faces.color.RGBA
-import scalismo.faces.image.PixelImage
+import scalismo.faces.image.{LabeledPixelImage, PixelImage}
 import scalismo.faces.parameters.RenderParameter
 import scalismo.faces.sampling.face.ParametricImageRenderer
 import scalismo.sampling.DistributionEvaluator
@@ -36,6 +36,21 @@ class ImageRendererEvaluator(val renderer: ParametricImageRenderer[RGBA], val im
 
 object ImageRendererEvaluator {
   def apply(renderer: ParametricImageRenderer[RGBA], imageEvaluator: DistributionEvaluator[PixelImage[RGBA]]) = new ImageRendererEvaluator(renderer, imageEvaluator)
+}
+
+/** evaluate the rendered image with given image evaluator and a segmentation label */
+class LabeledImageRendererEvaluator(val renderer: ParametricImageRenderer[RGBA], val imageEvaluator: DistributionEvaluator[LabeledPixelImage[RGBA]])
+  extends DistributionEvaluator[(RenderParameter, PixelImage[Int])] {
+
+  def logValue(masked: (RenderParameter, PixelImage[Int])): Double = {
+    val rendered = renderer.renderImage(masked._1)
+    imageEvaluator.logValue(LabeledPixelImage(rendered,masked._2))
+  }
+  override def toString = "LabeledImageRendererEvaluator(" + imageEvaluator.toString + ")"
+}
+
+object LabeledImageRendererEvaluator {
+  def apply(renderer: ParametricImageRenderer[RGBA], imageEvaluator: DistributionEvaluator[LabeledPixelImage[RGBA]]) = new LabeledImageRendererEvaluator(renderer, imageEvaluator)
 }
 
 /** evaluate the transformed, rendered image with given image evaluator */
