@@ -27,7 +27,7 @@ resolvers += Resolver.bintrayRepo("unibas-gravis", "maven")
 
 ### Getting Started
 
-- Create a checkerboard image and save it to disk:
+- The following code creates a checkerboard image and save it to disk:
 
 ```scala
 import scalismo.faces.color.RGB
@@ -35,10 +35,12 @@ import scalismo.faces.image.PixelImage
 import scalismo.faces.io.PixelImageIO
 import java.io.File
 
-val checkerboard = PixelImage(128, 128, {(x, y) => if ((x+y)%2 == 0) RGB.White else RGB.Black})
-PixelImageIO.write(checkerboard, new File("checkerboard.png")).get
+object ChessExample extends App {
+  val checkerboard = PixelImage(128, 128, {(x, y) => if ((x+y)%2 == 0) RGB.White else RGB.Black})
+  PixelImageIO.write(checkerboard, new File("checkerboard.png")).get
+}
 ```
-(you can open an appropriate Scala REPL via `sbt console`)
+To execute it place the code in a file `src/main/scala/ChessExample.scala` and run `sbt run` from your project directory where you have the `build.sbt` file with at least the lines described under the former point **sbt**.
 
 Documentation
 -------------
