@@ -30,8 +30,9 @@ resolvers += Resolver.bintrayRepo("unibas-gravis", "maven")
 - Create a checkerboard image and save it to disk:
 
 ```scala
-import scalismo.color.RGB
-import scalismo.image.{PixelImage, PixelImageIO}
+import scalismo.faces.color.RGB
+import scalismo.faces.image.PixelImage
+import scalismo.faces.io.PixelImageIO
 import java.io.File
 
 val checkerboard = PixelImage(128, 128, {(x, y) => if ((x+y)%2 == 0) RGB.White else RGB.Black})
