@@ -1,4 +1,4 @@
-package faces.sampling.face.proposals
+package scalismo.faces.sampling.face.proposals
 
 import scalismo.faces.image.PixelImage
 import scalismo.faces.parameters.RenderParameter
