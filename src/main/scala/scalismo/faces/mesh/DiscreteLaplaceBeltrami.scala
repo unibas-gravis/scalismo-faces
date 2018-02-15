@@ -22,7 +22,8 @@ import scalismo.mesh.{TriangleList, TriangleMesh3D}
 
 /** Construct a discrete Lapalace-Beltrami operators from different types of weights. */
 object DiscreteLaplaceBeltrami {
-  type WeightFunction = (PointId, PointId) => Double
+
+  trait LaplaceBeltramiWeightingFunction extends ((PointId, PointId) => Double)
 
   /**
     * Constructs a Laplace-Beltrami matrix from a given weight function where its rows and columns correspond to the PointIds of the given triangulation.
@@ -31,7 +32,7 @@ object DiscreteLaplaceBeltrami {
     * @param weightFun
     * @return
     */
-  def laplaceBeltramiMatrix(triangulation: TriangleList, weightFun: WeightFunction): CSCMatrix[Double] = {
+  def laplaceBeltramiMatrix(triangulation: TriangleList, weightFun: LaplaceBeltramiWeightingFunction): CSCMatrix[Double] = {
     val n = triangulation.pointIds.length
     val builderW = new CSCMatrix.Builder[Double](n, n)
     for (i <- triangulation.pointIds) {
@@ -65,7 +66,7 @@ object DiscreteLaplaceBeltrami {
     * @param ref : Mesh used to calculate cotangent weights.
     * @return DenseMatrix[Double]
     */
-  def cotangentWeight(ref: TriangleMesh3D): WeightFunction = {
+  def cotangentWeight(ref: TriangleMesh3D): LaplaceBeltramiWeightingFunction = {
 
     /** All three cotangent values of a triangle are stored and added to possibly already existing values.
       * This way both cotan values are added.
@@ -103,7 +104,7 @@ object DiscreteLaplaceBeltrami {
   def unitWeight(i: PointId, j: PointId): Double = 1.0
 
   /** Constructs a weight function which is the heat kernel value k(x1,x2) = exp(- ||x1-x2||^2 / diffusionDistance^2 ) */
-  def heatKernelWeights(ref: TriangleMesh3D, diffusionDistance: Double): WeightFunction = {
+  def heatKernelWeights(ref: TriangleMesh3D, diffusionDistance: Double): LaplaceBeltramiWeightingFunction = {
     (i: PointId, j: PointId) => {
       val dist = (ref.position.atPoint(i) - ref.position.atPoint(j)).norm2
       math.exp(-dist / (diffusionDistance * diffusionDistance))
