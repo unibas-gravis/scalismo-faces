@@ -26,6 +26,7 @@ import scalismo.faces.io.PixelImageIO
 import scalismo.faces.mesh.{ColorNormalMesh3D, TextureMappedProperty}
 import scalismo.faces.parameters.{Camera, Pose, RenderParameter}
 import scalismo.faces.render.PixelShaders.PropertyShader
+import scalismo.faces.texture.TextureExtraction
 import scalismo.geometry.Vector
 import scalismo.mesh.{MeshSurfaceProperty, SurfacePointProperty, TriangleMesh3D}
 import scalismo.utils.Random

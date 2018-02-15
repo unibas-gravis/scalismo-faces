@@ -21,10 +21,10 @@ import scalismo.faces.deluminate.SphericalHarmonicsOptimizer
 import scalismo.faces.image.{AccessMode, PixelImage}
 import scalismo.faces.mesh.{MeshSurfaceSampling, VertexColorMesh3D}
 import scalismo.faces.parameters.{RenderParameter, SphericalHarmonicsLight}
-import scalismo.faces.render.TextureExtraction
 import scalismo.faces.sampling.evaluators.LogNormalDistribution
 import scalismo.faces.sampling.face.evaluators.PixelEvaluators.IsotropicGaussianPixelEvaluatorHSV
 import scalismo.faces.sampling.face.{ParametricImageRenderer, ParametricModel}
+import scalismo.faces.texture.TextureExtraction
 import scalismo.geometry.{Vector, _3D}
 import scalismo.mesh._
 import scalismo.sampling.evaluators.{GaussianEvaluator, PairEvaluator}

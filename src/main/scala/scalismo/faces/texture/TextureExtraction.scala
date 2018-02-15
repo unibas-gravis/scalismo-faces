@@ -14,11 +14,12 @@
  *  limitations under the License.
  */
 
-package scalismo.faces.render
+package scalismo.faces.texture
 
 import scalismo.faces.color.ColorSpaceOperations
 import scalismo.faces.image.{InterpolatedPixelImage, PixelImage, PixelImageDomain}
 import scalismo.faces.mesh.TextureMappedProperty
+import scalismo.faces.render.{PointShader, TriangleRenderer}
 import scalismo.geometry.{Point, _2D, _3D}
 import scalismo.mesh._
 
