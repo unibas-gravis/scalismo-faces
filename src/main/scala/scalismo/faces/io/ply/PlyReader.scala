@@ -58,7 +58,7 @@ object PlyReader {
     // as we use buffered readers we need to reset the input stream
     val fis = new FileInputStream(url)
     val bis = new BufferedInputStream(fis)
-    bis.skip(header.map(_.size).sum + header.size)
+    bis.skip(header.map(_.size).sum + header.size*System.getProperty("line.separator").length)
     val values = readData(bis, plyFormat, elementReaders)
     (values, textures)
   }
