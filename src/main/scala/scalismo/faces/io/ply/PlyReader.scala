@@ -18,13 +18,14 @@ package scalismo.faces.io.ply
 import java.io.{BufferedInputStream, File, FileInputStream, IOException}
 import java.nio.ByteOrder
 import java.nio.file.{Files, Path, Paths}
-import java.util.Scanner
+import java.util.{Locale, Scanner}
 
 import scalismo.faces.color.RGBA
 import scalismo.faces.image.PixelImage
 import scalismo.faces.io.PixelImageIO
 
 import scala.collection.mutable.ListBuffer
+import scala.util.Try
 
 /**
  * Reads a ply file based on its header. This class is independent of the mesh class and could be reused in other
@@ -66,10 +67,14 @@ object PlyReader {
   private def readData(bis: BufferedInputStream, plyFormat: PlyFormat.PlyFormat, elementReaders: List[(String, PlyElementReader)]): List[(String, List[(String, List[_])])] = {
     plyFormat match {
       case PlyFormat.ASCII =>
-        val scanner = new Scanner(bis)
-        elementReaders.map { reader =>
-          (reader._1, reader._2.read(scanner))
+        def readFormat(locale: Locale) = Try {
+          val scanner = new Scanner(bis).useLocale(locale)
+          elementReaders.map { reader =>
+            (reader._1, reader._2.read(scanner))
+          }
         }
+        // read floating point number either with point or comma
+        readFormat(java.util.Locale.US).getOrElse(readFormat(java.util.Locale.FRENCH).get)
       case PlyFormat.BinaryLittleEndian =>
         elementReaders.map { reader =>
           (reader._1, reader._2.read(bis, ByteOrder.LITTLE_ENDIAN))
