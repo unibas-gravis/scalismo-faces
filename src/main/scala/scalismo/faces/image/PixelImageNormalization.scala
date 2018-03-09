@@ -30,11 +30,9 @@ object PixelImageNormalization {
       image.map(normalizer)
   }
 
-  /** Expands value range to the interval [0,1]. */
+  /** Normalize the value range to the interval [0,1]. */
   def normalizeDoubleImage(image: PixelImage[Double]): PixelImage[Double] = {
-    val min = image.values.min
-    val max = image.values.max
-    normalizeDoubleImageToRange(image, min, max)
+    normalizeDoubleImageToRange(image, 0.0, 1.0)
   }
 
   /** Normalize the image to range ([0,1], [0,1], [0,1]). (Each channel is normalized seperately.) */
