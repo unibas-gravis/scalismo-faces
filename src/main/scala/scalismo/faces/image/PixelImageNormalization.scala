@@ -28,7 +28,7 @@ object PixelImageNormalization {
     val max = image.values.max
     val min = image.values.min
 
-    def normalizer(x: Double) = min + (x - lower) / (upper - lower) * (max-min)
+    def normalizer(x: Double) = lower + (x - min) / (max - min) * (upper-lower)
     image.map(normalizer)
   }
 
