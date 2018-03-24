@@ -21,8 +21,8 @@ import scalismo.faces.color.RGBA
 import scalismo.faces.image.PixelImage
 import scalismo.faces.landmarks.TLMSLandmark2D
 import scalismo.faces.mesh.VertexColorMesh3D
-import scalismo.faces.momo.MoMo
-import scalismo.faces.parameters.{ParametricRenderer, RenderParameter}
+import scalismo.faces.momo.{MoMo, MoMoCoefficients}
+import scalismo.faces.parameters.{MoMoInstance, ParametricRenderer, RenderParameter}
 import scalismo.geometry.Point
 import scalismo.mesh.MeshSurfaceProperty
 import scalismo.utils.Memoize
@@ -46,7 +46,12 @@ class MoMoRenderer(val model: MoMo, val clearColor: RGBA)
 
   /** create an instance of the model, in the original model's object coordinates */
   override def instance(parameters: RenderParameter): VertexColorMesh3D = {
-    model.instance(parameters.momo.coefficients)
+    instanceFromCoefficients(parameters.momo)
+  }
+
+  /** draw a model instance directly from the coefficients */
+  def instanceFromCoefficients(instance: MoMoInstance): VertexColorMesh3D = {
+    model.instance(instance.coefficients)
   }
 
   /** render the image described by the parameters */
@@ -99,12 +104,12 @@ class MoMoRenderer(val model: MoMo, val clearColor: RGBA)
     private val meshRenderer = Memoize(super.renderMesh, cacheSize)
     private val maskRenderer = Memoize((super.renderMask _).tupled, cacheSize)
     private val lmRenderer = Memoize((super.renderLandmark _).tupled, cacheSize * allLandmarkIds.length)
-    private val instancer = Memoize(super.instance, cacheSize)
+    private val instancer = Memoize(super.instanceFromCoefficients _, cacheSize)
 
     override def renderImage(parameters: RenderParameter): PixelImage[RGBA] = imageRenderer(parameters)
     override def renderLandmark(lmId: String, parameter: RenderParameter): Option[TLMSLandmark2D] = lmRenderer((lmId, parameter))
     override def renderMesh(parameters: RenderParameter): VertexColorMesh3D = meshRenderer(parameters)
-    override def instance(parameters: RenderParameter): VertexColorMesh3D = instancer(parameters)
+    override def instance(parameters: RenderParameter): VertexColorMesh3D = instancer(parameters.momo)
     override def renderMask(parameters: RenderParameter, mask: MeshSurfaceProperty[Int]): PixelImage[Int] = maskRenderer((parameters, mask))
   }
 }
