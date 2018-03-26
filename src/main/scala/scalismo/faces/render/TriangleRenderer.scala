@@ -209,6 +209,22 @@ object TriangleRenderer {
 
   /** render a correspondence image into a buffer, contains information about triangle rasterization */
   def renderCorrespondence(mesh: TriangleMesh[_3D],
+                           triangleFilter: (TriangleId) => Boolean,
+                           pointShader: PointShader,
+                           screenTransform: InvertibleTransform3D,
+                           buffer: RenderBuffer[Option[TriangleFragment]]): RenderBuffer[Option[TriangleFragment]] = {
+    renderMesh[Option[TriangleFragment]](
+      mesh,
+      triangleFilter,
+      pointShader,
+      screenTransform,
+      PixelShaders.CorrespondenceShader(mesh),
+      buffer
+    )
+  }
+
+  /** render a correspondence image into a buffer, contains information about triangle rasterization */
+  def renderCorrespondence(mesh: TriangleMesh[_3D],
                            pointShader: PointShader,
                            buffer: RenderBuffer[Option[TriangleFragment]]): RenderBuffer[Option[TriangleFragment]] = {
     renderMesh[Option[TriangleFragment]](
@@ -218,6 +234,7 @@ object TriangleRenderer {
       buffer
     )
   }
+
 
   /** render window depth values (as used by Z buffer, in range [0, 1]) */
   def renderDepthWindow(mesh: TriangleMesh[_3D],
