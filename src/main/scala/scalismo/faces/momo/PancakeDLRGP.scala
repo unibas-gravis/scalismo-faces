@@ -176,7 +176,7 @@ case class PancakeDLRGP[D <: Dim: NDSpace, +DDomain <: DiscreteDomain[D], Value]
     *
     * @param sigma2 observation noise of sample, *additional* (independent) to model noise
     */
-  def posterior(trainingData: IndexedSeq[(PointId, Value)], sigma2: Double): PancakeDLRGP[D, DiscreteDomain[D], Value] = {
+  def posterior(trainingData: IndexedSeq[(PointId, Value)], sigma2: Double): PancakeDLRGP[D, DDomain, Value] = {
     require(sigma2 >= 0.0)
     val cov = MultivariateNormalDistribution(DenseVector.zeros[Double](outputDim), DenseMatrix.eye[Double](outputDim) *:* (sigma2 + totalNoiseVariance))
     val newtd = trainingData.map { case (ptId, df) => (ptId, df, cov) }
@@ -188,7 +188,7 @@ case class PancakeDLRGP[D <: Dim: NDSpace, +DDomain <: DiscreteDomain[D], Value]
     *
     * @param trainingData list of point observations (PointId, Value, Uncertainty), uncertainty is *additional* (independent) to model noise
     */
-  def posterior(trainingData: IndexedSeq[(PointId, Value, MultivariateNormalDistribution)]): PancakeDLRGP[D, DiscreteDomain[D], Value] = {
+  def posterior(trainingData: IndexedSeq[(PointId, Value, MultivariateNormalDistribution)]): PancakeDLRGP[D, DDomain, Value] = {
     def addMVN(mvn1: MultivariateNormalDistribution, mvn2: MultivariateNormalDistribution): MultivariateNormalDistribution = {
       MultivariateNormalDistribution(mvn1.mean + mvn2.mean, mvn1.cov + mvn2.cov)
     }
