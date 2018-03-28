@@ -143,12 +143,20 @@ object MoMoInstance {
     fromCoefficients(MoMoCoefficients.zeros(shapeComponents, colorComponents, expressionComponents), modelURI)
   }
 
+  /** create a random coefficient vector with specified size with its elements N(0,1) distributed. */
+  def sample(shapeComponents: Int,
+             colorComponents: Int,
+             expressionComponents: Int,
+             modelURI: URI)(implicit rnd: Random): MoMoInstance = {
+    fromCoefficients( MoMoCoefficients.sample(shapeComponents, colorComponents, expressionComponents), modelURI )
+  }
+
   /** create a random coefficient vector with its elements N(0,1) distributed. */
   def sample(model: MoMo, modelURI: URI)(implicit rnd: Random): MoMoInstance = {
     val rankShape = model.neutralModel.shape.rank
     val rankColor = model.neutralModel.color.rank
     val expressionRank = if(!model.hasExpressions) 0 else model.expressionModel.get.expression.rank
-    fromCoefficients( MoMoCoefficients.sample(rankShape, rankColor, expressionRank), modelURI )
+    sample(rankShape, rankColor, expressionRank, modelURI)
   }
 }
 
