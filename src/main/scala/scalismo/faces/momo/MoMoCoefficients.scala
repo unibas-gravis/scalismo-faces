@@ -17,6 +17,7 @@
 package scalismo.faces.momo
 
 import breeze.linalg.DenseVector
+import breeze.stats.distributions.Gaussian
 
 /** coefficients describing a Morphable Model instance */
 case class MoMoCoefficients(shape: DenseVector[Double],

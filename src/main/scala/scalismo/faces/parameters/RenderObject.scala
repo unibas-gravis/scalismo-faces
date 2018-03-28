@@ -20,10 +20,12 @@ import java.io.File
 import java.net.URI
 import java.util.Map.Entry
 
+import breeze.stats.distributions.Gaussian
 import scalismo.faces.io.MoMoIO
 import scalismo.faces.io.msh.MSHMeshIO
 import scalismo.faces.mesh.{ColorNormalMesh3D, VertexColorMesh3D}
 import scalismo.faces.momo.{MoMo, MoMoCoefficients}
+import scalismo.utils.Random
 
 import scala.util.Try
 
@@ -140,6 +142,20 @@ object MoMoInstance {
            expressionComponents: Int,
            modelURI: URI): MoMoInstance = {
     fromCoefficients(MoMoCoefficients.zeros(shapeComponents, colorComponents, expressionComponents), modelURI)
+  }
+
+  /** create a random coefficient vector with its elements N(0,1) distributed. */
+  def sample(model: MoMo, modelURI: URI)(implicit rnd: Random): MoMoInstance = {
+    val fullShapeCoeffs = for (_ <- 0 until model.neutralModel.shape.rank) yield Gaussian(0, 1).draw()
+    val fullColorCoeffs = for (_ <- 0 until model.neutralModel.color.rank) yield Gaussian(0, 1).draw()
+    val expressionRank = model.expressionModel.get.expression.rank
+    val coeff = if(expressionRank > 0) {
+      val fullExpressCoeffs = for (_ <- 0 until expressionRank) yield Gaussian(0, 1).draw()
+      MoMoCoefficients(fullShapeCoeffs, fullColorCoeffs, fullExpressCoeffs)
+    } else {
+      MoMoCoefficients(fullShapeCoeffs, fullColorCoeffs)
+    }
+    fromCoefficients(coeff, modelURI)
   }
 }
 
