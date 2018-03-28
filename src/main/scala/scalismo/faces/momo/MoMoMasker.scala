@@ -7,7 +7,7 @@ import scalismo.geometry.{Point, Vector, _3D}
 import scalismo.mesh.MeshCompactifier
 import scalismo.statisticalmodel.DiscreteLowRankGaussianProcess
 
-/** Mask a MoMo or DiscreteLowRankGaussianProcess according to use supplied mask in the form of a MeshCompactifier.*/
+/** Mask a MoMo or DiscreteLowRankGaussianProcess according to supplied mask in the form of a MeshCompactifier.*/
 case class MoMoMasker(op: MeshCompactifier) {
   val maskedMesh = op.transformedMesh
   val newIdx = maskedMesh.triangulation.pointIds
