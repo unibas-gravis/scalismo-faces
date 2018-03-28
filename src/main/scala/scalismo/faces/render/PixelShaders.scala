@@ -17,8 +17,9 @@
 package scalismo.faces.render
 
 import scalismo.faces.color.{RGB, RGBA}
+import scalismo.faces.mesh.{ColorNormalMesh3D, VertexColorMesh3D}
 import scalismo.faces.numerics.SphericalHarmonics
-import scalismo.faces.parameters.SphericalHarmonicsLight
+import scalismo.faces.parameters.{RenderParameter, SphericalHarmonicsLight}
 import scalismo.faces.render.TriangleRenderer.TriangleFragment
 import scalismo.geometry._
 import scalismo.mesh.{BarycentricCoordinates, MeshSurfaceProperty, TriangleId, TriangleMesh}
@@ -55,6 +56,34 @@ object PixelShaders {
     /** Lambertian BRDF, constant value */
     case class LambertBRDF(albedo: RGB) extends BRDF[RGB] {
       override def apply(lightDirection: Vector[_3D], viewDirection: Vector[_3D]): RGB = albedo
+    }
+  }
+
+  /** Lambertian reflectance shader, with point light source. */
+  case class LambertPointLightShader(position: MeshSurfaceProperty[Point[_3D]],
+                                     albedo: MeshSurfaceProperty[RGBA],
+                                     ambientLight: RGB,
+                                     diffuseLight: RGB,
+                                     pointLight: Point[_3D],
+                                     normals: MeshSurfaceProperty[Vector[_3D]]) extends PixelShader[RGBA] {
+    override def apply(triangleId: TriangleId, worldBCC: BarycentricCoordinates, screenCoordinates: Point[_3D]): RGBA = {
+      val p = position(triangleId, worldBCC)
+      val c = albedo(triangleId, worldBCC)
+      val n = normals(triangleId, worldBCC).normalize
+      val diffuseFactor: Double = math.max(n.dot((pointLight-p).normalize), 0.0)
+      val diffuse: RGB = diffuseLight * diffuseFactor
+      val combined = ambientLight + diffuse
+      RGBA(c.r * combined.r, c.g * combined.g, c.b * combined.b, c.a) // radiance
+    }
+  }
+
+  object LambertPointLightShader{
+    /** Convenience method to create a pixel shader correctly from a mesh and a render parameter. */
+    def pixelShader(mesh: ColorNormalMesh3D, parameter: RenderParameter, ambientLight: RGB, diffuseLight: RGB, pointLightPosition: Point[_3D]): PixelShader[RGBA] = {
+      val worldMesh = mesh.transform(parameter.pose.transform)
+      val ctRGB = parameter.colorTransform.transform
+      val ct = (c: RGBA) => ctRGB(c.toRGB).toRGBA
+      LambertPointLightShader(worldMesh.shape.position, worldMesh.color, ambientLight, diffuseLight, pointLightPosition , worldMesh.shape.vertexNormals).map(ct)
     }
   }
 
