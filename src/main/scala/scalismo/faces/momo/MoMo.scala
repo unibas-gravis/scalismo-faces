@@ -94,7 +94,7 @@ trait MoMo {
     *
     * @return the marginal model.
     */
-  def marginal(pointIds: Seq[PointId])(implicit rnd: Random): MoMo
+  def marginal(pointIds: Seq[PointId]): MoMo
 
   /**
     * Returns the same model but with exchanged or added landmarks.
@@ -483,7 +483,7 @@ case class MoMoExpress(override val referenceMesh: TriangleMesh3D,
     *
     * @return the marginal model.
     */
-  override def marginal(pointIds: Seq[PointId])(implicit rnd: Random): MoMo = {
+  override def marginal(pointIds: Seq[PointId]): MoMo = {
     val op = referenceMesh.operations.maskPoints(id => pointIds.contains(id))
     val maskedMesh = op.transformedMesh
     val maskedModelShape = shape.marginal(pointIds)
@@ -638,7 +638,7 @@ case class MoMoBasic(override val referenceMesh: TriangleMesh3D,
     *
     * @return the marginal model.
     */
-  override def marginal(pointIds: Seq[PointId])(implicit rnd: Random): MoMo = {
+  override def marginal(pointIds: Seq[PointId]): MoMo = {
     val op = referenceMesh.operations.maskPoints(id => pointIds.contains(id))
     val maskedMesh = op.transformedMesh
     val maskedModelShape = shape.marginal(pointIds)
