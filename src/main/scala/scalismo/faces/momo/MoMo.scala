@@ -90,6 +90,13 @@ trait MoMo {
   def sample()(implicit rnd: Random): VertexColorMesh3D
 
   /**
+    * Compute the marginal on a set of points (masking).
+    *
+    * @return the marginal model.
+    */
+  def marginal(pointIds: Seq[PointId])(implicit rnd: Random): MoMo
+
+  /**
     * Returns the same model but with exchanged or added landmarks.
     *
     * @param landmarksMap Map of named landmarks.
@@ -472,6 +479,20 @@ case class MoMoExpress(override val referenceMesh: TriangleMesh3D,
   }
 
   /**
+    * Compute the marginal on a set of points (masking).
+    *
+    * @return the marginal model.
+    */
+  override def marginal(pointIds: Seq[PointId])(implicit rnd: Random): MoMo = {
+    val op = referenceMesh.operations.maskPoints(id => pointIds.contains(id))
+    val maskedMesh = op.transformedMesh
+    val maskedModelShape = shape.marginal(pointIds)
+    val maskedModelColor = color.marginal(pointIds)
+    val maskedModelExpressions = expression.marginal(pointIds)
+    MoMo(maskedMesh, maskedModelShape, maskedModelColor, maskedModelExpressions, landmarks)
+  }
+
+  /**
     * Returns the same model but with exchanged or added landmarks.
     *
     * @param landmarksMap Map of named landmarks.
@@ -610,6 +631,19 @@ case class MoMoBasic(override val referenceMesh: TriangleMesh3D,
       discreteFieldToShape(shape.gpModel.sample()),
       discreteFieldToColor(color.gpModel.sample())
     )
+  }
+
+  /**
+    * Compute the marginal on a set of points (masking).
+    *
+    * @return the marginal model.
+    */
+  override def marginal(pointIds: Seq[PointId])(implicit rnd: Random): MoMo = {
+    val op = referenceMesh.operations.maskPoints(id => pointIds.contains(id))
+    val maskedMesh = op.transformedMesh
+    val maskedModelShape = shape.marginal(pointIds)
+    val maskedModelColor = color.marginal(pointIds)
+    MoMo(maskedMesh, maskedModelShape, maskedModelColor, landmarks)
   }
 
   /**
