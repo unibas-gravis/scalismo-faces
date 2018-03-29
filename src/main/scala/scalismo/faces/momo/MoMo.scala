@@ -90,6 +90,13 @@ trait MoMo {
   def sample()(implicit rnd: Random): VertexColorMesh3D
 
   /**
+    * Draw a set of coefficients from the prior of the statistical model.
+    *
+    * @return a set of coefficients to generate a random sample.
+    */
+  def sampleCoefficients()(implicit rnd: Random): MoMoCoefficients
+
+  /**
     * Returns the same model but with exchanged or added landmarks.
     *
     * @param landmarksMap Map of named landmarks.
@@ -471,6 +478,19 @@ case class MoMoExpress(override val referenceMesh: TriangleMesh3D,
     )
   }
 
+
+  /**
+    * Draw a set of coefficients from the prior of the statistical model.
+    *
+    * @return a set of coefficients to generate a random sample.
+    */
+  override def sampleCoefficients()(implicit rnd: Random): MoMoCoefficients = {
+    MoMoCoefficients(
+      shape.coefficientsDistribution.sample(),
+      color.coefficientsDistribution.sample(),
+      expression.coefficientsDistribution.sample())
+  }
+
   /**
     * Returns the same model but with exchanged or added landmarks.
     *
@@ -611,6 +631,20 @@ case class MoMoBasic(override val referenceMesh: TriangleMesh3D,
       discreteFieldToColor(color.gpModel.sample())
     )
   }
+
+
+  /**
+    * Draw a set of coefficients from the prior of the statistical model.
+    *
+    * @return a set of coefficients to generate a random sample.
+    */
+  override def sampleCoefficients()(implicit rnd: Random): MoMoCoefficients = {
+    MoMoCoefficients(
+      shape.coefficientsDistribution.sample(),
+      color.coefficientsDistribution.sample()
+    )
+  }
+
 
   /**
     * Returns the same model but with exchanged or added landmarks.
