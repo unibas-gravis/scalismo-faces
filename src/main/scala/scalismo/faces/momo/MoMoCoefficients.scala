@@ -17,7 +17,6 @@
 package scalismo.faces.momo
 
 import breeze.linalg.DenseVector
-import scalismo.utils.Random
 
 /** coefficients describing a Morphable Model instance */
 case class MoMoCoefficients(shape: DenseVector[Double],
@@ -48,14 +47,5 @@ object MoMoCoefficients {
       DenseVector.zeros(shapeComponents),
       DenseVector.zeros(colorComponents),
       DenseVector.zeros(expressionComponents))
-  }
-
-  def sample(shapeComponents: Int,
-             colorComponents: Int,
-             expressionComponents: Int)(implicit rnd: Random): MoMoCoefficients = {
-    val fullShapeCoeffs = for (_ <- 0 until shapeComponents) yield rnd.rng.breezeRandBasis.gaussian.draw()
-    val fullColorCoeffs = for (_ <- 0 until colorComponents) yield rnd.rng.breezeRandBasis.gaussian.draw()
-    val fullExpressCoeffs = for (_ <- 0 until expressionComponents) yield rnd.rng.breezeRandBasis.gaussian.draw()
-    MoMoCoefficients(fullShapeCoeffs, fullColorCoeffs, fullExpressCoeffs)
   }
 }
