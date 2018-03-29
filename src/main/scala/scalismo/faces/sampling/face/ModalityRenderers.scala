@@ -64,8 +64,9 @@ case class NormalMapRenderer(correspondenceMoMoRenderer: CorrespondenceMoMoRende
         val tId = frag.triangleId
         val bcc = frag.worldBCC
         val mesh = frag.mesh
+        val normal = parameters.modelViewTransform(mesh.vertexNormals(tId, bcc))
 
-        Some(mesh.vertexNormals(tId, bcc))
+        Some(normal)
       } else {
         None
       }
