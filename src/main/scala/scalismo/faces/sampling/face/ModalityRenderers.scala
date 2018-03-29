@@ -77,7 +77,7 @@ case class NormalMapRenderer(correspondenceMoMoRenderer: CorrespondenceMoMoRende
         clearColor
       else {
         val v = n.get * 0.5
-        RGBA(v.x + 0.5, v.y + 0.5, v.z + 0.5)
+        RGBA(v.x - 0.5, v.y - 0.5, v.z - 0.5)
       })
   }
 }
