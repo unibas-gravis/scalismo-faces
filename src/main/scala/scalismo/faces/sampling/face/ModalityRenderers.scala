@@ -89,7 +89,7 @@ case class AlbedoRenderer(override val model: MoMo, override val clearColor: RGB
   /** render the albedo described by the parameters */
   override def renderImage(parameters: RenderParameter): PixelImage[RGBA] = {
     val inst = instance(parameters)
-    val ambientParameters = parameters.withEnvironmentMap(SphericalHarmonicsLight.ambientWhite)
+    val ambientParameters = parameters.noLightAndColor
     ParametricRenderer.renderParameterVertexColorMesh(
       ambientParameters,
       inst,
@@ -105,7 +105,7 @@ case class IlluminationRenderer(override val model: MoMo, override val clearColo
     val inst = instance(parameters)
     val noColorInst = inst.copy(color = SurfacePointProperty(inst.shape.triangulation, inst.color.pointData.map(_ => RGBA(0.5, 0.5, 0.5))))
     ParametricRenderer.renderParameterVertexColorMesh(
-      parameters,
+      parameters.noColorTransform,
       noColorInst,
       clearColor)
   }
