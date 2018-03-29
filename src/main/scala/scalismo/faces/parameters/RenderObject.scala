@@ -24,6 +24,7 @@ import scalismo.faces.io.MoMoIO
 import scalismo.faces.io.msh.MSHMeshIO
 import scalismo.faces.mesh.{ColorNormalMesh3D, VertexColorMesh3D}
 import scalismo.faces.momo.{MoMo, MoMoCoefficients}
+import scalismo.utils.Random
 
 import scala.util.Try
 
@@ -141,6 +142,9 @@ object MoMoInstance {
            modelURI: URI): MoMoInstance = {
     fromCoefficients(MoMoCoefficients.zeros(shapeComponents, colorComponents, expressionComponents), modelURI)
   }
+
+  /** create a random coefficient vector with its elements N(0,1) distributed. */
+  def sample(model: MoMo, modelURI: URI)(implicit rnd: Random): MoMoInstance = fromCoefficients(model.sampleCoefficients(), modelURI)
 }
 
 /** mesh file reference to render */
