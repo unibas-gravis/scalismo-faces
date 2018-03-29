@@ -24,6 +24,7 @@ import scalismo.mesh.SurfacePointProperty
 
 
 case class DepthMapRenderer(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer, clearColor: RGBA = RGBA.Black) extends RenderFromCorrespondenceImage[RGBA](correspondenceMoMoRenderer: CorrespondenceMoMoRenderer) {
+  /** render the depthimage described by the parameters */
   override def renderImage(parameters: RenderParameter): PixelImage[RGBA] = {
     val correspondenceImage = correspondenceMoMoRenderer.renderCorrespondenceImage(parameters)
     val depthMap = correspondenceImage.map{ px=>
@@ -56,6 +57,7 @@ case class DepthMapRenderer(correspondenceMoMoRenderer: CorrespondenceMoMoRender
 }
 
 case class NormalMapRenderer(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer, clearColor: RGBA = RGBA.Black) extends RenderFromCorrespondenceImage[RGBA](correspondenceMoMoRenderer: CorrespondenceMoMoRenderer) {
+  /** render the normals described by the parameters */
   override def renderImage(parameters: RenderParameter): PixelImage[RGBA] = {
     val correspondenceImage = correspondenceMoMoRenderer.renderCorrespondenceImage(parameters)
     val normalMap = correspondenceImage.map { px =>
