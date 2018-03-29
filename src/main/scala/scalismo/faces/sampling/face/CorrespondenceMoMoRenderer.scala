@@ -74,38 +74,6 @@ abstract class RenderFromCorrespondenceImage[A](correspondenceMoMoRenderer: Corr
   override def renderImage(parameters: RenderParameter): PixelImage[A]
 }
 
-case class DepthMapRenderer(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer, clearColor: RGBA = RGBA.Black) extends RenderFromCorrespondenceImage[RGBA](correspondenceMoMoRenderer: CorrespondenceMoMoRenderer) {
-  override def renderImage(parameters: RenderParameter): PixelImage[RGBA] = {
-    val correspondenceImage = correspondenceMoMoRenderer.renderCorrespondenceImage(parameters)
-    val depthMap = correspondenceImage.map{ px=>
-      if(px.isDefined){
-        val frag = px.get
-        val tId = frag.triangleId
-        val bcc = frag.worldBCC
-        val mesh = frag.mesh
-
-        val posModel = mesh.position(tId, bcc)
-        val posEyeCoordinates = parameters.modelViewTransform(posModel)
-
-        Some((parameters.view.eyePosition-posEyeCoordinates).norm)
-      }else{
-        None
-      }
-    }
-    val values  = depthMap.values.toIndexedSeq.flatten
-    val ma = values.max
-    val mi = values.min
-    val mami = ma-mi
-    depthMap.map{d=>
-      if(d.isEmpty)
-        clearColor
-      else {
-        RGBA(1.0 - (d.get - mi)/mami)
-      }
-    }
-  }
-}
-
 case class CorrespondenceColorImageRenderer(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer, backgroundColor: RGBA = RGBA.Black) extends RenderFromCorrespondenceImage[RGBA](correspondenceMoMoRenderer){
   val reference: VertexColorMesh3D = correspondenceMoMoRenderer.model.mean
   val normalizedReference: SurfacePointProperty[RGBA] = {
