@@ -76,7 +76,8 @@ case class NormalMapRenderer(correspondenceMoMoRenderer: CorrespondenceMoMoRende
       if (n.isEmpty)
         clearColor
       else {
-        RGBA(n.get.x, n.get.y, n.get.z)
+        val v = n.get * 0.5
+        RGBA(v.x + 0.5, v.y + 0.5, v.z + 0.5)
       })
   }
 }
