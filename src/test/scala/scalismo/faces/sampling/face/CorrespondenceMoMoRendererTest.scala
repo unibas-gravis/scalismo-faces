@@ -41,12 +41,5 @@ class CorrespondenceMoMoRendererTest extends FacesTestSuite {
       val sum = A.zip(B).map{case(a,b)=>diffRGBA(a,b)}.values.toIndexedSeq.sum
       sum should be <= 0.0
     }
-
-    it("is approximately as fast as the MoMoRenderer") {
-      val t1 = LanguageUtilities.timed{for(i <- 0 until 5) moMoRenderer.renderImage(param)}._2
-      val t2 = LanguageUtilities.timed{for(i <- 0 until 5) corrMoMoRenderer.renderImage(param)}._2
-      t2 should be <= t1 * 1.5
-    }
-
   }
 }
