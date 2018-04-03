@@ -60,7 +60,8 @@ case class NormalMapRenderer(correspondenceMoMoRenderer: CorrespondenceMoMoRende
   /** render the normals described by the parameters */
   override def renderImage(parameters: RenderParameter): PixelImage[RGBA] = {
     val correspondenceImage = correspondenceMoMoRenderer.renderCorrespondenceImage(parameters)
-    val normalMap = correspondenceImage.map { px =>
+
+    correspondenceImage.map { px =>
       if (px.isDefined) {
         val frag = px.get
         val tId = frag.triangleId
@@ -68,19 +69,12 @@ case class NormalMapRenderer(correspondenceMoMoRenderer: CorrespondenceMoMoRende
         val mesh = frag.mesh
         val normal = parameters.modelViewTransform(mesh.vertexNormals(tId, bcc))
 
-        Some(normal)
+        val v = normal * 0.5
+        RGBA(0.5 - v.x, 0.5 - v.y, 0.5 - v.z)
       } else {
-        None
+        clearColor
       }
     }
-
-    normalMap.map(n =>
-      if (n.isEmpty)
-        clearColor
-      else {
-        val v = n.get * 0.5
-        RGBA(0.5 - v.x, 0.5 - v.y, 0.5 - v.z)
-      })
   }
 }
 
