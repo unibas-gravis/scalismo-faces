@@ -23,13 +23,14 @@ object PixelImageNormalization {
 
   /** Normalizes the image such that its values are on the interval [lower, upper]. */
   def normalizeDoubleImageToRange(image: PixelImage[Double], lower: Double, upper: Double): PixelImage[Double] = {
-    require(lower < upper)
     val min = image.values.min
     val max = image.values.max
     if(min == max){ //if we would divide with 0
-      image.map(_ => (upper-lower)/2) //return mean of [lower,upper]
+      val avg = (upper+lower)/2
+      image.map(avg) //return mean of [lower,upper]
     }else {
-      def normalizer(x: Double) = lower + (x - min) / (max - min) * (upper - lower)
+      val Z = 1.0 / (max - min) * (upper - lower)
+      def normalizer(x: Double) = lower + (x - min) * Z
       image.map(normalizer)
     }
   }
