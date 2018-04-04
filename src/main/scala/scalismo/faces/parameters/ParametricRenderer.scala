@@ -55,13 +55,14 @@ object ParametricRenderer {
     *
     * @param parameter scene description
     * @param mesh mesh to render, has positions, colors and normals
+    * @param pixelShader used to calculate the color for a pixel
     * @param clearColor background color of buffer
     * @return
     */
   def renderParameterMesh[A: ClassTag](parameter: RenderParameter,
-                          mesh: ColorNormalMesh3D,
-                          pixelShader: PixelShader[A],
-                          clearColor: A): PixelImage[A] = {
+                                       mesh: ColorNormalMesh3D,
+                                       pixelShader: PixelShader[A],
+                                       clearColor: A): PixelImage[A] = {
     val buffer = ZBuffer(parameter.imageSize.width, parameter.imageSize.height, clearColor)
 
     val worldMesh = mesh.transform(parameter.modelViewTransform)
@@ -95,13 +96,14 @@ object ParametricRenderer {
     *
     * @param parameter scene description
     * @param mesh mesh to render, vertex color, vertex normals
+    * @param pixelShader used to calculate the color for a pixel
     * @param clearColor background color of buffer
     * @return
     */
   def renderParameterVertexColorMesh[A:ClassTag](parameter: RenderParameter,
-                                     mesh: VertexColorMesh3D,
-                                     pixelShader: PixelShader[A],
-                                     clearColor: A ): PixelImage[A] = {
+                                                 mesh: VertexColorMesh3D,
+                                                 pixelShader: PixelShader[A],
+                                                 clearColor: A ): PixelImage[A] = {
     renderParameterMesh(parameter, ColorNormalMesh3D(mesh), pixelShader, clearColor)
   }
 
@@ -122,12 +124,13 @@ object ParametricRenderer {
     * render the object described by the render parameters
     *
     * @param parameter scene description, including the object
+    * @param pixelShader used to calculate the color for a pixel
     * @param clearColor background color of scene/buffer
     * @return
     */
   def renderParameter[A: ClassTag](parameter: RenderParameter,
-                         pixelShader: PixelShader[A],
-                      clearColor: A): PixelImage[A] = {
+                                   pixelShader: PixelShader[A],
+                                   clearColor: A): PixelImage[A] = {
     val mesh = RenderObject.instance(parameter.momo)
     renderParameterMesh(parameter, mesh, pixelShader, clearColor)
   }

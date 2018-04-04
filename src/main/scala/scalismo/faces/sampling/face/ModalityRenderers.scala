@@ -129,10 +129,9 @@ object ModalityRenderers {
     val instance = correspondenceMoMoRenderer.instance(parameters)
     val noColorInst = instance.copy(color = SurfacePointProperty(instance.shape.triangulation, instance.color.pointData.map(_ => RGBA(0.5, 0.5, 0.5))))
     val correspondenceImage = correspondenceMoMoRenderer.renderCorrespondenceImage(parameters)
-    val shader = MoMoShader.pixelShader(noColorInst,parameters)
     correspondenceImage.map{ optFrag =>
       optFrag.map{ fragment =>
-        shader(fragment)
+        parameters.pixelShader(instance)(fragment.triangleId,fragment.worldBCC,Point(fragment.x,fragment.y,fragment.z))
       }.getOrElse(clearColor)
     }
   }
