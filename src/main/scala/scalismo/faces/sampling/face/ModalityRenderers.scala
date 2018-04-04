@@ -77,10 +77,10 @@ object ModalityRenderers {
     }
   }
 
-  object IlluminationRenderer {
-    def apply(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer, clearColor: RGBA = RGBA.BlackTransparent) = new IlluminationRenderer(correspondenceMoMoRenderer, clearColor)
+  object IlluminationVisualizationRenderer {
+    def apply(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer, clearColor: RGBA = RGBA.BlackTransparent) = new IlluminationVisualizationRenderer(correspondenceMoMoRenderer, clearColor)
   }
-  class IlluminationRenderer(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer, clearColor: RGBA) extends ParametricImageRenderer[RGBA] {
+  class IlluminationVisualizationRenderer(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer, clearColor: RGBA) extends ParametricImageRenderer[RGBA] {
 
     override def renderImage(parameters: RenderParameter) : PixelImage[RGBA] = {
       val instance = correspondenceMoMoRenderer.instance(parameters)
