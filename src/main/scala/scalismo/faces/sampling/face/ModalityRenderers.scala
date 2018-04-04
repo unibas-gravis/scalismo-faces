@@ -19,7 +19,6 @@ package scalismo.faces.sampling.face
 import scalismo.faces.color.RGBA
 import scalismo.faces.image.PixelImage
 import scalismo.faces.parameters.{ParametricRenderer, RenderParameter}
-import scalismo.faces.render.PixelShaders.MoMoShader
 import scalismo.geometry.{Point, Vector, _3D}
 import scalismo.mesh.{BarycentricCoordinates, SurfacePointProperty, TriangleId}
 
