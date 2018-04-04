@@ -45,6 +45,12 @@ object ModalityRenderers {
       }
     }
 
+    def renderNormalsImage(parameters: RenderParameter, correspondenceMoMoRenderer: CorrespondenceMoMoRenderer, clearColor: RGBA = RGBA.BlackTransparent) : PixelImage[RGBA] = {
+      val normals = renderNormals(parameters, correspondenceMoMoRenderer)
+      colorNormalImage(normals, clearColor)
+
+    }
+
     def renderAlbedo(parameters: RenderParameter, correspondenceMoMoRenderer: CorrespondenceMoMoRenderer, clearColor: RGBA = RGBA.BlackTransparent): PixelImage[RGBA] = {
       val instance = correspondenceMoMoRenderer.instance(parameters)
       val correspondenceImage = correspondenceMoMoRenderer.renderCorrespondenceImage(parameters)
@@ -55,7 +61,7 @@ object ModalityRenderers {
       }
     }
 
-    def renderIllumination(parameters: RenderParameter, correspondenceMoMoRenderer: CorrespondenceMoMoRenderer, clearColor: RGBA = RGBA.BlackTransparent) : PixelImage[RGBA] = {
+    def renderIlluminationImage(parameters: RenderParameter, correspondenceMoMoRenderer: CorrespondenceMoMoRenderer, clearColor: RGBA = RGBA.BlackTransparent) : PixelImage[RGBA] = {
       val instance = correspondenceMoMoRenderer.instance(parameters)
       val noColorInst = instance.copy(color = SurfacePointProperty(instance.shape.triangulation, instance.color.pointData.map(_ => RGBA(0.5, 0.5, 0.5))))
       val correspondenceImage = correspondenceMoMoRenderer.renderCorrespondenceImage(parameters)
@@ -90,6 +96,11 @@ object ModalityRenderers {
         clearColor)
     }
 
+    def renderNormalsImage(parameters: RenderParameter, parametricModel: ParametricModel, clearColor: RGBA = RGBA.BlackTransparent): PixelImage[RGBA] = {
+      val normals = renderNormals(parameters, parametricModel)
+      colorNormalImage(normals, clearColor)
+    }
+
     def renderAlbedo(parameters: RenderParameter, parametricModel: ParametricModel, clearColor: RGBA = RGBA.BlackTransparent) : PixelImage[RGBA] = {
       val instance = parametricModel.instance(parameters)
       ParametricRenderer.renderPropertyImage(parameters,
@@ -97,7 +108,7 @@ object ModalityRenderers {
         instance.color).map(_.getOrElse(clearColor))
     }
 
-    def renderIllumination(parameters: RenderParameter, parametricModel: ParametricModel, clearColor: RGBA = RGBA.BlackTransparent): PixelImage[RGBA] = {
+    def renderIlluminationImage(parameters: RenderParameter, parametricModel: ParametricModel, clearColor: RGBA = RGBA.BlackTransparent): PixelImage[RGBA] = {
       val instance = parametricModel.instance(parameters)
       val noColorInst = instance.copy(color = SurfacePointProperty(instance.shape.triangulation, instance.color.pointData.map(_ => RGBA(0.5, 0.5, 0.5))))
       ParametricRenderer.renderParameterVertexColorMesh(
@@ -134,15 +145,15 @@ object ModalityRenderers {
     }
   }
 
-  def colorNormalImage(depthMap: PixelImage[Option[Vector[_3D]]]) : PixelImage[Option[RGBA]] = {
-    depthMap.map(opt => opt.map { normal =>
+  def colorNormalImage(normals: PixelImage[Option[Vector[_3D]]]) : PixelImage[Option[RGBA]] = {
+    normals.map(opt => opt.map { normal =>
       val v = normal * 0.5
       RGBA(0.5 - v.x, 0.5 - v.y, 0.5 - v.z, 1.0)
     })
   }
 
-  def colorNormalImage(depthMap: PixelImage[Option[Vector[_3D]]], clearColor: RGBA) : PixelImage[RGBA] = {
-    depthMap.map { opt =>
+  def colorNormalImage(normals: PixelImage[Option[Vector[_3D]]], clearColor: RGBA) : PixelImage[RGBA] = {
+    normals.map { opt =>
       opt.map { normal =>
         val v = normal * 0.5
         RGBA(0.5 - v.x, 0.5 - v.y, 0.5 - v.z, 1.0)
