@@ -25,7 +25,7 @@ import scalismo.mesh.{BarycentricCoordinates, SurfacePointProperty, TriangleId}
 
 object ModalityRenderers {
 
-  object CorrespondenceRenderer {
+  object CorrespondenceMoMoModalityRenderer {
 
     def renderDepthMap(parameters: RenderParameter, correspondenceMoMoRenderer: CorrespondenceMoMoRenderer): PixelImage[Option[Double]] = {
       val correspondenceImage = correspondenceMoMoRenderer.renderCorrespondenceImage(parameters)
@@ -69,7 +69,7 @@ object ModalityRenderers {
 
   }
 
-  object ParametricModel {
+  object ParametricModelModalityRenderer {
 
     def renderDepthMap(parameters: RenderParameter, parametricModel: ParametricModel, clearColor: Option[Double] = None): PixelImage[Option[Double]] = {
       val instance = parametricModel.instance(parameters)
