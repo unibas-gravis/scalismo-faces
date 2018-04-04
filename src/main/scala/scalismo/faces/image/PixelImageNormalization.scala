@@ -27,7 +27,7 @@ object PixelImageNormalization {
     val max = image.values.max
     if(min == max){ //if we would divide with 0
       val avg = (upper+lower)/2
-      image.map(avg) //return mean of [lower,upper]
+      image.map(_ => avg) //return mean of [lower,upper]
     }else {
       val Z = 1.0 / (max - min) * (upper - lower)
       def normalizer(x: Double) = lower + (x - min) * Z
