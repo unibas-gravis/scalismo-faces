@@ -18,91 +18,134 @@ package scalismo.faces.sampling.face
 
 import scalismo.faces.color.RGBA
 import scalismo.faces.image.PixelImage
-import scalismo.faces.momo.MoMo
-import scalismo.faces.parameters.{ParametricRenderer, RenderParameter, SphericalHarmonicsLight}
-import scalismo.mesh.SurfacePointProperty
+import scalismo.faces.parameters.{ParametricRenderer, RenderParameter}
+import scalismo.faces.render.PixelShaders.MoMoShader
+import scalismo.geometry.{Point, Vector, _3D}
+import scalismo.mesh.{BarycentricCoordinates, SurfacePointProperty, TriangleId}
 
 
-case class DepthMapRenderer(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer, clearColor: RGBA = RGBA.Black) extends RenderFromCorrespondenceImage[RGBA](correspondenceMoMoRenderer: CorrespondenceMoMoRenderer) {
-  /** render the depthimage described by the parameters */
-  override def renderImage(parameters: RenderParameter): PixelImage[RGBA] = {
-    val correspondenceImage = correspondenceMoMoRenderer.renderCorrespondenceImage(parameters)
-    val depthMap = correspondenceImage.map{ px=>
-      if(px.isDefined){
-        val frag = px.get
-        val tId = frag.triangleId
-        val bcc = frag.worldBCC
-        val mesh = frag.mesh
+object ModalityRenderers {
 
-        val posModel = mesh.position(tId, bcc)
-        val posEyeCoordinates = parameters.modelViewTransform(posModel)
-
-        Some((parameters.view.eyePosition-posEyeCoordinates).norm)
-      }else{
-        None
-      }
+  def normalizeDepthMapIamge(depthMap: PixelImage[Option[Double]]) : PixelImage[Option[Double]] = {
+    val values = depthMap.values.flatten.toIndexedSeq
+    if (!values.isEmpty) {
+      val max = values.max
+      val min = values.min
+      val mami = max-min
+      depthMap.map(v => v.map(d => (d-min)/mami))
+    } else {
+      depthMap
     }
-    val values  = depthMap.values.toIndexedSeq.flatten
-    val ma = values.max
-    val mi = values.min
-    val mami = ma-mi
-    depthMap.map{d=>
-      if(d.isEmpty)
-        clearColor
-      else {
-        RGBA(1.0 - (d.get - mi)/mami)
+  }
+
+  def normalizeDepthMapIamge(depthMap: PixelImage[Option[Double]], clearValue: Double) : PixelImage[Double] = {
+    val values = depthMap.values.flatten.toIndexedSeq
+    if (!values.isEmpty) {
+      val max = values.max
+      val min = values.min
+      val mami = max-min
+      depthMap.map(v => v.map(d => (d-min)/mami).getOrElse(clearValue))
+    } else {
+      depthMap.map(v => v.getOrElse(clearValue))
+    }
+  }
+
+  def renderDepthMap(parameters: RenderParameter, correspondenceMoMoRenderer: CorrespondenceMoMoRenderer) : PixelImage[Option[Double]] = {
+    val correspondenceImage = correspondenceMoMoRenderer.renderCorrespondenceImage(parameters)
+    correspondenceImage.map{ optFrag =>
+      optFrag.map{ fragment =>
+        parameters.renderTransform(fragment.mesh.position(fragment.triangleId,fragment.worldBCC)).z
       }
     }
   }
-}
 
-case class NormalMapRenderer(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer, clearColor: RGBA = RGBA.Black) extends RenderFromCorrespondenceImage[RGBA](correspondenceMoMoRenderer: CorrespondenceMoMoRenderer) {
-  /** render the normals described by the parameters */
-  override def renderImage(parameters: RenderParameter): PixelImage[RGBA] = {
-    val correspondenceImage = correspondenceMoMoRenderer.renderCorrespondenceImage(parameters)
+  def renderDepthMap(parameters: RenderParameter, parametricModel: ParametricModel, clearColor: Option[Double] = None) : PixelImage[Option[Double]] = {
+    val instance = parametricModel.instance(parameters)
+    ParametricRenderer.renderParameter(parameters,(triangleId: TriangleId,
+                                                   worldBCC: BarycentricCoordinates,
+                                                   _: Point[_3D]) => {
+      Some(parameters.renderTransform(instance.shape.position(triangleId,worldBCC)).z)
+    },clearColor)
+  }
 
-    correspondenceImage.map { px =>
-      if (px.isDefined) {
-        val frag = px.get
-        val tId = frag.triangleId
-        val bcc = frag.worldBCC
-        val mesh = frag.mesh
-        val normal = parameters.modelViewTransform(mesh.vertexNormals(tId, bcc))
 
+
+  def colorNormalImage(depthMap: PixelImage[Option[Vector[_3D]]]) : PixelImage[Option[RGBA]] = {
+    depthMap.map(opt => opt.map { normal =>
+      val v = normal * 0.5
+      RGBA(0.5 - v.x, 0.5 - v.y, 0.5 - v.z, 1.0)
+    })
+  }
+
+  def colorNormalImage(depthMap: PixelImage[Option[Vector[_3D]]], clearColor: RGBA) : PixelImage[RGBA] = {
+    depthMap.map { opt =>
+      opt.map { normal =>
         val v = normal * 0.5
-        RGBA(0.5 - v.x, 0.5 - v.y, 0.5 - v.z)
-      } else {
-        clearColor
+        RGBA(0.5 - v.x, 0.5 - v.y, 0.5 - v.z, 1.0)
+      }.getOrElse(clearColor)
+    }
+  }
+
+  def renderNormals(parameters: RenderParameter, correspondenceMoMoRenderer: CorrespondenceMoMoRenderer) : PixelImage[Option[Vector[_3D]]] = {
+    val correspondenceImage = correspondenceMoMoRenderer.renderCorrespondenceImage(parameters)
+    correspondenceImage.map{ optFrag =>
+      optFrag.map{ fragment =>
+        parameters.modelViewTransform(fragment.mesh.vertexNormals(fragment.triangleId,fragment.worldBCC))
       }
     }
   }
-}
 
-case class AlbedoRenderer(override val model: MoMo, override val clearColor: RGBA = RGBA.Black) extends MoMoRenderer(model: MoMo, clearColor: RGBA){
-
-  /** render the albedo described by the parameters */
-  override def renderImage(parameters: RenderParameter): PixelImage[RGBA] = {
-    val inst = instance(parameters)
-    val ambientParameters = parameters.noLightAndColor
-    ParametricRenderer.renderParameterVertexColorMesh(
-      ambientParameters,
-      inst,
+  def renderNormals(parameters: RenderParameter, parametricModel: ParametricModel, clearColor: Option[Vector[_3D]] = None) : PixelImage[Option[Vector[_3D]]] = {
+    val instance = parametricModel.instance(parameters)
+    ParametricRenderer.renderParameter(parameters,(triangleId: TriangleId,
+                                                   worldBCC: BarycentricCoordinates,
+                                                   _: Point[_3D]) => {
+      Some(parameters.modelViewTransform(instance.shape.vertexNormals(triangleId,worldBCC)))
+    },
       clearColor)
   }
 
-}
 
-case class IlluminationRenderer(override val model: MoMo, override val clearColor: RGBA = RGBA.Black) extends MoMoRenderer(model: MoMo, clearColor: RGBA){
 
-  /** render the illumination component described by the parameters */
-  override def renderImage(parameters: RenderParameter): PixelImage[RGBA] = {
-    val inst = instance(parameters)
-    val noColorInst = inst.copy(color = SurfacePointProperty(inst.shape.triangulation, inst.color.pointData.map(_ => RGBA(0.5, 0.5, 0.5))))
+  def renderAlbedo(parameters: RenderParameter, correspondenceMoMoRenderer: CorrespondenceMoMoRenderer, clearColor: RGBA) : PixelImage[RGBA] = {
+    val instance = correspondenceMoMoRenderer.instance(parameters)
+    val correspondenceImage = correspondenceMoMoRenderer.renderCorrespondenceImage(parameters)
+    correspondenceImage.map{ optFrag =>
+      optFrag.map{ fragment =>
+        instance.color.onSurface(fragment.triangleId,fragment.worldBCC)
+      }.getOrElse(clearColor)
+    }
+  }
+
+  def renderAlbedo(parameters: RenderParameter, parametricModel: ParametricModel, clearColor: RGBA = RGBA.BlackTransparent) : PixelImage[RGBA] = {
+    val instance = parametricModel.instance(parameters)
+    ParametricRenderer.renderPropertyImage(parameters,
+      instance.shape,
+      instance.color).map(_.getOrElse(clearColor))
+  }
+
+
+
+  def renderIllumination(parameters: RenderParameter, correspondenceMoMoRenderer: CorrespondenceMoMoRenderer, clearColor: RGBA) : PixelImage[RGBA] = {
+    val instance = correspondenceMoMoRenderer.instance(parameters)
+    val noColorInst = instance.copy(color = SurfacePointProperty(instance.shape.triangulation, instance.color.pointData.map(_ => RGBA(0.5, 0.5, 0.5))))
+    val correspondenceImage = correspondenceMoMoRenderer.renderCorrespondenceImage(parameters)
+    val shader = MoMoShader.pixelShader(noColorInst,parameters)
+    correspondenceImage.map{ optFrag =>
+      optFrag.map{ fragment =>
+        shader(fragment)
+      }.getOrElse(clearColor)
+    }
+  }
+
+  def renderIllumination(parameters: RenderParameter, parametricModel: ParametricModel, clearColor: RGBA = RGBA.BlackTransparent) : PixelImage[RGBA] = {
+    val instance = parametricModel.instance(parameters)
+    val noColorInst = instance.copy(color = SurfacePointProperty(instance.shape.triangulation, instance.color.pointData.map(_ => RGBA(0.5, 0.5, 0.5))))
     ParametricRenderer.renderParameterVertexColorMesh(
       parameters.noColorTransform,
       noColorInst,
       clearColor)
   }
 
-}
 
+}
