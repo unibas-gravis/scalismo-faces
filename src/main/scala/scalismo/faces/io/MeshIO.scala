@@ -21,9 +21,9 @@ import java.io.{File, IOException}
 import scalismo.faces.color.RGBA
 import scalismo.faces.io.msh.MSHMeshIO
 import scalismo.faces.io.ply.PLYMesh
-import scalismo.faces.mesh.{ColorNormalMesh3D, OptionalColorNormalMesh3D, VertexColorMesh3D}
+import scalismo.faces.mesh.{ColorNormalMesh3D, OptionalColorNormalMesh3D, TextureMappedProperty, VertexColorMesh3D}
 import scalismo.geometry.{Vector, _3D}
-import scalismo.mesh.{MeshSurfaceProperty, TriangleMesh3D}
+import scalismo.mesh.{MeshSurfaceProperty, SurfacePointProperty, TriangleMesh3D}
 
 import scala.util.{Failure, Try}
 
@@ -59,8 +59,15 @@ object MeshIO {
       case f if f.toLowerCase.endsWith(".ply") =>
         if (mesh.colorNormalMesh3D.isDefined)
           Try(PLYMesh.writePLY(mesh.colorNormalMesh3D.get, filename))
-        else if (mesh.vertexColorMesh3D.isDefined)
-          Try(PLYMesh.writePLY(mesh.vertexColorMesh3D.get, filename))
+        else if (mesh.hasColor)
+          mesh.color match {
+            case texture: TextureMappedProperty[RGBA] =>
+              Try(PLYMesh.writePLY(mesh.copy(normals = Some(mesh.shape.vertexNormals)).colorNormalMesh3D.get, filename))
+            case vertexColor: SurfacePointProperty[RGBA] =>
+              Try(PLYMesh.writePLY(mesh.vertexColorMesh3D.get, filename))
+            case _ =>
+              Failure(new IOException("Do not know how to write the color information of the given mesh to the file."))
+          }
         else
           Try(PLYMesh.writePLY(mesh.shape, filename))
       case _ => Failure(new IOException("Writing mesh: Unknown file type " + filename))
