@@ -60,7 +60,7 @@ object MeshIO {
         if (mesh.colorNormalMesh3D.isDefined)
           Try(PLYMesh.writePLY(mesh.colorNormalMesh3D.get, filename))
         else if (mesh.hasColor)
-          mesh.color match {
+          mesh.color.get match {
             case texture: TextureMappedProperty[RGBA] =>
               Try(PLYMesh.writePLY(mesh.copy(normals = Some(mesh.shape.vertexNormals)).colorNormalMesh3D.get, filename))
             case vertexColor: SurfacePointProperty[RGBA] =>
