@@ -29,30 +29,11 @@ import scalismo.utils.Memoize
 
 /** parametric renderer for a Morphable Model, implements all useful Parameteric*Renderer interfaces */
 class MoMoRenderer(val model: MoMo, val clearColor: RGBA)
-  extends ParametricImageRenderer[RGBA]
+  extends ParametricModel(model)
     with ParametricLandmarksRenderer
     with ParametricMaskRenderer
     with ParametricMeshRenderer
-    with ParametricModel {
-
-  /** pad a coefficient vector if it is too short, basis with single vector */
-  private def padCoefficients(coefficients: DenseVector[Double], rank: Int): DenseVector[Double] = {
-    require(coefficients.length <= rank, "too many coefficients for model")
-    if (coefficients.length == rank)
-      coefficients
-    else
-      DenseVector(coefficients.toArray ++ Array.fill(rank - coefficients.length)(0.0))
-  }
-
-  /** create an instance of the model, in the original model's object coordinates */
-  override def instance(parameters: RenderParameter): VertexColorMesh3D = {
-    instanceFromCoefficients(parameters.momo)
-  }
-
-  /** draw a model instance directly from the coefficients */
-  def instanceFromCoefficients(instance: MoMoInstance): VertexColorMesh3D = {
-    model.instance(instance.coefficients)
-  }
+    with ParametricImageRenderer[RGBA] {
 
   /** render the image described by the parameters */
   override def renderImage(parameters: RenderParameter): PixelImage[RGBA] = {

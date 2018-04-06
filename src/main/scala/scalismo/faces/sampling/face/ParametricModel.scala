@@ -16,10 +16,29 @@
 
 package scalismo.faces.sampling.face
 
+import breeze.linalg.DenseVector
 import scalismo.faces.mesh.VertexColorMesh3D
-import scalismo.faces.parameters.RenderParameter
+import scalismo.faces.momo.MoMo
+import scalismo.faces.parameters.{MoMoInstance, RenderParameter}
 
 /** generates a model instance in original model coordinates */
-trait ParametricModel {
-  def instance(parameters: RenderParameter): VertexColorMesh3D
+class ParametricModel(model: MoMo ) {
+  /** pad a coefficient vector if it is too short, basis with single vector */
+  private def padCoefficients(coefficients: DenseVector[Double], rank: Int): DenseVector[Double] = {
+    require(coefficients.length <= rank, "too many coefficients for model")
+    if (coefficients.length == rank)
+      coefficients
+    else
+      DenseVector(coefficients.toArray ++ Array.fill(rank - coefficients.length)(0.0))
+  }
+
+  /** create an instance of the model, in the original model's object coordinates */
+  def instance(parameters: RenderParameter): VertexColorMesh3D = {
+    instanceFromCoefficients(parameters.momo)
+  }
+
+  /** draw a model instance directly from the coefficients */
+  def instanceFromCoefficients(instance: MoMoInstance): VertexColorMesh3D = {
+    model.instance(instance.coefficients)
+  }
 }
