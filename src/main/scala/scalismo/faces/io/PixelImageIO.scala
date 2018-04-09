@@ -16,8 +16,10 @@
 
 package scalismo.faces.io
 
-import java.io.{File, IOException, InputStream, OutputStream}
+import java.io._
 
+import javax.imageio.stream.MemoryCacheImageOutputStream
+import javax.imageio.{IIOImage, ImageWriteParam}
 import scalismo.faces.image.{BufferedImageConverter, PixelImage}
 
 import scala.util.Try
@@ -48,8 +50,23 @@ object PixelImageIO {
     val bufImage = converter.toBufferedImage(image)
     file match {
       case f if f.getAbsolutePath.toLowerCase.endsWith(".png") => javax.imageio.ImageIO.write(bufImage, "png", file)
-      case f if f.getAbsolutePath.toLowerCase.endsWith(".jpg") => javax.imageio.ImageIO.write(bufImage, "jpg", file)
+      case f if f.getAbsolutePath.toLowerCase.endsWith(".jpg") => {
+        writeJPEGToStream(image, new FileOutputStream(file), 1.0)
+      }
       case _ => throw new IOException("Unknown image format: " + file.getName)
     }
+  }
+
+  /** Write a JPEG image with a specified quality level where 1.0 is the maximally possible and 0 the minimal quality. */
+  def writeJPEGToStream[Pixel](image: PixelImage[Pixel], outputStream: OutputStream, quality: Double)(implicit converter: BufferedImageConverter[Pixel]): Try[Unit] = Try {
+    val bufImage = converter.toBufferedImage(image)
+    val jpgWriter = javax.imageio.ImageIO.getImageWritersByFormatName("jpg").next()
+    val jpgParams: ImageWriteParam = jpgWriter.getDefaultWriteParam
+    jpgParams.setCompressionMode(ImageWriteParam.MODE_EXPLICIT)
+    jpgParams.setCompressionQuality(quality.toFloat)
+    val imageStream = new MemoryCacheImageOutputStream(outputStream)
+    jpgWriter.setOutput(imageStream)
+    jpgWriter.write(null, new IIOImage(bufImage, null, null), jpgParams)
+    jpgWriter.dispose()
   }
 }
