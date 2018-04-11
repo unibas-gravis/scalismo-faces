@@ -16,6 +16,7 @@
 
 package scalismo.faces.io
 
+import java.awt.image.BufferedImage
 import java.io._
 
 import javax.imageio.stream.MemoryCacheImageOutputStream
@@ -50,23 +51,26 @@ object PixelImageIO {
     val bufImage = converter.toBufferedImage(image)
     file match {
       case f if f.getAbsolutePath.toLowerCase.endsWith(".png") => javax.imageio.ImageIO.write(bufImage, "png", file)
-      case f if f.getAbsolutePath.toLowerCase.endsWith(".jpg") => {
-        writeJPEGToStream(image, new FileOutputStream(file), 1.0)
-      }
+      case f if f.getAbsolutePath.toLowerCase.endsWith(".jpg") => writeJPEGToStream(bufImage, new FileOutputStream(file), 1.0f)
       case _ => throw new IOException("Unknown image format: " + file.getName)
     }
   }
 
   /** Write a JPEG image with a specified quality level where 1.0 is the maximally possible and 0 the minimal quality. */
-  def writeJPEGToStream[Pixel](image: PixelImage[Pixel], outputStream: OutputStream, quality: Double)(implicit converter: BufferedImageConverter[Pixel]): Try[Unit] = Try {
-    val bufImage = converter.toBufferedImage(image)
+  def writeJPEGToStream[Pixel](image: PixelImage[Pixel], outputStream: OutputStream, quality: Float)(implicit converter: BufferedImageConverter[Pixel]): Try[Unit] = Try {
+    val img = converter.toBufferedImage(image)
+    writeJPEGToStream(img, outputStream, quality)
+  }
+
+  /** Write a JPEG image with a specified quality level where 1.0 is the maximally possible and 0 the minimal quality. */
+  def writeJPEGToStream[Pixel](image: BufferedImage, outputStream: OutputStream, quality: Float): Try[Unit] = Try {
     val jpgWriter = javax.imageio.ImageIO.getImageWritersByFormatName("jpg").next()
     val jpgParams: ImageWriteParam = jpgWriter.getDefaultWriteParam
     jpgParams.setCompressionMode(ImageWriteParam.MODE_EXPLICIT)
     jpgParams.setCompressionQuality(quality.toFloat)
     val imageStream = new MemoryCacheImageOutputStream(outputStream)
     jpgWriter.setOutput(imageStream)
-    jpgWriter.write(null, new IIOImage(bufImage, null, null), jpgParams)
+    jpgWriter.write(null, new IIOImage(image, null, null), jpgParams)
     jpgWriter.dispose()
   }
 }
