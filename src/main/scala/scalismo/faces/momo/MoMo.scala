@@ -97,11 +97,11 @@ trait MoMo {
   def sampleCoefficients()(implicit rnd: Random): MoMoCoefficients
 
   /**
-    * Compute the marginal on a set of points (masking).
+    * Mask the model using a set of points (masking).
     *
-    * @return the marginal model.
+    * @return the masked model.
     */
-  def marginal(pointIds: Seq[PointId]): MoMo
+  def mask(pointIds: Seq[PointId]): MoMo
 
   /**
     * Returns the same model but with exchanged or added landmarks.
@@ -499,16 +499,17 @@ case class MoMoExpress(override val referenceMesh: TriangleMesh3D,
   }
 
   /**
-    * Compute the marginal on a set of points (masking).
+    * Mask the model with a set of points.
     *
-    * @return the marginal model.
+    * @return the masked model.
     */
-  override def marginal(pointIds: Seq[PointId]): MoMo = {
+  override def mask(pointIds: Seq[PointId]): MoMo = {
     val op = referenceMesh.operations.maskPoints(id => pointIds.contains(id))
     val maskedMesh = op.transformedMesh
-    val maskedModelShape = shape.marginal(pointIds)
-    val maskedModelColor = color.marginal(pointIds)
-    val maskedModelExpressions = expression.marginal(pointIds)
+    val remainingPtIds = maskedMesh.pointSet.pointIds.map(id => op.pointBackMap(id)).toIndexedSeq
+    val maskedModelShape = shape.marginal(remainingPtIds)
+    val maskedModelColor = color.marginal(remainingPtIds)
+    val maskedModelExpressions = expression.marginal(remainingPtIds)
     MoMo(maskedMesh, maskedModelShape, maskedModelColor, maskedModelExpressions, landmarks)
   }
 
@@ -668,15 +669,16 @@ case class MoMoBasic(override val referenceMesh: TriangleMesh3D,
 
 
   /**
-    * Compute the marginal on a set of points (masking).
+    * Mask the model with a set of points (masking).
     *
-    * @return the marginal model.
+    * @return the masked model.
     */
-  override def marginal(pointIds: Seq[PointId]): MoMo = {
+  override def mask(pointIds: Seq[PointId]): MoMo = {
     val op = referenceMesh.operations.maskPoints(id => pointIds.contains(id))
     val maskedMesh = op.transformedMesh
-    val maskedModelShape = shape.marginal(pointIds)
-    val maskedModelColor = color.marginal(pointIds)
+    val remainingPtIds = maskedMesh.pointSet.pointIds.map(id => op.pointBackMap(id)).toIndexedSeq
+    val maskedModelShape = shape.marginal(remainingPtIds)
+    val maskedModelColor = color.marginal(remainingPtIds)
     MoMo(maskedMesh, maskedModelShape, maskedModelColor, landmarks)
   }
 
