@@ -97,13 +97,6 @@ trait MoMo {
   def sampleCoefficients()(implicit rnd: Random): MoMoCoefficients
 
   /**
-    * Mask the model using a set of points (masking).
-    *
-    * @return the masked model.
-    */
-  def mask(pointIds: Seq[PointId]): MoMo
-
-  /**
     * Returns the same model but with exchanged or added landmarks.
     *
     * @param landmarksMap Map of named landmarks.
@@ -499,21 +492,6 @@ case class MoMoExpress(override val referenceMesh: TriangleMesh3D,
   }
 
   /**
-    * Mask the model with a set of points.
-    *
-    * @return the masked model.
-    */
-  override def mask(pointIds: Seq[PointId]): MoMo = {
-    val op = referenceMesh.operations.maskPoints(id => pointIds.contains(id))
-    val maskedMesh = op.transformedMesh
-    val remainingPtIds = maskedMesh.pointSet.pointIds.map(id => op.pointBackMap(id)).toIndexedSeq
-    val maskedModelShape = shape.marginal(remainingPtIds)
-    val maskedModelColor = color.marginal(remainingPtIds)
-    val maskedModelExpressions = expression.marginal(remainingPtIds)
-    MoMo(maskedMesh, maskedModelShape, maskedModelColor, maskedModelExpressions, landmarks)
-  }
-
-  /**
     * Returns the same model but with exchanged or added landmarks.
     *
     * @param landmarksMap Map of named landmarks.
@@ -665,21 +643,6 @@ case class MoMoBasic(override val referenceMesh: TriangleMesh3D,
       shape.coefficientsDistribution.sample(),
       color.coefficientsDistribution.sample()
     )
-  }
-
-
-  /**
-    * Mask the model with a set of points (masking).
-    *
-    * @return the masked model.
-    */
-  override def mask(pointIds: Seq[PointId]): MoMo = {
-    val op = referenceMesh.operations.maskPoints(id => pointIds.contains(id))
-    val maskedMesh = op.transformedMesh
-    val remainingPtIds = maskedMesh.pointSet.pointIds.map(id => op.pointBackMap(id)).toIndexedSeq
-    val maskedModelShape = shape.marginal(remainingPtIds)
-    val maskedModelColor = color.marginal(remainingPtIds)
-    MoMo(maskedMesh, maskedModelShape, maskedModelColor, landmarks)
   }
 
   /**
