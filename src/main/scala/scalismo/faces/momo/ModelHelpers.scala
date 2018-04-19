@@ -22,6 +22,8 @@ import scalismo.faces.momo.{MoMo, PancakeDLRGP}
 import scalismo.geometry._
 import scalismo.mesh.TriangleMesh
 
+import scala.util.{Failure, Success, Try}
+
 object ModelHelpers {
 
 
@@ -133,20 +135,27 @@ object ModelHelpers {
     * @return the masked model.
     */
 
-  def maskMoMo(momo : MoMo, pointIds: Seq[PointId]): MoMo = {
+  def maskMoMo(momo : MoMo, pointIds: Seq[PointId], strict: Boolean = true): Try[MoMo] = {
 
     val referenceMesh = momo.referenceMesh
     val op = referenceMesh.operations.maskPoints(id => pointIds.contains(id))
     val maskedMesh = op.transformedMesh
+
+    if (strict && (maskedMesh.pointSet.numberOfPoints+pointIds.distinct.size != referenceMesh.pointSet.numberOfPoints) ) {
+      return Failure(new Exception(
+        "Masking the model would remove additonal points not specified in the provided list of point ids.\n"+
+        "Either provide a different list of point ids or set the parameter stict to false to mask the model."))
+    }
+
     val remainingPtIds = maskedMesh.pointSet.pointIds.map(id => op.pointBackMap(id)).toIndexedSeq
     val maskedModelShape = momo.neutralModel.shape.marginal(remainingPtIds)
     val maskedModelColor = momo.neutralModel.color.marginal(remainingPtIds)
 
     if(momo.hasExpressions){
       val maskedModelExpressions = momo.expressionModel.get.expression.marginal(remainingPtIds)
-      MoMo(maskedMesh, maskedModelShape, maskedModelColor, maskedModelExpressions, momo.landmarks)
+      Success(MoMo(maskedMesh, maskedModelShape, maskedModelColor, maskedModelExpressions, momo.landmarks))
     } else {
-      MoMo(maskedMesh, maskedModelShape, maskedModelColor, momo.landmarks)
+      Success(MoMo(maskedMesh, maskedModelShape, maskedModelColor, momo.landmarks))
     }
 
   }
@@ -159,17 +168,22 @@ object ModelHelpers {
     * @return the masked model.
     */
 
-  def maskMoMo(momo : MoMo, maskMesh: TriangleMesh[_3D]): MoMo = {
+  def maskMoMo(momo : MoMo, maskMesh: TriangleMesh[_3D]): Try[MoMo] = {
 
     val remainingPtIds = momo.referenceMesh.pointSet.points.map(p => maskMesh.pointSet.findClosestPoint(p).id).toIndexedSeq
-    val maskedModelShape = momo.neutralModel.shape.marginal(remainingPtIds)
-    val maskedModelColor = momo.neutralModel.color.marginal(remainingPtIds)
+    val maskedReference = momo.referenceMesh.operations.maskPoints(remainingPtIds.contains)
+    if (maskMesh == maskedReference) {
+      val maskedModelShape = momo.neutralModel.shape.marginal(remainingPtIds)
+      val maskedModelColor = momo.neutralModel.color.marginal(remainingPtIds)
 
-    if(momo.hasExpressions){
-      val maskedModelExpressions = momo.expressionModel.get.expression.marginal(remainingPtIds)
-      MoMo(maskMesh, maskedModelShape, maskedModelColor, maskedModelExpressions, momo.landmarks)
+      if (momo.hasExpressions) {
+        val maskedModelExpressions = momo.expressionModel.get.expression.marginal(remainingPtIds)
+        Success(MoMo(maskMesh, maskedModelShape, maskedModelColor, maskedModelExpressions, momo.landmarks))
+      } else {
+        Success(MoMo(maskMesh, maskedModelShape, maskedModelColor, momo.landmarks))
+      }
     } else {
-      MoMo(maskMesh, maskedModelShape, maskedModelColor, momo.landmarks)
+      Failure(new Exception("The mesh you provided does not seem to be a masked version of the reference."))
     }
 
   }
