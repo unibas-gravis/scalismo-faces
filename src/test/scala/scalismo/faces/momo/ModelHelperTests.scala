@@ -222,4 +222,41 @@ class ModelHelperTests extends FacesTestSuite {
 
   }
 
+  describe("Model masking") {
+
+    object Fixture {
+      val randomModel = randomGridModel()
+      val reducedMesh = randomModel.referenceMesh.operations.mask(pid => pid.id%4!=0,_=>true).transformedMesh
+    }
+
+    it ("should fail if wrong point id sequence is given for strict mode") {
+      assert(ModelHelpers.maskMoMo(Fixture.randomModel,Seq(PointId(0),PointId(1),PointId(5),PointId(2)),strict = true).isFailure)
+      assert(ModelHelpers.maskMoMo(Fixture.randomModel,Seq(PointId(0),PointId(1),PointId(2)),strict = true).isFailure)
+    }
+
+    it ("should succeed if good point id sequence is given for strict mode") {
+      assert(ModelHelpers.maskMoMo(Fixture.randomModel,Seq(PointId(0),PointId(1),PointId(5)),strict = true).isSuccess)
+    }
+
+    it ("should succeed if wrong point id sequence is given for non-strict mode") {
+      assert(ModelHelpers.maskMoMo(Fixture.randomModel,Seq(PointId(0),PointId(1),PointId(5),PointId(2)),strict = false).isSuccess)
+    }
+
+    it ("should succeed if the passed mesh has different points than the reference mesh") {
+      assert(ModelHelpers.maskMoMo(Fixture.randomModel,Fixture.reducedMesh).isSuccess)
+    }
+
+    it ("should fail if the passed mesh has different points than the reference mesh") {
+      val reducedMesh = Fixture.reducedMesh
+      val distortedMesh = reducedMesh.copy(pointSet = UnstructuredPointsDomain(reducedMesh.pointSet.points.map(pt => pt.copy(x = pt.x+1.0e-6)).toIndexedSeq))
+      assert(ModelHelpers.maskMoMo(Fixture.randomModel,distortedMesh).isFailure)
+    }
+
+    it ("should fail if the passed mesh has different triangulation than the reference mesh") {
+      val reducedMesh = Fixture.reducedMesh
+      val distortedMesh = reducedMesh.copy(triangulation = reducedMesh.triangulation.copy(triangles = scala.util.Random.shuffle(reducedMesh.triangulation.triangles)))
+      assert(ModelHelpers.maskMoMo(Fixture.randomModel,distortedMesh).isFailure)
+    }
+  }
+
 }

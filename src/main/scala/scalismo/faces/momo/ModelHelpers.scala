@@ -18,9 +18,11 @@ package scalismo.statisticalmodel
 import breeze.linalg.svd.SVD
 import breeze.linalg.{*, DenseMatrix, DenseVector}
 import scalismo.common._
-import scalismo.faces.momo.PancakeDLRGP
+import scalismo.faces.momo.{MoMo, PancakeDLRGP}
 import scalismo.geometry._
 import scalismo.mesh.TriangleMesh
+
+import scala.util.{Failure, Success, Try}
 
 object ModelHelpers {
 
@@ -125,6 +127,66 @@ object ModelHelpers {
     PancakeDLRGP(DiscreteLowRankGaussianProcess(domain,mean,variance,basis), noiseVariance)
   }
 
+  /**
+    * Create a masked model using a set of PointIds.
+    * Please note that the procedure can return a model with less PointId's because of the maskPoints operation.
+    * @param momo The model to be masked.
+    * @param pointIds The PointIds of the reference to be kept.
+    * @return the masked model.
+    */
+
+  def maskMoMo(momo : MoMo, pointIds: Seq[PointId], strict: Boolean = true): Try[MoMo] = {
+
+    val referenceMesh = momo.referenceMesh
+    val op = referenceMesh.operations.maskPoints(id => pointIds.contains(id))
+    val maskedMesh = op.transformedMesh
+
+    if (strict && (maskedMesh.pointSet.numberOfPoints != pointIds.distinct.size) ) {
+      return Failure(new Exception(
+        "Masking the model would remove additonal points not specified in the provided list of point ids.\n"+
+        "Either provide a different list of point ids or set the parameter stict to false to mask the model."))
+    }
+
+    val remainingPtIds = maskedMesh.pointSet.pointIds.map(id => op.pointBackMap(id)).toIndexedSeq
+    val maskedModelShape = momo.neutralModel.shape.marginal(remainingPtIds)
+    val maskedModelColor = momo.neutralModel.color.marginal(remainingPtIds)
+
+    if(momo.hasExpressions){
+      val maskedModelExpressions = momo.expressionModel.get.expression.marginal(remainingPtIds)
+      Success(MoMo(maskedMesh, maskedModelShape, maskedModelColor, maskedModelExpressions, momo.landmarks))
+    } else {
+      Success(MoMo(maskedMesh, maskedModelShape, maskedModelColor, momo.landmarks))
+    }
+
+  }
+
+  /**
+    * Create a masked model using a masked reference mesh.
+    * The input maskMesh for masking needs to be a subset of the reference mesh.
+    * @param momo The model to be masked.
+    * @param maskMesh The masked mesh, which must be a subset of the original reference mesh. It will be the new reference mesh for the output MoMo.
+    * @return the masked model.
+    */
+
+  def maskMoMo(momo : MoMo, maskMesh: TriangleMesh[_3D]): Try[MoMo] = {
+
+    val remainingPtIds = maskMesh.pointSet.points.map(p => momo.referenceMesh.pointSet.findClosestPoint(p).id).toIndexedSeq
+    val maskedReference = momo.referenceMesh.operations.maskPoints(pid => remainingPtIds.contains(pid)).transformedMesh
+    if (maskMesh == maskedReference) {
+      val maskedModelShape = momo.neutralModel.shape.marginal(remainingPtIds)
+      val maskedModelColor = momo.neutralModel.color.marginal(remainingPtIds)
+
+      if (momo.hasExpressions) {
+        val maskedModelExpressions = momo.expressionModel.get.expression.marginal(remainingPtIds)
+        Success(MoMo(maskMesh, maskedModelShape, maskedModelColor, maskedModelExpressions, momo.landmarks))
+      } else {
+        Success(MoMo(maskMesh, maskedModelShape, maskedModelColor, momo.landmarks))
+      }
+    } else {
+      Failure(new Exception("The mesh you provided does not seem to be a masked version of the reference."))
+    }
+
+  }
 
   /**
     *
