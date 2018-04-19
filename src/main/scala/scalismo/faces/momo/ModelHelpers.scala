@@ -141,7 +141,7 @@ object ModelHelpers {
     val op = referenceMesh.operations.maskPoints(id => pointIds.contains(id))
     val maskedMesh = op.transformedMesh
 
-    if (strict && (maskedMesh.pointSet.numberOfPoints+pointIds.distinct.size != referenceMesh.pointSet.numberOfPoints) ) {
+    if (strict && (maskedMesh.pointSet.numberOfPoints != pointIds.distinct.size) ) {
       return Failure(new Exception(
         "Masking the model would remove additonal points not specified in the provided list of point ids.\n"+
         "Either provide a different list of point ids or set the parameter stict to false to mask the model."))
@@ -170,8 +170,8 @@ object ModelHelpers {
 
   def maskMoMo(momo : MoMo, maskMesh: TriangleMesh[_3D]): Try[MoMo] = {
 
-    val remainingPtIds = momo.referenceMesh.pointSet.points.map(p => maskMesh.pointSet.findClosestPoint(p).id).toIndexedSeq
-    val maskedReference = momo.referenceMesh.operations.maskPoints(remainingPtIds.contains)
+    val remainingPtIds = maskMesh.pointSet.points.map(p => momo.referenceMesh.pointSet.findClosestPoint(p).id).toIndexedSeq
+    val maskedReference = momo.referenceMesh.operations.maskPoints(pid => remainingPtIds.contains(pid)).transformedMesh
     if (maskMesh == maskedReference) {
       val maskedModelShape = momo.neutralModel.shape.marginal(remainingPtIds)
       val maskedModelColor = momo.neutralModel.color.marginal(remainingPtIds)
