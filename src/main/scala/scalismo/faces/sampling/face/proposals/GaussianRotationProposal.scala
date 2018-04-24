@@ -50,7 +50,7 @@ case class GaussianRotationProposal(axis: Vector[_3D], sdev: Double)(implicit rn
       val dy = to.yaw - from.yaw
       val dr = to.roll - from.roll
       val rot = Rotation3D.fromEulerXYZ(dp, dy, dr)
-      if (math.abs(rot.phi) > 1e-5 && (rot.axis dot axis) < 1.0 - 1e-4)
+      if (math.abs(rot.phi) > 1e-5 && math.abs(rot.axis dot normAxis) < 1.0 - 1e-4)
         Double.NegativeInfinity // wrong axis
       else {
         GaussianEvaluator.logDensity(rot.phi, 0.0, sdev)
