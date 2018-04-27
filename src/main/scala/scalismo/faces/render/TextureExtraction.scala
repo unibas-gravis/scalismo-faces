@@ -22,6 +22,8 @@ import scalismo.faces.mesh.TextureMappedProperty
 import scalismo.geometry.{Point, _2D, _3D}
 import scalismo.mesh._
 
+import scala.util.Try
+
 /** methods to extract texture from images when rendering a mesh */
 object TextureExtraction {
   /**
@@ -42,7 +44,7 @@ object TextureExtraction {
         val vis: Boolean = visible(triangleId, bcc)
         if (vis) {
           val imagePoint: Point[_3D] = TriangleRenderer.transformPoint(mesh.position(triangleId, bcc), pointShader, targetImage.domain)
-          Some(target(imagePoint.x + 0.5, imagePoint.y + 0.5)) // interpolated image access is shifted by 0.5/0.5
+          Try(target(imagePoint.x + 0.5, imagePoint.y + 0.5)).toOption // interpolated image access is shifted by 0.5/0.5
         } else
           None
       }
