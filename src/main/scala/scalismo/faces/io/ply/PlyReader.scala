@@ -15,7 +15,7 @@
  */
 package scalismo.faces.io.ply
 
-import java.io.{BufferedInputStream, File, FileInputStream, IOException}
+import java.io._
 import java.nio.ByteOrder
 import java.nio.file.{Files, Path, Paths}
 import java.util.{Locale, Scanner}
@@ -23,6 +23,7 @@ import java.util.{Locale, Scanner}
 import scalismo.faces.color.RGBA
 import scalismo.faces.image.PixelImage
 import scalismo.faces.io.PixelImageIO
+import spire.std.char
 
 import scala.collection.mutable.ListBuffer
 import scala.util.Try
@@ -45,6 +46,8 @@ object PlyReader {
    * @return
    */
   def read(url: String): (List[(String, List[(String, List[_])])], List[PixelImage[RGBA]]) = {
+    val lineSeparatorSize = getLineSeparatorSize(url)
+
     val path = Paths.get(url)
     val plyFile = path.getFileName
     val dir = path.getParent
@@ -59,7 +62,7 @@ object PlyReader {
     // as we use buffered readers we need to reset the input stream
     val fis = new FileInputStream(url)
     val bis = new BufferedInputStream(fis)
-    bis.skip(header.map(_.size).sum + header.size*System.getProperty("line.separator").length)
+    bis.skip(header.map(_.size).sum + header.size*lineSeparatorSize)
     val values = readData(bis, plyFormat, elementReaders)
     (values, textures)
   }
@@ -235,6 +238,29 @@ object PlyReader {
     } else {
       throw new IOException("Do not know how to read property type: " + format.mkString(" "))
     }
+  }
+
+
+
+
+  private def getLineSeparatorSize(url: String): Int = {
+    val fis = new FileInputStream( url )
+    while ( fis.available()>0 )
+    {
+      val c = fis.read().asInstanceOf[Char]
+      if ( ( c == '\n' ) || ( c == '\r' ) )
+      {
+        if ( fis.available()>0){
+          val c2 = fis.read().asInstanceOf[Char]
+          if ( (( c2 == '\n' ) || ( c2 == '\r' )) && c != c2) return 2
+          return 1
+        }
+        return 1
+      }
+      if ( c == '\u0085' || c == '\u2028' || c == '\u2029') return 1
+    }
+    // default line separator size is 1, this will be choosen if file is empty or does not use \r or \n characters (will use unicode characters)
+    return 1
   }
 
 }
