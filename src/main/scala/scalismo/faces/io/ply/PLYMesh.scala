@@ -15,7 +15,6 @@
  */
 package scalismo.faces.io.ply
 
-import scalismo.faces.color.RGBA
 import scalismo.faces.io.ply.PlyHelpers.PlyFormat._
 import scalismo.faces.io.ply.PlyHelpers.PlyHeader._
 import scalismo.faces.io.ply.PlyHelpers._
