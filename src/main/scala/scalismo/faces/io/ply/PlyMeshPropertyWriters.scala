@@ -155,12 +155,14 @@ object PlyMeshPropertyWriters {
     private val writer = new SequenceWriter[Byte]
 
     override def write(color: RGBA, osw: OutputStreamWriter): Unit = {
-      val seq = IndexedSeq(color.r,color.g,color.b,color.a).map(zeroOne2Byte)
+      val clamped = color.clamped
+      val seq = IndexedSeq(clamped.r,clamped.g,clamped.b,clamped.a).map(zeroOne2Byte)
       writer.write(seq,osw)
     }
 
     override def write(color: RGBA, os: OutputStream, bo: ByteOrder): Unit = {
-      val seq = IndexedSeq(color.r,color.g,color.b,color.a).map(zeroOne2Byte)
+      val clamped = color.clamped
+      val seq = IndexedSeq(clamped.r,clamped.g,clamped.b,clamped.a).map(zeroOne2Byte)
       writer.write(seq,os,bo)
     }
 
