@@ -145,8 +145,13 @@ class MeshIOTests extends FacesTestSuite {
     f.deleteOnExit()
     MeshIO.write(mesh, f).get
     val readMesh = MeshIO.read(f).get
+
+    val correctedMesh = if ( readMesh.normals.isDefined && !mesh.normals.isDefined){ // maybe normals are generated while reading
+      OptionalColorNormalMesh3D(readMesh.shape,readMesh.color,None)
+    } else readMesh
+
     testDiffOptionalColorNormalMesh3D(
-      readMesh,
+      correctedMesh,
       mesh
     )
   }
