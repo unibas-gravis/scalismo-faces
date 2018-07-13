@@ -45,11 +45,11 @@ object TriangleRenderer {
                         pointShader: PointShader,
                         pixelShader: PixelShader[A],
                         buffer: RenderBuffer[A]): Unit = {
-    // bounding box
-    val minX = math.min(a.x, math.min(b.x, c.x)).floor.toInt
-    val maxX = math.max(a.x, math.max(b.x, c.x)).ceil.toInt
-    val minY = math.min(a.y, math.min(b.y, c.y)).floor.toInt
-    val maxY = math.max(a.y, math.max(b.y, c.y)).ceil.toInt
+    // bounding box cropped to viewport size
+    val minX = math.min(math.max(math.min(a.x, math.min(b.x, c.x)).floor.toInt, 0), buffer.width)
+    val maxX = math.min(math.max(math.max(a.x, math.max(b.x, c.x)).ceil.toInt, 0), buffer.width)
+    val minY = math.min(math.max(math.min(a.y, math.min(b.y, c.y)).floor.toInt, 0), buffer.height)
+    val maxY = math.min(math.max(math.max(a.y, math.max(b.y, c.y)).ceil.toInt, 0), buffer.height)
 
     // determine winding order
     val signedArea = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)
@@ -80,7 +80,8 @@ object TriangleRenderer {
     while (y <= maxY) {
       var x = minX
       while (x <= maxX) {
-        if (inTriangle(x, y) && buffer.isDefinedAt(x, y)) {
+        //viewport check is not needed here anymore
+        if (inTriangle(x, y)) {
           val screenBCC = BarycentricCoordinates.pointInTriangle(Point(x, y), vs2D(a), vs2D(b), vs2D(c))
           val worldBCC = pointShader.bccScreenToWorld(screenBCC, a, b, c)
           val z: Double = a.z + z10 * worldBCC.b + z20 * worldBCC.c
