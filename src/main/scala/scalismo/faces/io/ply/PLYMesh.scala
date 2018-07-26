@@ -140,10 +140,14 @@ object PLYMesh {
     val triangleMesh3D = TriangleMesh3D(points, triangles)
 
     val colors = getSurfaceColor(vertexProperties, faceProperties, texture, triangles)
-    val normals = getSurfaceNormal(vertexProperties, faceProperties, texture, triangles)
 
-    // building the mesh class
+    val normals = Try { // use stored vertex normals from file if available
+      getSurfaceNormal(vertexProperties, faceProperties, texture, triangles)
+    }.getOrElse { // compute the vertex normals using the built mesh - note: this will fail if vertices without adjacent triangles exist
+      triangleMesh3D.vertexNormals
+    }
     ColorNormalMesh3D(triangleMesh3D, colors, normals)
+
   }
 
 
