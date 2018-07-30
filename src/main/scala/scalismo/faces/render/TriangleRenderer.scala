@@ -46,10 +46,10 @@ object TriangleRenderer {
                         pixelShader: PixelShader[A],
                         buffer: RenderBuffer[A]): Unit = {
     // bounding box cropped to viewport size
-    val minX = math.min(math.max(math.min(a.x, math.min(b.x, c.x)).floor.toInt, 0), buffer.width)
-    val maxX = math.min(math.max(math.max(a.x, math.max(b.x, c.x)).ceil.toInt, 0), buffer.width)
-    val minY = math.min(math.max(math.min(a.y, math.min(b.y, c.y)).floor.toInt, 0), buffer.height)
-    val maxY = math.min(math.max(math.max(a.y, math.max(b.y, c.y)).ceil.toInt, 0), buffer.height)
+    val minX = math.min(math.max(math.min(a.x, math.min(b.x, c.x)).floor.toInt, 0), buffer.width-1)
+    val maxX = math.min(math.max(math.max(a.x, math.max(b.x, c.x)).ceil.toInt, 0), buffer.width-1)
+    val minY = math.min(math.max(math.min(a.y, math.min(b.y, c.y)).floor.toInt, 0), buffer.height-1)
+    val maxY = math.min(math.max(math.max(a.y, math.max(b.y, c.y)).ceil.toInt, 0), buffer.height-1)
 
     // determine winding order
     val signedArea = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)
