@@ -2,9 +2,9 @@ organization  := "ch.unibas.cs.gravis"
 name := """scalismo-faces"""
 licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")) 
 
-scalaVersion  := "2.12.1"
+scalaVersion  := "2.12.6"
 
-crossScalaVersions := Seq("2.12.1", "2.11.8")
+crossScalaVersions := Seq("2.12.6", "2.11.8")
 
 scalacOptions ++= (CrossVersion.partialVersion(scalaVersion.value) match {
     case Some((2,  11)) =>  Seq("-deprecation", "-unchecked", "-feature")
