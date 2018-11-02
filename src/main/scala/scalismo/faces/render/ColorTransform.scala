@@ -17,7 +17,8 @@
 package scalismo.faces.render
 
 import breeze.linalg.{DenseMatrix, DenseVector, inv}
-import scalismo.faces.color.RGB
+import scalismo.color.RGB
+import scalismo.color.ColorSpaceOperations.implicits._
 import scalismo.geometry.{SquareMatrix, _3D}
 
 /** color transform: map color values */
@@ -25,10 +26,10 @@ trait ColorTransform extends (RGB => RGB)
 
 /** General color transform, affine with matrix and shift */
 case class AffineColorTransform(A: SquareMatrix[_3D], b: RGB) extends ColorTransform {
-  def apply(c: RGB): RGB = RGB(A * c.toVector[_3D]) + b
+  def apply(c: RGB): RGB = RGB(A * c.toVector) + b
   def invert: AffineColorTransform = {
     val Ainv = SquareMatrix.inv(A)
-    AffineColorTransform(Ainv, RGB(Ainv * (-b.toVector[_3D])))
+    AffineColorTransform(Ainv, RGB(Ainv * (-b.toVector)))
   }
 }
 

@@ -17,6 +17,7 @@
 
 package scalismo.faces.segmentation
 
+import scalismo.color.RGB
 import scalismo.faces.color._
 import scalismo.faces.image.{ImageBuffer, PixelImage}
 import scalismo.faces.gui.GUIBlock._

@@ -16,12 +16,13 @@
 
 package scalismo.faces.color
 
+import scalismo.color.{ColorSpaceOperations, RGB, RGBA}
 import scalismo.faces.FacesTestSuite
 
 class ColorSpaceOperationsTest extends FacesTestSuite {
 
   describe("Implicit ColorSpaceOperation operators are mapped to proper ColorSpaceOperations methods") {
-    import ColorSpaceOperations.implicits._
+    import scalismo.color.ColorSpaceOperations.implicits._
 
     case class V(v: Double)
 

@@ -21,12 +21,12 @@ import java.net.URI
 import breeze.linalg.{DenseMatrix, DenseVector, qr}
 import org.scalatest._
 import scalismo.common.{PointId, UnstructuredPointsDomain}
-import scalismo.faces.color.{RGB, RGBA}
+import scalismo.color.{RGB, RGBA}
 import scalismo.faces.image.{AccessMode, PixelImage, PixelImageDomain}
-import scalismo.faces.mesh.{ColorNormalMesh3D, TextureMappedProperty, VertexColorMesh3D}
+import scalismo.faces.mesh.{ColorNormalMesh3D, TextureMappedProperty}
 import scalismo.faces.momo.{MoMo, PancakeDLRGP}
 import scalismo.geometry.{Landmark, Point, Vector, Vector3D, _2D, _3D}
-import scalismo.mesh.{SurfacePointProperty, TriangleCell, TriangleList, TriangleMesh3D}
+import scalismo.mesh._
 import scalismo.statisticalmodel.ModelHelpers
 import scalismo.utils.Random
 

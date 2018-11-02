@@ -19,7 +19,7 @@ package scalismo.faces.io
 import java.io.File
 
 import scalismo.faces.FacesTestSuite
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.io.msh.{MSHMaterial, MSHMesh, MSHMeshIO, MSHTexture}
 import scalismo.geometry._
 

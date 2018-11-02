@@ -15,6 +15,7 @@
  */
 package scalismo.faces.color
 
+import scalismo.color.RGB
 import scalismo.faces.FacesTestSuite
 import scalismo.utils.Random
 

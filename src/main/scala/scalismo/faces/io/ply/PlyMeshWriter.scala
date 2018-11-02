@@ -18,7 +18,7 @@ package scalismo.faces.io.ply
 import java.io.{File, FileOutputStream, OutputStream, OutputStreamWriter}
 import java.nio.ByteOrder
 
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.io.PixelImageIO
 import scalismo.faces.io.ply.PlyHelpers.PlyFormat._
 import scalismo.faces.io.ply.PlyHelpers.PlyHeader._

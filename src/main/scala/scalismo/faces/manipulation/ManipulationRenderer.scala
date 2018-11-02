@@ -16,7 +16,7 @@
 
 package scalismo.faces.manipulation
 
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.image.{PixelImage, PixelImageDomain}
 import scalismo.faces.parameters.{ParametricRenderer, RenderParameter}
 import scalismo.faces.render.TriangleRenderer

@@ -16,7 +16,7 @@
 
 package scalismo.faces.parameters
 
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.image.PixelImage
 import scalismo.geometry._
 import scalismo.mesh._

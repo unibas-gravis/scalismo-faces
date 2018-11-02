@@ -16,8 +16,8 @@
 
 package scalismo.faces.manipulation
 
-import scalismo.faces.color._
-import scalismo.faces.mesh.VertexColorMesh3D
+import scalismo.color.RGBA
+import scalismo.mesh.VertexColorMesh3D
 import scalismo.faces.momo.{MoMo, MoMoCoefficients}
 import scalismo.geometry._
 import scalismo.mesh.{SurfacePointProperty, TriangleMesh3D}

@@ -16,7 +16,7 @@
 
 package scalismo.faces.sampling.face.proposals
 
-import scalismo.faces.color.RGB
+import scalismo.color.RGB
 import scalismo.faces.parameters.ColorTransform
 import scalismo.faces.sampling.evaluators.LogNormalDistribution
 import scalismo.sampling.evaluators.GaussianEvaluator

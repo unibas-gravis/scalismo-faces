@@ -19,10 +19,10 @@ package scalismo.faces.io
 import java.io.File
 
 import scalismo.faces.FacesTestSuite
-import scalismo.faces.color.RGBA
-import scalismo.faces.mesh.{ColorNormalMesh3D, OptionalColorNormalMesh3D, TextureMappedProperty, VertexColorMesh3D}
+import scalismo.color.RGBA
+import scalismo.faces.mesh.{ColorNormalMesh3D, OptionalColorNormalMesh3D, TextureMappedProperty}
 import scalismo.geometry.{Point, _2D}
-import scalismo.mesh.{BarycentricCoordinates, SurfacePointProperty, TriangleId}
+import scalismo.mesh.{BarycentricCoordinates, SurfacePointProperty, TriangleId, VertexColorMesh3D}
 
 class MeshIOTests extends FacesTestSuite {
 

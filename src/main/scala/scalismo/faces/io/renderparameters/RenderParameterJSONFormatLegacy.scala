@@ -18,7 +18,7 @@ package scalismo.faces.io.renderparameters
 
 import java.net.URI
 
-import scalismo.faces.color.{RGB, RGBA}
+import scalismo.color.{RGB, RGBA}
 import scalismo.faces.parameters._
 import scalismo.faces.mesh._
 import scalismo.geometry._

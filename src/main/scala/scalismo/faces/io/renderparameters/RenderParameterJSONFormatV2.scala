@@ -19,7 +19,7 @@ package scalismo.faces.io.renderparameters
 import java.net.URI
 
 import scalismo.common.PointId
-import scalismo.faces.color.{ColorSpaceOperations, RGB, RGBA}
+import scalismo.color.{ColorSpaceOperations, RGB, RGBA}
 import scalismo.faces.image._
 import scalismo.faces.mesh._
 import scalismo.faces.parameters._

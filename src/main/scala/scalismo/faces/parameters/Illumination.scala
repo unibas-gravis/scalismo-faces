@@ -17,7 +17,7 @@
 package scalismo.faces.parameters
 
 import breeze.linalg.DenseVector
-import scalismo.faces.color.{RGB, RGBA}
+import scalismo.color.{RGB, RGBA}
 import scalismo.faces.mesh.ColorNormalMesh3D
 import scalismo.faces.numerics.SphericalHarmonics
 import scalismo.faces.render.PixelShaders.SphericalHarmonicsLambertShader

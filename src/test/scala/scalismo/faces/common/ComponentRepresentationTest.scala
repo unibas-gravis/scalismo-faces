@@ -17,7 +17,8 @@
 package scalismo.faces.common
 
 import scalismo.faces.FacesTestSuite
-import scalismo.faces.color.{RGB, RGBA}
+import scalismo.color.{RGB, RGBA}
+import scalismo.common.ComponentRepresentation
 import scalismo.geometry.{Vector, _2D, _3D}
 
 class ComponentRepresentationTest extends FacesTestSuite {

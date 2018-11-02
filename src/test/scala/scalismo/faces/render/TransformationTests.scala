@@ -17,7 +17,7 @@
 package scalismo.faces.render
 
 import scalismo.faces.FacesTestSuite
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.image.{PixelImage, PixelImageOperations}
 import scalismo.faces.parameters.RenderParameter
 import scalismo.geometry._

@@ -20,7 +20,7 @@ import java.io._
 import java.nio.ByteBuffer
 import java.util.zip.{GZIPInputStream, GZIPOutputStream}
 
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.io.PixelImageIO
 import scalismo.faces.utils.ResourceManagement
 import scalismo.geometry.{IntVector, Point, Vector, _2D, _3D}

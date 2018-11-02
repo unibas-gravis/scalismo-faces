@@ -19,7 +19,8 @@ package scalismo.faces.io
 import java.io._
 
 import scalismo.faces.FacesTestSuite
-import scalismo.faces.color.ColorSpaceOperations.implicits._
+import scalismo.color.ColorSpaceOperations.implicits._
+import scalismo.color.{ColorSpaceOperations, RGB, RGBA}
 import scalismo.faces.color._
 import scalismo.faces.image.{BufferedImageConverter, PixelImage}
 import scalismo.faces.utils.LanguageUtilities

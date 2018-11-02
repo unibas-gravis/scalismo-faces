@@ -18,12 +18,12 @@ package scalismo.faces.io
 
 import java.io.{File, IOException}
 
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.io.msh.MSHMeshIO
 import scalismo.faces.io.ply.PLYMesh
-import scalismo.faces.mesh.{ColorNormalMesh3D, OptionalColorNormalMesh3D, TextureMappedProperty, VertexColorMesh3D}
+import scalismo.faces.mesh.{ColorNormalMesh3D, OptionalColorNormalMesh3D, TextureMappedProperty}
 import scalismo.geometry.{Vector, _3D}
-import scalismo.mesh.{MeshSurfaceProperty, SurfacePointProperty, TriangleMesh3D}
+import scalismo.mesh.{MeshSurfaceProperty, SurfacePointProperty, TriangleMesh3D, VertexColorMesh3D}
 
 import scala.util.{Failure, Try}
 

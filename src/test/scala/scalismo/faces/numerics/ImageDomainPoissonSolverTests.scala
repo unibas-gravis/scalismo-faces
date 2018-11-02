@@ -17,8 +17,8 @@
 package scalismo.faces.numerics
 
 import scalismo.faces.FacesTestSuite
-import scalismo.faces.color.RGB
-import scalismo.faces.common.ComponentRepresentation
+import scalismo.color.RGB
+import scalismo.common.ComponentRepresentation
 import scalismo.faces.image.{AccessMode, PixelImage, PixelImageDifferential}
 
 /** tests for Poisson solvers in the image domain (used for inpainting) */

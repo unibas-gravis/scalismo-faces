@@ -19,8 +19,8 @@ import scalismo.faces.io.ply.PlyHelpers.PlyFormat._
 import scalismo.faces.io.ply.PlyHelpers.PlyHeader._
 import scalismo.faces.io.ply.PlyHelpers._
 import scalismo.faces.io.ply.PlyMeshReader._
-import scalismo.faces.mesh.{ColorNormalMesh3D, VertexColorMesh3D}
-import scalismo.mesh.{SurfacePointProperty, TriangleMesh3D}
+import scalismo.faces.mesh.ColorNormalMesh3D
+import scalismo.mesh.{SurfacePointProperty, TriangleMesh3D, VertexColorMesh3D}
 
 import scala.util.Try
 

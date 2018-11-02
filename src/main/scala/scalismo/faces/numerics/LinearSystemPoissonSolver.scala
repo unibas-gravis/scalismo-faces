@@ -18,7 +18,7 @@ package scalismo.faces.numerics
 
 import breeze.linalg.{CSCMatrix, DenseMatrix, DenseVector}
 import breeze.optimize.linear.{ConjugateGradient => BreezeCG}
-import scalismo.faces.common.ComponentRepresentation
+import scalismo.common.ComponentRepresentation
 import scalismo.faces.image.{ChannelOperations, PixelImage}
 
 import scala.reflect.ClassTag

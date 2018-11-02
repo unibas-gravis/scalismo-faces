@@ -18,7 +18,7 @@ package scalismo.faces.parameters
 
 import breeze.linalg.DenseVector
 import scalismo.faces.FacesTestSuite
-import scalismo.faces.color.RGB
+import scalismo.color.RGB
 import scalismo.geometry.{Vector, Vector3D, _3D}
 
 class SphericalHarmonicsLightTests extends FacesTestSuite {

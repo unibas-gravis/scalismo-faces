@@ -16,7 +16,7 @@
 
 package scalismo.faces.warp
 
-import scalismo.faces.color.ColorSpaceOperations
+import scalismo.color.ColorSpaceOperations
 import scalismo.faces.image.AccessMode.Strict
 import scalismo.faces.image.PixelImage
 import scalismo.geometry.{Vector, _2D}

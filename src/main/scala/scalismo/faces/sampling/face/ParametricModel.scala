@@ -17,9 +17,9 @@
 package scalismo.faces.sampling.face
 
 import breeze.linalg.DenseVector
-import scalismo.faces.mesh.VertexColorMesh3D
 import scalismo.faces.momo.MoMo
 import scalismo.faces.parameters.{MoMoInstance, RenderParameter}
+import scalismo.mesh.VertexColorMesh3D
 
 /** generates a model instance in original model coordinates */
 class ParametricModel(model: MoMo ) {

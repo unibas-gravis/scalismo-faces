@@ -19,7 +19,7 @@ package scalismo.faces.render
 import java.io.File
 
 import scalismo.faces.FacesTestSuite
-import scalismo.faces.color.{RGB, RGBA}
+import scalismo.color.{RGB, RGBA}
 import scalismo.faces.image.InterpolationKernel.BilinearKernel
 import scalismo.faces.image.PixelImage
 import scalismo.faces.io.PixelImageIO

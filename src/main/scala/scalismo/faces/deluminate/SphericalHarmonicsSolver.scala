@@ -17,7 +17,7 @@
 package scalismo.faces.deluminate
 
 import breeze.linalg.{DenseMatrix, DenseVector}
-import scalismo.faces.color.RGB
+import scalismo.color.RGB
 import scalismo.faces.numerics.SphericalHarmonics
 import scalismo.geometry.{Vector, _3D}
 
@@ -54,7 +54,7 @@ object SphericalHarmonicsSolver {
     val shBasis = IndexedSeq.tabulate(nSH)(i => SphericalHarmonics.shBasisFunction(i))
 
     // build target vector on rhs: b (3*#points x 1), vectorize all colors to r, g, b
-    val b = DenseVector(radiances.toArray.flatMap(r => r.toVector[_3D].toArray))
+    val b = DenseVector(radiances.toArray.flatMap(r => r.toVector.toArray))
 
     // build matrix: (3*#points) x  (3*#lightCoefficients)
     def matrixBuilder(i: Int, j: Int): Double = {
@@ -66,7 +66,7 @@ object SphericalHarmonicsSolver {
       val shColorIndex = j % 3
       // matrix element: albedo[point, color] * Y[shCoeff](normal[point]) * kernel(shCoeff) * delta(pointColor, shColor)
       if (pointColorIndex == shColorIndex)
-        albedi(pointIndex).toVector[_3D].toArray(pointColorIndex) * shBasis(shCoeffIndex)(normals(pointIndex)) * kernel(shCoeffIndex)
+        albedi(pointIndex).toVector.toArray(pointColorIndex) * shBasis(shCoeffIndex)(normals(pointIndex)) * kernel(shCoeffIndex)
       else
         0.0
     }

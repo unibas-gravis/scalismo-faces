@@ -18,7 +18,7 @@ package scalismo.faces.io.msh
 
 import java.io._
 
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.mesh._
 import scalismo.geometry._
 import scalismo.mesh._

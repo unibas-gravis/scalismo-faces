@@ -24,7 +24,7 @@ import java.util.Map.Entry
 
 import breeze.linalg.{DenseMatrix, DenseVector}
 import scalismo.common.{DiscreteDomain, PointId, UnstructuredPointsDomain, Vectorizer}
-import scalismo.faces.color.RGB
+import scalismo.color.RGB
 import scalismo.faces.momo.{MoMo, MoMoBasic, MoMoExpress, PancakeDLRGP}
 import scalismo.faces.utils.ResourceManagement
 import scalismo.geometry.{Landmark, Point, Vector, _3D}

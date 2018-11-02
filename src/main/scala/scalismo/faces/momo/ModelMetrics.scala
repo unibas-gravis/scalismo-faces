@@ -16,8 +16,8 @@
 
 package scalismo.faces.momo
 
-import scalismo.faces.color.RGBA
-import scalismo.faces.mesh.VertexColorMesh3D
+import scalismo.color.RGBA
+import scalismo.mesh.VertexColorMesh3D
 import scalismo.geometry.{Point, _3D}
 import scalismo.utils.Random
 

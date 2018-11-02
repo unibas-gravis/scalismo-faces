@@ -16,10 +16,10 @@
 
 package scalismo.faces.sampling.face.proposals
 
-import scalismo.faces.color.{RGB, RGBA}
+import scalismo.color.{RGB, RGBA}
 import scalismo.faces.deluminate.SphericalHarmonicsOptimizer
 import scalismo.faces.image.{AccessMode, PixelImage}
-import scalismo.faces.mesh.{MeshSurfaceSampling, VertexColorMesh3D}
+import scalismo.faces.mesh.MeshSurfaceSampling
 import scalismo.faces.parameters.{RenderParameter, SphericalHarmonicsLight}
 import scalismo.faces.render.TextureExtraction
 import scalismo.faces.sampling.evaluators.LogNormalDistribution

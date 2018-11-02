@@ -16,15 +16,15 @@
 
 package scalismo.faces.deluminate
 
-import scalismo.faces.color.RGBA
+
+import scalismo.color.RGBA
 import scalismo.faces.deluminate.SphericalHarmonicsSolver.IlluminatedPoint
 import scalismo.faces.image.PixelImage
-import scalismo.faces.mesh.VertexColorMesh3D
 import scalismo.faces.parameters.{RenderParameter, SphericalHarmonicsLight}
 import scalismo.faces.render.{ColorTransform, TextureExtraction}
 import scalismo.faces.sampling.face.ParametricModel
 import scalismo.geometry.{Vector, _3D}
-import scalismo.mesh.{BarycentricCoordinates, MeshSurfaceProperty, TriangleId, TriangleMesh3D}
+import scalismo.mesh._
 import scalismo.utils.Random
 
 /** wrap Spherical Harmonics illumination solver in parametric rendering framework */

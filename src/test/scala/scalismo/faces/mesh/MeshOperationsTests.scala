@@ -18,7 +18,7 @@ package scalismo.faces.mesh
 
 import scalismo.common.PointId
 import scalismo.faces.FacesTestSuite
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.geometry.{Point, Vector3D, _3D}
 import scalismo.mesh._
 

@@ -20,7 +20,7 @@ import java.nio.ByteOrder
 import java.nio.file.{Files, Path, Paths}
 import java.util.{Locale, Scanner}
 
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.image.PixelImage
 import scalismo.faces.io.PixelImageIO
 import spire.std.char

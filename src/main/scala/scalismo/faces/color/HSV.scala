@@ -16,6 +16,8 @@
 
 package scalismo.faces.color
 
+import scalismo.color.RGB
+
 /** HSV color value with Hue in [0.0,2*Pi), Saturation in [0.0,1.0] and Value in [0.0,1.0] */
 case class HSV(hue: Double, saturation: Double, value: Double) {
 

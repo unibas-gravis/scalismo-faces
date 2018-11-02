@@ -18,8 +18,9 @@ package scalismo.faces.io.msh
 
 import java.io.File
 
+import scalismo.color.RGBA
 import scalismo.common.PointId
-import scalismo.faces.color.{ColorBlender, RGBA}
+import scalismo.faces.color.ColorBlender
 import scalismo.faces.image.{PixelImage, PixelImageOperations}
 import scalismo.faces.io.PixelImageIO
 import scalismo.faces.mesh._

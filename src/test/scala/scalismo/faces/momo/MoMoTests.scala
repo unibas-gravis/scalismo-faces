@@ -22,7 +22,7 @@ import breeze.linalg.{DenseVector, norm, sum}
 import breeze.stats.distributions.Gaussian
 import scalismo.faces.FacesTestSuite
 import scalismo.faces.io.MoMoIO
-import scalismo.faces.mesh.VertexColorMesh3D
+import scalismo.mesh.VertexColorMesh3D
 
 class MoMoTests extends FacesTestSuite {
 

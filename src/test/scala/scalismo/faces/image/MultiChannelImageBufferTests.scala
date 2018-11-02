@@ -16,6 +16,8 @@
 
 package scalismo.faces.image
 
+import scalismo.color.RGB
+import scalismo.common.ComponentRepresentation
 import scalismo.faces.FacesTestSuite
 import scalismo.faces.color._
 import scalismo.faces.common._

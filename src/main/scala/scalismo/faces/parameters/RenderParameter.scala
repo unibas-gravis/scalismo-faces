@@ -16,10 +16,11 @@
 
 package scalismo.faces.parameters
 
-import scalismo.faces.color.RGBA
-import scalismo.faces.mesh.{ColorNormalMesh3D, VertexColorMesh3D}
+import scalismo.color.RGBA
+import scalismo.faces.mesh.ColorNormalMesh3D
 import scalismo.faces.render.{Affine3D, PixelShader, PointShader}
 import scalismo.geometry.{Point, Point2D, Vector, _3D}
+import scalismo.mesh.VertexColorMesh3D
 
 /** main parameter to describe a 3D scene setup with a face for rendering and fitting */
 case class RenderParameter(pose: Pose,

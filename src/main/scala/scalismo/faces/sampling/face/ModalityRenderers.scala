@@ -16,7 +16,7 @@
 
 package scalismo.faces.sampling.face
 
-import scalismo.faces.color.{RGB, RGBA}
+import scalismo.color.{RGB, RGBA}
 import scalismo.faces.image.PixelImage
 import scalismo.faces.parameters.{ColorTransform, ParametricRenderer, RenderParameter}
 import scalismo.geometry.{Point, Vector, _3D}

@@ -20,7 +20,7 @@ import java.io._
 import java.net.URI
 
 import scalismo.faces.FacesTestSuite
-import scalismo.faces.color.{RGB, RGBA}
+import scalismo.color.{RGB, RGBA}
 import scalismo.faces.image.PixelImageDomain
 import scalismo.faces.io.renderparameters.{RenderParameterJSONFormat, RenderParameterJSONFormatV4}
 import scalismo.faces.mesh._
@@ -28,7 +28,7 @@ import scalismo.faces.parameters._
 import scalismo.faces.render._
 import scalismo.faces.utils.ResourceManagement
 import scalismo.geometry._
-import scalismo.mesh.SurfacePointProperty
+import scalismo.mesh.{SurfacePointProperty, VertexColorMesh3D}
 import spray.json._
 
 import scala.io.Source

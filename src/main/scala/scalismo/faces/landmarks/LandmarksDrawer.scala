@@ -19,7 +19,7 @@ package scalismo.faces.landmarks
 import java.awt.image.BufferedImage
 import java.awt.{Color, RenderingHints}
 
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.image.{BufferedImageConverter, PixelImage}
 
 object LandmarksDrawer {

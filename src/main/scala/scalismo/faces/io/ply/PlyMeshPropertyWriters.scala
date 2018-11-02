@@ -19,7 +19,7 @@ import java.io.{OutputStream, OutputStreamWriter}
 import java.nio.ByteOrder
 
 import scalismo.common.PointId
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.mesh.VertexPropertyPerTriangle
 import scalismo.geometry.{_2D, _}
 import scalismo.mesh.{BarycentricCoordinates, SurfacePointProperty, TriangleId, TriangleProperty}

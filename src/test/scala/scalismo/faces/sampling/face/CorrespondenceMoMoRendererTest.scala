@@ -19,7 +19,7 @@ package scalismo.faces.sampling.face
 import java.net.URI
 
 import scalismo.faces.FacesTestSuite
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.parameters.{MoMoInstance, Pose, RenderParameter}
 import scalismo.faces.utils.LanguageUtilities
 import scalismo.geometry.Vector

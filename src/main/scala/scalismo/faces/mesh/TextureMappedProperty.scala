@@ -16,7 +16,7 @@
 
 package scalismo.faces.mesh
 
-import scalismo.faces.color.ColorSpaceOperations
+import scalismo.color.ColorSpaceOperations
 import scalismo.faces.image.filter.ImageFilter
 import scalismo.faces.image.{InterpolatedPixelImage, PixelImage, PixelImageDomain}
 import scalismo.faces.render.{PixelShaders, PlainRenderBuffer, PointShader, TriangleRenderer}

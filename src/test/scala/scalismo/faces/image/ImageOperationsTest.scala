@@ -16,7 +16,7 @@
 package scalismo.faces.image
 
 import scalismo.faces.FacesTestSuite
-import scalismo.faces.color.RGB
+import scalismo.color.RGB
 
 class ImageOperationsTest  extends FacesTestSuite {
 

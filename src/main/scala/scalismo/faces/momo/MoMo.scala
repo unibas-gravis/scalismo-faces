@@ -19,8 +19,8 @@ package scalismo.faces.momo
 
 import breeze.linalg.{DenseMatrix, DenseVector}
 import scalismo.common._
-import scalismo.faces.color.{RGB, RGBA}
-import scalismo.faces.mesh.VertexColorMesh3D
+import scalismo.color.{RGB, RGBA}
+import scalismo.mesh.VertexColorMesh3D
 import scalismo.geometry._
 import scalismo.mesh.{TriangleMesh3D, _}
 import scalismo.statisticalmodel._

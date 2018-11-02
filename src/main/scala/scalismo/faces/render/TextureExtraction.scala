@@ -16,7 +16,7 @@
 
 package scalismo.faces.render
 
-import scalismo.faces.color.ColorSpaceOperations
+import scalismo.color.ColorSpaceOperations
 import scalismo.faces.image.{InterpolatedPixelImage, PixelImage, PixelImageDomain}
 import scalismo.faces.mesh.TextureMappedProperty
 import scalismo.geometry.{Point, _2D, _3D}

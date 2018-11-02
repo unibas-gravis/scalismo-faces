@@ -16,7 +16,7 @@
 
 package scalismo.faces.mesh
 
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.render.Transform3D
 import scalismo.geometry.{Vector, _3D}
 import scalismo.mesh._
@@ -35,19 +35,6 @@ case class ColorMesh3D(shape: TriangleMesh3D, color: MeshSurfaceProperty[RGBA]) 
   }
 }
 
-/**
-  * colored mesh with color per vertex
-  * @param shape positions
-  * @param color color of mesh surface, per point
-  */
-case class VertexColorMesh3D(shape: TriangleMesh3D, color: SurfacePointProperty[RGBA]) {
-  require(shape.triangulation == color.triangulation)
-
-  def transform(trafo: Transform3D): VertexColorMesh3D = {
-    val s = shape.transform{trafo(_)}
-    copy(shape = s)
-  }
-}
 
 /**
   * colored mesh with normals

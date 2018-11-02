@@ -16,7 +16,7 @@
 
 package scalismo.faces.render
 
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.image.{ImageBuffer, PixelImage}
 
 import scala.reflect.ClassTag

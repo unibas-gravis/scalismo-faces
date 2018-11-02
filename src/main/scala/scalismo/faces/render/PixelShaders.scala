@@ -16,8 +16,8 @@
 
 package scalismo.faces.render
 
-import scalismo.faces.color.{RGB, RGBA}
-import scalismo.faces.mesh.{ColorNormalMesh3D, VertexColorMesh3D}
+import scalismo.color.{RGB, RGBA}
+import scalismo.faces.mesh.ColorNormalMesh3D
 import scalismo.faces.numerics.SphericalHarmonics
 import scalismo.faces.parameters.{RenderParameter, SphericalHarmonicsLight}
 import scalismo.faces.render.TriangleRenderer.TriangleFragment

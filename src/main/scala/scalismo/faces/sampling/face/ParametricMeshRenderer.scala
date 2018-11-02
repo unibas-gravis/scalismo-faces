@@ -16,7 +16,7 @@
 
 package scalismo.faces.sampling.face
 
-import scalismo.faces.mesh.VertexColorMesh3D
+import scalismo.mesh.VertexColorMesh3D
 import scalismo.faces.parameters.RenderParameter
 
 /** generates a mesh in world coordinates, controlled by RenderParameter, used for fitting */
