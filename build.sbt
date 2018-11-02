@@ -22,4 +22,4 @@ libraryDependencies  ++= Seq(
 // Git versioning
 enablePlugins(GitVersioning, GitBranchPrompt)
 com.typesafe.sbt.SbtGit.useJGit 
-git.baseVersion := "develop"
+git.baseVersion := "noVertexColorMesh3D"
