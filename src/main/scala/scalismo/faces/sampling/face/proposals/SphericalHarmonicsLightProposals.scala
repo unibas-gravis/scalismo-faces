@@ -16,16 +16,16 @@
 
 package scalismo.faces.sampling.face.proposals
 
-import scalismo.faces.color.{RGB, RGBA}
+import scalismo.color.{RGB, RGBA}
 import scalismo.faces.deluminate.SphericalHarmonicsOptimizer
 import scalismo.faces.image.{AccessMode, PixelImage}
-import scalismo.faces.mesh.{MeshSurfaceSampling, VertexColorMesh3D}
+import scalismo.faces.mesh.MeshSurfaceSampling
 import scalismo.faces.parameters.{RenderParameter, SphericalHarmonicsLight}
 import scalismo.faces.render.TextureExtraction
 import scalismo.faces.sampling.evaluators.LogNormalDistribution
 import scalismo.faces.sampling.face.evaluators.PixelEvaluators.IsotropicGaussianPixelEvaluatorHSV
 import scalismo.faces.sampling.face.{ParametricImageRenderer, ParametricModel}
-import scalismo.geometry.{Vector, _3D}
+import scalismo.geometry.{EuclideanVector, _3D}
 import scalismo.mesh._
 import scalismo.sampling.evaluators.{GaussianEvaluator, PairEvaluator}
 import scalismo.sampling.{ProposalGenerator, SymmetricTransitionRatio, TransitionProbability}
@@ -44,7 +44,7 @@ object SphericalHarmonicsLightProposals {
 
     override def propose(current: SphericalHarmonicsLight): SphericalHarmonicsLight = {
       val factor = exp(rnd.scalaRandom.nextGaussian() * logSdev * 0.5)
-      current.copy(coefficients = current.coefficients.map(_ * factor: Vector[_3D]))
+      current.copy(coefficients = current.coefficients.map(_ * factor: EuclideanVector[_3D]))
     }
 
     override def logTransitionProbability(from: SphericalHarmonicsLight, to: SphericalHarmonicsLight): Double = {
@@ -57,14 +57,14 @@ object SphericalHarmonicsLightProposals {
     extends ProposalGenerator[SphericalHarmonicsLight] with SymmetricTransitionRatio[SphericalHarmonicsLight] with TransitionProbability[SphericalHarmonicsLight] {
 
     override def propose(current: SphericalHarmonicsLight): SphericalHarmonicsLight = {
-      val shift = Vector(
+      val shift = EuclideanVector(
         rnd.scalaRandom.nextGaussian() * sdev,
         rnd.scalaRandom.nextGaussian() * sdev,
         rnd.scalaRandom.nextGaussian() * sdev
       )
       val proposal = current.copy(coefficients = current.coefficients.map(v => v + shift))
       val intensityChange = sqrt(proposal.energy / current.energy)
-      proposal.copy(coefficients = proposal.coefficients.map(v => v / intensityChange: Vector[_3D]))
+      proposal.copy(coefficients = proposal.coefficients.map(v => v / intensityChange: EuclideanVector[_3D]))
     }
 
     override def logTransitionProbability(from: SphericalHarmonicsLight, to: SphericalHarmonicsLight): Double = {
@@ -91,14 +91,14 @@ object SphericalHarmonicsLightProposals {
       TransitionProbability[SphericalHarmonicsLight] {
 
     override def propose(current: SphericalHarmonicsLight): SphericalHarmonicsLight = {
-      val proposal = current.copy(coefficients = current.coefficients.map(v => v + Vector(
+      val proposal = current.copy(coefficients = current.coefficients.map(v => v + EuclideanVector(
         rnd.scalaRandom.nextGaussian(),
         rnd.scalaRandom.nextGaussian(),
         rnd.scalaRandom.nextGaussian()
       ) * sdev ))
       val intensityChange = sqrt(proposal.energy / current.energy)
       if (fixIntensity)
-        proposal.copy(coefficients = proposal.coefficients.map(v => v / intensityChange: Vector[_3D]))
+        proposal.copy(coefficients = proposal.coefficients.map(v => v / intensityChange: EuclideanVector[_3D]))
       else
         proposal
     }
@@ -129,7 +129,7 @@ object SphericalHarmonicsLightProposals {
       if (current.nonEmpty) {
         val bands = sqrt(current.coefficients.size).floor.toInt
         require(bands * bands - current.coefficients.size == 0, "SHLightBandEnergyMixer: number of bands unknown")
-        val coeff: Array[Vector[_3D]] = current.coefficients.toArray
+        val coeff: Array[EuclideanVector[_3D]] = current.coefficients.toArray
         for (b <- 1 to bands) {
           val factor = math.exp(rnd.scalaRandom.nextGaussian() * logSdev)
           for (i <- (b - 1) * (b - 1) until b * b) {
@@ -227,7 +227,7 @@ object SphericalHarmonicsLightProposals {
     override def propose(current: SphericalHarmonicsLight): SphericalHarmonicsLight = {
       SphericalHarmonicsLight(current.coefficients.map(v => {
         val value = rnd.scalaRandom.nextGaussian() * sdev
-        v + Vector(value, value, value) //monochrome: add the same to every channel
+        v + EuclideanVector(value, value, value) //monochrome: add the same to every channel
       }))
     }
 

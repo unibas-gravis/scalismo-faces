@@ -16,6 +16,7 @@
 
 package scalismo.faces.color
 
+import scalismo.color.{RGB, RGBA}
 import scalismo.faces.FacesTestSuite
 
 class RGBTests extends FacesTestSuite {

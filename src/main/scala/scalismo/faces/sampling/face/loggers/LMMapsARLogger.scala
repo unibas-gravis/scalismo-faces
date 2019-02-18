@@ -16,7 +16,7 @@
 
 package scalismo.faces.sampling.face.loggers
 
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.image.{ImageBuffer, PixelImage}
 import scalismo.faces.parameters.RenderParameter
 import scalismo.faces.sampling.face.ParametricLandmarksRenderer

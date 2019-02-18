@@ -17,7 +17,7 @@
 package scalismo.faces.sampling.face.evaluators
 
 import breeze.linalg.max
-import scalismo.faces.color.{RGB, RGBA}
+import scalismo.color.{RGB, RGBA}
 import scalismo.faces.image.{LabeledPixelImage, PixelImage}
 import scalismo.sampling.DistributionEvaluator
 import scalismo.sampling.evaluators.PairEvaluator

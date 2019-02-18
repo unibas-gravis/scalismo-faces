@@ -16,7 +16,7 @@
 
 package scalismo.faces.image.filter
 
-import scalismo.faces.color.ColorSpaceOperations
+import scalismo.color.ColorSpaceOperations
 import scalismo.faces.image.PixelImage
 
 import scala.reflect.ClassTag

@@ -16,7 +16,7 @@
 
 package scalismo.faces.image
 
-import scalismo.faces.color.ColorSpaceOperations
+import scalismo.color.ColorSpaceOperations
 import scalismo.faces.image.AccessMode.Repeat
 import scalismo.faces.numerics.{GenericMultigridPoissonSolver, ImageDomainPoissonSolver}
 
@@ -24,7 +24,7 @@ import scala.reflect.ClassTag
 
 /** Methods to inpaint/blend two images using Poisson Image Editing [roughly Perez 2003 SIGGRAPH (different implementation)] */
 class PoissonInpainting[A: ClassTag](solver: ImageDomainPoissonSolver[A])(implicit ops: ColorSpaceOperations[A]) {
-  import scalismo.faces.color.ColorSpaceOperations.implicits._
+  import scalismo.color.ColorSpaceOperations.implicits._
 
   /** inpainting with seamless cloning method: match gradients of inpainted part with overlay image */
   def seamlessCloning(targetImage: PixelImage[A], overlayImage: PixelImage[Option[A]], left: Int = 0, top: Int = 0): PixelImage[A] = {

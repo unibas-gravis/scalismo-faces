@@ -16,7 +16,7 @@
 
 package scalismo.faces.image
 
-import scalismo.faces.common.ComponentRepresentation
+import scalismo.common.ComponentRepresentation
 import scalismo.faces.image.filter.ImageFilter
 
 import scala.reflect.ClassTag

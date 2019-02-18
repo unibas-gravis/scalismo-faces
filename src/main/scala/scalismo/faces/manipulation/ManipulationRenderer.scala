@@ -16,11 +16,11 @@
 
 package scalismo.faces.manipulation
 
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.image.{PixelImage, PixelImageDomain}
 import scalismo.faces.parameters.{ParametricRenderer, RenderParameter}
 import scalismo.faces.render.TriangleRenderer
-import scalismo.geometry.{Point, Point2D, Vector, _2D}
+import scalismo.geometry.{Point, Point2D, EuclideanVector, _2D}
 import scalismo.mesh.{SurfacePointProperty, TriangleMesh3D}
 import scalismo.numerics.ValueInterpolator
 
@@ -62,7 +62,7 @@ class ManipulationRenderer {
   def manipulationWarpField(originalParameter: RenderParameter,
                             originalMesh: TriangleMesh3D,
                             manipulatedParameter: RenderParameter,
-                            manipulatedMesh: TriangleMesh3D): PixelImage[Option[Vector[_2D]]] = {
+                            manipulatedMesh: TriangleMesh3D): PixelImage[Option[EuclideanVector[_2D]]] = {
     require(originalMesh.pointSet.numberOfPoints == manipulatedMesh.pointSet.numberOfPoints)
 
     // render 2d positions of original and manipulation, respects visibility of points
@@ -70,7 +70,7 @@ class ManipulationRenderer {
     val points2DManipulated = renderPointsIn2D(manipulatedParameter, manipulatedMesh)
 
     // warp vector with validity to remove warps involving invisible points
-    case class WarpVector(vector: Vector[_2D], validity: Double)
+    case class WarpVector(vector: EuclideanVector[_2D], validity: Double)
 
     // warp list: warp vector for each point in mesh
     val warpList: IndexedSeq[WarpVector] = points2DOriginal.zip(points2DManipulated).map{
@@ -79,7 +79,7 @@ class ManipulationRenderer {
     }
 
     // interpolator is required to render warp field as surface property
-    implicit def warpInterpolator(implicit vecBlender: ValueInterpolator[Vector[_2D]], doubleBlender: ValueInterpolator[Double]) =
+    implicit def warpInterpolator(implicit vecBlender: ValueInterpolator[EuclideanVector[_2D]], doubleBlender: ValueInterpolator[Double]) =
       new ValueInterpolator[WarpVector] {
         override def blend(obj1: WarpVector, obj2: WarpVector, l: Double): WarpVector = {
           WarpVector(
@@ -91,7 +91,7 @@ class ManipulationRenderer {
 
     // render warpfield to 2d image (uses BCC interpolation, "property rendering")
     // respects validity and combines with invisible parts from rendering
-    val rawWarpfield: PixelImage[Option[Vector[_2D]]] = ParametricRenderer.renderPropertyImage(
+    val rawWarpfield: PixelImage[Option[EuclideanVector[_2D]]] = ParametricRenderer.renderPropertyImage(
       manipulatedParameter,
       manipulatedMesh,
       SurfacePointProperty(manipulatedMesh.triangulation, warpList)

@@ -18,7 +18,7 @@ package scalismo.faces.sampling.face.loggers
 
 import java.io.File
 
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.image.PixelImage
 import scalismo.faces.io.PixelImageIO
 import scalismo.faces.landmarks.{LandmarksDrawer, TLMSLandmark2D}

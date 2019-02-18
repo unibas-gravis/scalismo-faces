@@ -16,6 +16,7 @@
 
 package scalismo.faces.color
 
+import scalismo.color.ColorSpaceOperations
 import scalismo.geometry._
 
 import scala.annotation.tailrec

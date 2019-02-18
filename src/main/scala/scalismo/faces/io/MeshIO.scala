@@ -18,12 +18,12 @@ package scalismo.faces.io
 
 import java.io.{File, IOException}
 
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.io.msh.MSHMeshIO
 import scalismo.faces.io.ply.PLYMesh
-import scalismo.faces.mesh.{ColorNormalMesh3D, OptionalColorNormalMesh3D, TextureMappedProperty, VertexColorMesh3D}
-import scalismo.geometry.{Vector, _3D}
-import scalismo.mesh.{MeshSurfaceProperty, SurfacePointProperty, TriangleMesh3D}
+import scalismo.faces.mesh.{ColorNormalMesh3D, OptionalColorNormalMesh3D, TextureMappedProperty}
+import scalismo.geometry.{EuclideanVector, _3D}
+import scalismo.mesh.{MeshSurfaceProperty, SurfacePointProperty, TriangleMesh3D, VertexColorMesh3D}
 
 import scala.util.{Failure, Try}
 
@@ -75,7 +75,7 @@ object MeshIO {
   }
 
   /** write a mesh, optionally with color and normals, automatically chooses format based on filename */
-  def write(mesh: TriangleMesh3D, color: Option[MeshSurfaceProperty[RGBA]], normals: Option[MeshSurfaceProperty[Vector[_3D]]], file: File): Try[Unit] = {
+  def write(mesh: TriangleMesh3D, color: Option[MeshSurfaceProperty[RGBA]], normals: Option[MeshSurfaceProperty[EuclideanVector[_3D]]], file: File): Try[Unit] = {
     write(OptionalColorNormalMesh3D(mesh, color, normals), file)
   }
 

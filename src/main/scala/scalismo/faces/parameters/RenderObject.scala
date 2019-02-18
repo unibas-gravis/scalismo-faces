@@ -22,8 +22,9 @@ import java.util.Map.Entry
 
 import scalismo.faces.io.MoMoIO
 import scalismo.faces.io.msh.MSHMeshIO
-import scalismo.faces.mesh.{ColorNormalMesh3D, VertexColorMesh3D}
+import scalismo.faces.mesh.ColorNormalMesh3D
 import scalismo.faces.momo.{MoMo, MoMoCoefficients}
+import scalismo.mesh.VertexColorMesh3D
 import scalismo.utils.Random
 
 import scala.util.Try

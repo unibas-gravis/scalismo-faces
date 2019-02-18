@@ -16,15 +16,15 @@
 
 package scalismo.faces.sampling.face
 
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.image.PixelImage
 import scalismo.faces.landmarks.TLMSLandmark2D
-import scalismo.faces.mesh.VertexColorMesh3D
+import scalismo.mesh.VertexColorMesh3D
 import scalismo.faces.momo.MoMo
 import scalismo.faces.parameters.RenderParameter
 import scalismo.faces.render.TriangleRenderer.TriangleFragment
 import scalismo.faces.render.{PixelShader, TriangleFilters, TriangleRenderer, ZBuffer}
-import scalismo.geometry.{Vector, _3D}
+import scalismo.geometry.{EuclideanVector, _3D}
 import scalismo.mesh.{MeshSurfaceProperty, SurfacePointProperty}
 import scalismo.utils.Memoize
 
@@ -81,7 +81,7 @@ case class CorrespondenceColorImageRenderer(correspondenceMoMoRenderer: Correspo
     val min = reference.shape.pointSet.boundingBox.origin.toBreezeVector
     val extV = reference.shape.pointSet.boundingBox.extent
     val minV = reference.shape.pointSet.boundingBox.origin
-    val normalizedPoints = reference.shape.pointSet.points.map(p => (p.toBreezeVector - min) /:/ extent).map(f => Vector[_3D](f.toArray)).toIndexedSeq
+    val normalizedPoints = reference.shape.pointSet.points.map(p => (p.toBreezeVector - min) /:/ extent).map(f => EuclideanVector[_3D](f.toArray)).toIndexedSeq
     SurfacePointProperty(reference.shape.triangulation, normalizedPoints.map(d=>RGBA(d.x,d.y, d.z)))
   }
 

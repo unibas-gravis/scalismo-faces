@@ -19,14 +19,14 @@ package scalismo.faces.render
 import java.io.File
 
 import scalismo.faces.FacesTestSuite
-import scalismo.faces.color.{RGB, RGBA}
+import scalismo.color.{RGB, RGBA}
 import scalismo.faces.image.InterpolationKernel.BilinearKernel
 import scalismo.faces.image.PixelImage
 import scalismo.faces.io.PixelImageIO
 import scalismo.faces.mesh.{ColorNormalMesh3D, TextureMappedProperty}
 import scalismo.faces.parameters.{Camera, Pose, RenderParameter}
 import scalismo.faces.render.PixelShaders.PropertyShader
-import scalismo.geometry.Vector
+import scalismo.geometry.EuclideanVector
 import scalismo.mesh.{MeshSurfaceProperty, SurfacePointProperty, TriangleMesh3D}
 import scalismo.utils.Random
 
@@ -50,7 +50,7 @@ class TextureExtractionTests extends FacesTestSuite {
 
   val rps: RenderParameter = RenderParameter.default.copy(
     camera = Camera.for35mmFilm(focalLength = 100),
-    pose = Pose.neutral.copy(translation = Vector(-100, -100, -1000))).noLightAndColor
+    pose = Pose.neutral.copy(translation = EuclideanVector(-100, -100, -1000))).noLightAndColor
 
   val renderedImage: PixelImage[RGBA] = TriangleRenderer.renderMesh(mesh, rps.pointShader, PropertyShader(texture), ZBuffer[RGBA](rps.imageSize.width, rps.imageSize.height, RGBA(1, 0, 1, 0))).toImage
 

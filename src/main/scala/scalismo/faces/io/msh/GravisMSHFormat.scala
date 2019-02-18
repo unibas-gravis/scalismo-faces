@@ -20,10 +20,10 @@ import java.io._
 import java.nio.ByteBuffer
 import java.util.zip.{GZIPInputStream, GZIPOutputStream}
 
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.io.PixelImageIO
 import scalismo.faces.utils.ResourceManagement
-import scalismo.geometry.{IntVector, Point, Vector, _2D, _3D}
+import scalismo.geometry.{IntVector, Point, EuclideanVector, _2D, _3D}
 
 import scala.reflect.ClassTag
 import scala.util.control.NonFatal
@@ -114,11 +114,11 @@ object GravisMSHFormat {
       RGBA(r, g, b, a)
     }
 
-    private def readVector(ds: DataInputStream): Vector[_3D] = {
+    private def readVector(ds: DataInputStream): EuclideanVector[_3D] = {
       val x = readFloat(ds)
       val y = readFloat(ds)
       val z = readFloat(ds)
-      Vector(x, y, z)
+      EuclideanVector(x, y, z)
     }
 
     private def readIntVector(ds: DataInputStream): IntVector[_3D] = {
@@ -247,7 +247,7 @@ object GravisMSHFormat {
       writeFloat(ds, data.z.toFloat)
     }
 
-    private def writeVector(ds: DataOutputStream, data: Vector[_3D]) = {
+    private def writeVector(ds: DataOutputStream, data:EuclideanVector[_3D]) = {
       writeFloat(ds, data.x.toFloat)
       writeFloat(ds, data.y.toFloat)
       writeFloat(ds, data.z.toFloat)

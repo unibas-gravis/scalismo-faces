@@ -17,10 +17,10 @@
 package scalismo.faces.sampling.face
 
 import breeze.linalg.DenseVector
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.image.PixelImage
 import scalismo.faces.landmarks.TLMSLandmark2D
-import scalismo.faces.mesh.VertexColorMesh3D
+import scalismo.mesh.VertexColorMesh3D
 import scalismo.faces.momo.{MoMo, MoMoCoefficients}
 import scalismo.faces.parameters.{MoMoInstance, ParametricRenderer, RenderParameter}
 import scalismo.geometry.Point

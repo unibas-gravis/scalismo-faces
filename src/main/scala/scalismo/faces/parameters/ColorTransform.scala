@@ -16,7 +16,7 @@
 
 package scalismo.faces.parameters
 
-import scalismo.faces.color.RGB
+import scalismo.color.RGB
 import scalismo.faces.render.ColorTransformWithColorContrast
 
 /** parametrization of color transform in image after rendering (color gain, offset and color contrast) */

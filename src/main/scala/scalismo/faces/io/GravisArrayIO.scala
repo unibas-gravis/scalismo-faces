@@ -18,7 +18,7 @@ package scalismo.faces.io
 
 import java.io._
 
-import scalismo.faces.color.{RGB, RGBA}
+import scalismo.color.{RGB, RGBA}
 import scalismo.faces.utils.ResourceManagement
 
 import scala.collection.mutable.ArrayBuffer

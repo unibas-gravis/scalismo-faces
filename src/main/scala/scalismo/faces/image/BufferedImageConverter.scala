@@ -19,7 +19,7 @@ package scalismo.faces.image
 import java.awt.Color
 import java.awt.image.BufferedImage
 
-import scalismo.faces.color.{RGB, RGBA}
+import scalismo.color.{RGB, RGBA}
 
 /** convert between PixelImage and BufferedImage */
 trait BufferedImageConverter[Pixel] {

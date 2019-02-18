@@ -21,6 +21,7 @@ import scalismo.faces.color._
 import scalismo.faces.image.InterpolationKernel._
 import scalismo.faces.image.PixelImage.implicits._
 import org.scalatest.PrivateMethodTester
+import scalismo.color.RGB
 
 import scala.annotation.tailrec
 

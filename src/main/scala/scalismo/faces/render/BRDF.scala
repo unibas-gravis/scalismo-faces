@@ -16,9 +16,9 @@
 
 package scalismo.faces.render
 
-import scalismo.geometry.{Vector, _3D}
+import scalismo.geometry.{EuclideanVector, _3D}
 
 /** a bidirectional reflectance distribution function to describe reflectance models */
 trait BRDF[A] {
-  def apply(lightDirection: Vector[_3D], viewDirection: Vector[_3D]): A
+  def apply(lightDirection: EuclideanVector[_3D], viewDirection: EuclideanVector[_3D]): A
 }

@@ -17,30 +17,30 @@
 package scalismo.faces.warp
 
 import scalismo.faces.image.PixelImage
-import scalismo.geometry.{Vector, _2D}
+import scalismo.geometry.{EuclideanVector, _2D}
 
 import scala.annotation.tailrec
 
 /** invert warp field */
 object WarpFieldInversion {
   /** invert a warp field, uses a fixed point iteration invW(x) = -W(x + invW(x)) */
-  def fixedPointInversion(warpField: PixelImage[Vector[_2D]], iterations: Int = 5): PixelImage[Vector[_2D]] = {
+  def fixedPointInversion(warpField: PixelImage[EuclideanVector[_2D]], iterations: Int = 5): PixelImage[EuclideanVector[_2D]] = {
     val contField = warpField.interpolate
     // iteration: iw(x) = -w( x + iw(x) )
     @tailrec
-    def fixedPointIteration(invW: PixelImage[Vector[_2D]], iterations: Int): PixelImage[Vector[_2D]] = {
+    def fixedPointIteration(invW: PixelImage[EuclideanVector[_2D]], iterations: Int): PixelImage[EuclideanVector[_2D]] = {
       if (iterations > 0) {
         // for each position pull back the correct warp field value
         val invField = PixelImage(warpField.domain, (x, y) => {
-          val v = Vector(x, y) + invW(x, y)
-          -contField(v.x, v.y): Vector[_2D]
+          val v = EuclideanVector(x, y) + invW(x, y)
+          -contField(v.x, v.y): EuclideanVector[_2D]
         })
         fixedPointIteration(invField, iterations - 1)
       } else
         invW
     }
     // initial: iw(x) = 0
-    val init: PixelImage[Vector[_2D]] = warpField.map(v => Vector(0f, 0f))
+    val init: PixelImage[EuclideanVector[_2D]] = warpField.map(v => EuclideanVector(0f, 0f))
     // iterate: fixed-point iterations
     fixedPointIteration(init, iterations)
   }

@@ -16,10 +16,11 @@
 
 package scalismo.faces.parameters
 
-import scalismo.faces.color.RGBA
-import scalismo.faces.mesh.{ColorNormalMesh3D, VertexColorMesh3D}
+import scalismo.color.RGBA
+import scalismo.faces.mesh.ColorNormalMesh3D
 import scalismo.faces.render.{Affine3D, PixelShader, PointShader}
-import scalismo.geometry.{Point, Point2D, Vector, _3D}
+import scalismo.geometry.{Point, Point2D, EuclideanVector, _3D}
+import scalismo.mesh.VertexColorMesh3D
 
 /** main parameter to describe a 3D scene setup with a face for rendering and fitting */
 case class RenderParameter(pose: Pose,
@@ -103,7 +104,7 @@ case class RenderParameter(pose: Pose,
     val sh = height.toDouble / imageSize.height
     copy(
       imageSize = ImageSize(width, height),
-      camera = camera.copy(sensorSize = Vector(camera.sensorSize.x * sw, camera.sensorSize.y * sh))
+      camera = camera.copy(sensorSize = EuclideanVector(camera.sensorSize.x * sw, camera.sensorSize.y * sh))
     )
   }
 
@@ -137,7 +138,7 @@ object RenderParameter {
     camera = Camera(
       focalLength = 7.5,
       principalPoint = Point2D.origin,
-      sensorSize = Vector(2.0, 2.0),
+      sensorSize = EuclideanVector(2.0, 2.0),
       near = 10,
       far = 1000e3,
       orthographic = false),

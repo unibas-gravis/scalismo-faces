@@ -16,7 +16,7 @@
 
 package scalismo.faces.render
 
-import scalismo.faces.color.ColorSpaceOperations
+import scalismo.color.ColorSpaceOperations
 import scalismo.faces.render.TriangleRenderer.TriangleFragment
 import scalismo.geometry.{Point, _3D}
 import scalismo.mesh.{BarycentricCoordinates, TriangleId}

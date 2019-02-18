@@ -18,18 +18,19 @@ package scalismo.faces.io.msh
 
 import java.io.File
 
+import scalismo.color.RGBA
 import scalismo.common.PointId
-import scalismo.faces.color.{ColorBlender, RGBA}
+import scalismo.faces.color.ColorBlender
 import scalismo.faces.image.{PixelImage, PixelImageOperations}
 import scalismo.faces.io.PixelImageIO
 import scalismo.faces.mesh._
-import scalismo.geometry.{IntVector, Point, Vector, _2D, _3D}
+import scalismo.geometry.{IntVector, Point, EuclideanVector, _2D, _3D}
 import scalismo.mesh._
 
 /** capture the structure of the Gravis MSH mesh (do not use in production unless you really need to) */
 case class MSHMesh(materials: Array[MSHMaterial],
                    vertex: Array[Point[_3D]],
-                   normal: Array[Vector[_3D]],
+                   normal: Array[EuclideanVector[_3D]],
                    textureCoordinates: Array[Point[_3D]],
                    color: Array[RGBA],
                    tvi: Array[IntVector[_3D]],
@@ -62,7 +63,7 @@ case class MSHMesh(materials: Array[MSHMaterial],
     }
   }
 
-  def getNormal: Option[VertexPropertyPerTriangle[Vector[_3D]]] = {
+  def getNormal: Option[VertexPropertyPerTriangle[EuclideanVector[_3D]]] = {
     val normalsValid = tni.forall(i => normal.isDefinedAt(i(0)) && normal.isDefinedAt(i(1)) && normal.isDefinedAt(i(2)))
     if (normal.nonEmpty && tni.nonEmpty && normalsValid)
       Some(VertexPropertyPerTriangle(triangulation, tni, normal))
@@ -225,20 +226,20 @@ case class MSHMesh(materials: Array[MSHMaterial],
 
 
 object MSHMesh {
-  def fromTriangleMesh3D(mesh: TriangleMesh3D, color: Option[MeshSurfaceProperty[RGBA]], normals: Option[MeshSurfaceProperty[Vector[_3D]]]): MSHMesh = color match {
+  def fromTriangleMesh3D(mesh: TriangleMesh3D, color: Option[MeshSurfaceProperty[RGBA]], normals: Option[MeshSurfaceProperty[EuclideanVector[_3D]]]): MSHMesh = color match {
     case Some(tex: TextureMappedProperty[RGBA]) => fromGravisMesh3DWithSingleTexture(mesh, tex, normals)
     case Some(tex: IndirectProperty[RGBA]) => fromGravisMesh3DWithTextures(mesh, tex, normals)
     case Some(col: MeshSurfaceProperty[RGBA]) => fromGravisMesh3DWithVertexColor(mesh, col, normals)
     case None => fromGravisMesh3DNoColors(mesh, normals)
   }
 
-  def fromGravisMesh3DNoColors(mesh: TriangleMesh3D, normals: Option[MeshSurfaceProperty[Vector[_3D]]]): MSHMesh = {
+  def fromGravisMesh3DNoColors(mesh: TriangleMesh3D, normals: Option[MeshSurfaceProperty[EuclideanVector[_3D]]]): MSHMesh = {
     val triangulation = mesh.triangulation
 
     // normals
     val mshNormals = normals.map(n => VertexPropertyPerTriangle.fromSurfaceProperty(n))
-    val tni: IndexedSeq[IntVector[_3D]] = mshNormals.map((n: VertexPropertyPerTriangle[Vector[_3D]]) => n.triangleVertexIndex).getOrElse(IndexedSeq.empty[IntVector[_3D]])
-    val normalData: Array[Vector[_3D]] = mshNormals.map((n: VertexPropertyPerTriangle[Vector[_3D]]) => n.vertexData.toArray).getOrElse(Array.empty[Vector[_3D]])
+    val tni: IndexedSeq[IntVector[_3D]] = mshNormals.map((n: VertexPropertyPerTriangle[EuclideanVector[_3D]]) => n.triangleVertexIndex).getOrElse(IndexedSeq.empty[IntVector[_3D]])
+    val normalData: Array[EuclideanVector[_3D]] = mshNormals.map((n: VertexPropertyPerTriangle[EuclideanVector[_3D]]) => n.vertexData.toArray).getOrElse(Array.empty[EuclideanVector[_3D]])
 
     MSHMesh(
       Array(MSHMaterial.defaultMaterial),
@@ -259,7 +260,7 @@ object MSHMesh {
       new File(""))
   }
 
-  def fromGravisMesh3DWithSingleTexture(mesh: TriangleMesh3D, texture: TextureMappedProperty[RGBA], normals: Option[MeshSurfaceProperty[Vector[_3D]]]): MSHMesh = {
+  def fromGravisMesh3DWithSingleTexture(mesh: TriangleMesh3D, texture: TextureMappedProperty[RGBA], normals: Option[MeshSurfaceProperty[EuclideanVector[_3D]]]): MSHMesh = {
     val triangulation = mesh.triangulation
     // create material with texture
     val material = MSHMaterial.defaultMaterialWithTexture(MSHTexture(texture.texture, new File("tex.png")))
@@ -270,8 +271,8 @@ object MSHMesh {
 
     // normals
     val mshNormals = normals.map(n => VertexPropertyPerTriangle.fromSurfaceProperty(n))
-    val tni: IndexedSeq[IntVector[_3D]] = mshNormals.map((n: VertexPropertyPerTriangle[Vector[_3D]]) => n.triangleVertexIndex).getOrElse(IndexedSeq.empty[IntVector[_3D]])
-    val normalData: Array[Vector[_3D]] = mshNormals.map((n: VertexPropertyPerTriangle[Vector[_3D]]) => n.vertexData.toArray).getOrElse(Array.empty[Vector[_3D]])
+    val tni: IndexedSeq[IntVector[_3D]] = mshNormals.map((n: VertexPropertyPerTriangle[EuclideanVector[_3D]]) => n.triangleVertexIndex).getOrElse(IndexedSeq.empty[IntVector[_3D]])
+    val normalData: Array[EuclideanVector[_3D]] = mshNormals.map((n: VertexPropertyPerTriangle[EuclideanVector[_3D]]) => n.vertexData.toArray).getOrElse(Array.empty[EuclideanVector[_3D]])
 
     MSHMesh(
       Array(material),
@@ -292,7 +293,7 @@ object MSHMesh {
       new File(""))
   }
 
-  def fromGravisMesh3DWithTextures(mesh: TriangleMesh3D, indirectTexture: IndirectProperty[RGBA], normals: Option[MeshSurfaceProperty[Vector[_3D]]]): MSHMesh = {
+  def fromGravisMesh3DWithTextures(mesh: TriangleMesh3D, indirectTexture: IndirectProperty[RGBA], normals: Option[MeshSurfaceProperty[EuclideanVector[_3D]]]): MSHMesh = {
     val triangulation = mesh.triangulation
 
     // create material with texture
@@ -323,8 +324,8 @@ object MSHMesh {
 
     // normals
     val mshNormals = normals.map(n => VertexPropertyPerTriangle.fromSurfaceProperty(n))
-    val tni: IndexedSeq[IntVector[_3D]] = mshNormals.map((n: VertexPropertyPerTriangle[Vector[_3D]]) => n.triangleVertexIndex).getOrElse(IndexedSeq.empty[IntVector[_3D]])
-    val normalData: Array[Vector[_3D]] = mshNormals.map((n: VertexPropertyPerTriangle[Vector[_3D]]) => n.vertexData.toArray).getOrElse(Array.empty[Vector[_3D]])
+    val tni: IndexedSeq[IntVector[_3D]] = mshNormals.map((n: VertexPropertyPerTriangle[EuclideanVector[_3D]]) => n.triangleVertexIndex).getOrElse(IndexedSeq.empty[IntVector[_3D]])
+    val normalData: Array[EuclideanVector[_3D]] = mshNormals.map((n: VertexPropertyPerTriangle[EuclideanVector[_3D]]) => n.vertexData.toArray).getOrElse(Array.empty[EuclideanVector[_3D]])
 
     MSHMesh(
       textureMaterials.toArray,
@@ -345,15 +346,15 @@ object MSHMesh {
       new File(""))
   }
 
-  def fromGravisMesh3DWithVertexColor(mesh: TriangleMesh3D, color: MeshSurfaceProperty[RGBA], normals: Option[MeshSurfaceProperty[Vector[_3D]]]): MSHMesh = {
+  def fromGravisMesh3DWithVertexColor(mesh: TriangleMesh3D, color: MeshSurfaceProperty[RGBA], normals: Option[MeshSurfaceProperty[EuclideanVector[_3D]]]): MSHMesh = {
     val triangulation = mesh.triangulation
     // extract color with our triangle indirection: magic handled in fromSurfaceProperty, chooses best representation based on actual type
     val colorPerTriangle = VertexPropertyPerTriangle.fromSurfaceProperty(color)
 
     // normals
     val mshNormals = normals.map(n => VertexPropertyPerTriangle.fromSurfaceProperty(n))
-    val tni: IndexedSeq[IntVector[_3D]] = mshNormals.map((n: VertexPropertyPerTriangle[Vector[_3D]]) => n.triangleVertexIndex).getOrElse(IndexedSeq.empty[IntVector[_3D]])
-    val normalData: Array[Vector[_3D]] = mshNormals.map((n: VertexPropertyPerTriangle[Vector[_3D]]) => n.vertexData.toArray).getOrElse(Array.empty[Vector[_3D]])
+    val tni: IndexedSeq[IntVector[_3D]] = mshNormals.map((n: VertexPropertyPerTriangle[EuclideanVector[_3D]]) => n.triangleVertexIndex).getOrElse(IndexedSeq.empty[IntVector[_3D]])
+    val normalData: Array[EuclideanVector[_3D]] = mshNormals.map((n: VertexPropertyPerTriangle[EuclideanVector[_3D]]) => n.vertexData.toArray).getOrElse(Array.empty[EuclideanVector[_3D]])
 
     MSHMesh(
       Array(MSHMaterial.defaultMaterial),

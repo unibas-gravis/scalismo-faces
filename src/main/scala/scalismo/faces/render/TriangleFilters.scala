@@ -16,7 +16,7 @@
 
 package scalismo.faces.render
 
-import scalismo.geometry.{Point, Vector, _3D}
+import scalismo.geometry.{Point, EuclideanVector, _3D}
 import scalismo.mesh.{TriangleId, TriangleMesh}
 
 /** methods to create useful triangle filters to use in TriangleRenderer, e.g. culling and clipping */
@@ -30,7 +30,7 @@ object TriangleFilters {
   }
 
   /** remove triangles *partially* behind clipping plane, use as triangleFilter in renderMesh */
-  def clippingFilter(worldMesh: TriangleMesh[_3D], point: Point[_3D], normal: Vector[_3D]): TriangleId => Boolean = {
+  def clippingFilter(worldMesh: TriangleMesh[_3D], point: Point[_3D], normal: EuclideanVector[_3D]): TriangleId => Boolean = {
     triangleId =>
       val triangle = worldMesh.triangulation.triangle(triangleId)
       val a = worldMesh.pointSet.point(triangle.ptId1)
@@ -41,7 +41,7 @@ object TriangleFilters {
   }
 
   /** remove triangles *completely* behind clipping plane, use as triangleFilter in renderMesh */
-  def completeClippingFilter(worldMesh: TriangleMesh[_3D], point: Point[_3D], normal: Vector[_3D]): TriangleId => Boolean = {
+  def completeClippingFilter(worldMesh: TriangleMesh[_3D], point: Point[_3D], normal: EuclideanVector[_3D]): TriangleId => Boolean = {
     triangleId =>
       val triangle = worldMesh.triangulation.triangle(triangleId)
       val a = worldMesh.pointSet.point(triangle.ptId1)

@@ -18,8 +18,8 @@ package scalismo.faces.mesh
 
 import scalismo.common.PointId
 import scalismo.faces.FacesTestSuite
-import scalismo.faces.color.RGBA
-import scalismo.geometry.{Point, Vector3D, _3D}
+import scalismo.color.RGBA
+import scalismo.geometry.{Point, EuclideanVector3D, _3D}
 import scalismo.mesh._
 
 import scala.collection.immutable.IndexedSeq
@@ -170,7 +170,7 @@ class MeshOperationsTests extends FacesTestSuite {
     describe("clipMesh") {
       // clip with plane which cuts diagonally from top left to bottom right
       val p0 = Point(0.5, 0.5, 0.0)
-      val n = Vector3D(0.5, 0.5, 0.0).normalize
+      val n = EuclideanVector3D(0.5, 0.5, 0.0).normalize
 
       val clipper = MeshOperations.clipMeshPoints(basicMesh.shape, p0, n)
 

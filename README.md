@@ -30,7 +30,7 @@ resolvers += Resolver.bintrayRepo("unibas-gravis", "maven")
 - The following code creates a checkerboard image and save it to disk:
 
 ```scala
-import scalismo.faces.color.RGB
+import scalismo.color.RGB
 import scalismo.faces.image.PixelImage
 import scalismo.faces.io.PixelImageIO
 import java.io.File

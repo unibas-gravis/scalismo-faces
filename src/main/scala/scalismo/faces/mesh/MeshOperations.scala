@@ -30,7 +30,7 @@ object MeshOperations {
     * @param point  point in clipping plane
     * @param normal normal vector of clipping plane
     */
-  def clipMeshPoints(mesh: TriangleMesh[_3D], point: Point[_3D], normal: Vector[_3D]): CompactMesh = {
+  def clipMeshPoints(mesh: TriangleMesh[_3D], point: Point[_3D], normal: EuclideanVector[_3D]): CompactMesh = {
     val n = normal.normalize
     maskPoints(
       mesh,

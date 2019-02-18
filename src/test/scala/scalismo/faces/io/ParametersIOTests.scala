@@ -20,7 +20,7 @@ import java.io._
 import java.net.URI
 
 import scalismo.faces.FacesTestSuite
-import scalismo.faces.color.{RGB, RGBA}
+import scalismo.color.{RGB, RGBA}
 import scalismo.faces.image.PixelImageDomain
 import scalismo.faces.io.renderparameters.{RenderParameterJSONFormat, RenderParameterJSONFormatV4}
 import scalismo.faces.mesh._
@@ -28,7 +28,7 @@ import scalismo.faces.parameters._
 import scalismo.faces.render._
 import scalismo.faces.utils.ResourceManagement
 import scalismo.geometry._
-import scalismo.mesh.SurfacePointProperty
+import scalismo.mesh.{SurfacePointProperty, VertexColorMesh3D}
 import spray.json._
 
 import scala.io.Source
@@ -48,23 +48,23 @@ class ParametersIOTests extends FacesTestSuite {
     RenderParameter(
       pose = Pose(
         scaling = d * 2 + 1f,
-        translation = Vector(d * 100, d * 100, -10000 * d),
+        translation = EuclideanVector(d * 100, d * 100, -10000 * d),
         pitch = randomAngle(),
         yaw = randomAngle(),
         roll = randomAngle()),
       view = ViewParameter(
-        translation = Vector(d * 100, d * 100, d * 1000),
+        translation = EuclideanVector(d * 100, d * 100, d * 1000),
         pitch = randomAngle(),
         yaw = randomAngle(),
         roll = randomAngle()),
       camera = Camera(
         focalLength = d * 40,
         principalPoint = Point(d * 2 - 1, d * 2 - 1),
-        sensorSize = Vector(d * 100, d * 100),
+        sensorSize = EuclideanVector(d * 100, d * 100),
         near = d * 0.1,
         far = 1e12,
         orthographic = rnd.scalaRandom.nextBoolean()),
-      environmentMap = SphericalHarmonicsLight(IndexedSeq.fill(9)(Vector(d, d, d))),
+      environmentMap = SphericalHarmonicsLight(IndexedSeq.fill(9)(EuclideanVector(d, d, d))),
       directionalLight = DirectionalLight.off,
       momo = MoMoInstance(
         shape = randomList(n),
@@ -80,7 +80,7 @@ class ParametersIOTests extends FacesTestSuite {
         offset = randomRGB))
   }
 
-  def vec2Close(v1: Vector[_2D], v2: Vector[_2D]): Unit = {
+  def vec2Close(v1: EuclideanVector[_2D], v2: EuclideanVector[_2D]): Unit = {
     math.abs(v1.x - v2.x) should be < 1e-5
     math.abs(v1.y - v2.y) should be < 1e-5
   }
@@ -275,9 +275,9 @@ class ParametersIOTests extends FacesTestSuite {
       it("flattens the scene tree with the right transformations") {
         val so = SceneObject(MeshVertexColor(randomGridMesh()))
 
-        val px = Pose.neutral.copy(translation = Vector3D.unitX)
-        val py = Pose.neutral.copy(translation = Vector3D.unitY)
-        val pz = Pose.neutral.copy(translation = Vector3D.unitZ)
+        val px = Pose.neutral.copy(translation = EuclideanVector3D.unitX)
+        val py = Pose.neutral.copy(translation = EuclideanVector3D.unitY)
+        val pz = Pose.neutral.copy(translation = EuclideanVector3D.unitZ)
 
         val targetObjects: IndexedSeq[(Transform3D, RenderObject)] = IndexedSeq(
           (px.transform compose py.transform compose pz.transform, so.renderObject),
@@ -334,7 +334,7 @@ class ParametersIOTests extends FacesTestSuite {
     // explicit json to parse with target
     val targetParam = RenderParameter(
       view = ViewParameter(
-        translation = Vector(10.0, 20.0, 2000.0),
+        translation = EuclideanVector(10.0, 20.0, 2000.0),
         pitch = 0.75,
         roll = -0.125,
         yaw = 1.5),
@@ -344,13 +344,13 @@ class ParametersIOTests extends FacesTestSuite {
         near = 1.0,
         orthographic = false,
         principalPoint = Point(0.005555555555555556, -0.016666666666666666),
-        sensorSize = Vector(36.0, 24.0)),
+        sensorSize = EuclideanVector(36.0, 24.0)),
       colorTransform = ColorTransform(RGB(1.0, 0.5, 0.25), 1.0, RGB(0.25, 0.125, 0.75)),
-      environmentMap = SphericalHarmonicsLight(IndexedSeq(Vector(0.5, 0.25, 0.125), Vector(0.125, 0.25, 0.5), Vector(0.25, 0.5, 0.125), Vector(0.5, 0.125, 0.25))),
-      directionalLight = DirectionalLight(RGB.Black, RGB.Black, Vector3D.unitZ, RGB.Black, 10.0),
+      environmentMap = SphericalHarmonicsLight(IndexedSeq(EuclideanVector(0.5, 0.25, 0.125), EuclideanVector(0.125, 0.25, 0.5), EuclideanVector(0.25, 0.5, 0.125), EuclideanVector(0.5, 0.125, 0.25))),
+      directionalLight = DirectionalLight(RGB.Black, RGB.Black, EuclideanVector3D.unitZ, RGB.Black, 10.0),
       imageSize = ImageSize(width = 720, height = 480),
       momo = MoMoInstance(IndexedSeq(-1.0, 0.5, -0.25), IndexedSeq(1.0, 0.0, 0.5), IndexedSeq(), new URI("modelPath1")),
-      pose = Pose(1.0, Vector(0.0, 0.0, -1000.0), roll = 0.125, yaw = -0.125, pitch = 0.25))
+      pose = Pose(1.0, EuclideanVector(0.0, 0.0, -1000.0), roll = 0.125, yaw = -0.125, pitch = 0.25))
 
     def readResourceAsString(resource: String): String = {
       Source.fromURL(this.getClass.getResource("/" + resource)).toString()

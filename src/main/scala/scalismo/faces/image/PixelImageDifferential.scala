@@ -16,8 +16,8 @@
 
 package scalismo.faces.image
 
-import scalismo.faces.color.ColorSpaceOperations
-import scalismo.faces.color.ColorSpaceOperations.implicits._
+import scalismo.color.ColorSpaceOperations
+import scalismo.color.ColorSpaceOperations.implicits._
 
 import scala.reflect.ClassTag
 

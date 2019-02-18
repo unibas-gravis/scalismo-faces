@@ -18,16 +18,16 @@ package scalismo.faces.sampling.face.proposals
 
 import scalismo.faces.parameters.Pose
 import scalismo.faces.render.Rotation3D
-import scalismo.geometry.{Vector, _3D}
+import scalismo.geometry.{EuclideanVector, _3D}
 import scalismo.sampling.evaluators.GaussianEvaluator
 import scalismo.sampling.{ProposalGenerator, SymmetricTransitionRatio, TransitionProbability}
 import scalismo.utils.Random
 
 /** rotation with a random angle (Gaussian) angle around a given axis */
-case class GaussianRotationProposal(axis: Vector[_3D], sdev: Double)(implicit rnd: Random)
+case class GaussianRotationProposal(axis: EuclideanVector[_3D], sdev: Double)(implicit rnd: Random)
     extends ProposalGenerator[Pose] with SymmetricTransitionRatio[Pose] with TransitionProbability[Pose] {
 
-  private val normAxis: Vector[_3D] = axis.normalize
+  private val normAxis: EuclideanVector[_3D] = axis.normalize
 
   override def propose(current: Pose): Pose = {
     val angle = rnd.scalaRandom.nextGaussian() * sdev

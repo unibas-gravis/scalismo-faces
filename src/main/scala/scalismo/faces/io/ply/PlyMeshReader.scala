@@ -19,7 +19,7 @@ import java.io._
 import java.nio.ByteOrder
 import java.util.Scanner
 
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.image.PixelImage
 import scalismo.faces.mesh.{TextureMappedProperty, VertexPropertyPerTriangle}
 import scalismo.geometry._
@@ -102,7 +102,7 @@ object PlyMeshReader {
     }
   }
 
-  def getNormals(properties: List[(String, List[_])]): IndexedSeq[Vector[_3D]] = {
+  def getNormals(properties: List[(String, List[_])]): IndexedSeq[EuclideanVector[_3D]] = {
     val nx = properties.find(e => e._1 == PLY.nx).getOrElse(
       throw new IOException("Could not read normals x component.")
     )._2.map(e => any2Double(e))
@@ -115,7 +115,7 @@ object PlyMeshReader {
       throw new IOException("Could not read normals z component.")
     )._2.map(e => any2Double(e))
 
-    (nx, ny, nz).zipped.toIndexedSeq.map(t => Vector(t._1, t._2, t._3))
+    (nx, ny, nz).zipped.toIndexedSeq.map(t => EuclideanVector(t._1, t._2, t._3))
   }
 
 
@@ -145,7 +145,7 @@ object PlyMeshReader {
     t
   }
 
-  def getTriangleVertexNormals(properties: List[(String, List[_])]): IndexedSeq[Seq[Vector[_3D]]] = {
+  def getTriangleVertexNormals(properties: List[(String, List[_])]): IndexedSeq[Seq[EuclideanVector[_3D]]] = {
     val t = properties.find(e => e._1 == PLY.normals).getOrElse(
       throw new IOException("Could not read per triangle vertex normals coordinates.")
     )._2.grouped(9).map(e => listOfAny2ListOfVector3D(e)).toIndexedSeq
@@ -210,7 +210,7 @@ object PlyMeshReader {
                        faceProperties: List[(String, List[_])],
                        texture: List[PixelImage[RGBA]],
                        triangleList: TriangleList
-                      ): MeshSurfaceProperty[Vector[_3D]] = {
+                      ): MeshSurfaceProperty[EuclideanVector[_3D]] = {
 
     val normalPerTriangleVertex = try {
       Some(getTriangleVertexNormals(faceProperties))

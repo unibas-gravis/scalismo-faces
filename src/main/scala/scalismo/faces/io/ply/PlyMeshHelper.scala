@@ -16,7 +16,7 @@
 package scalismo.faces.io.ply
 
 import scalismo.common.PointId
-import scalismo.geometry.{Point, Vector, _2D, _3D}
+import scalismo.geometry.{Point,EuclideanVector, _2D, _3D}
 
 
 /**
@@ -97,12 +97,12 @@ object PlyMeshHelper {
     }
   }
 
-  private[ply] def listOfAny2ListOfVector3D(any: Any): Seq[Vector[_3D]] = {
+  private[ply] def listOfAny2ListOfVector3D(any: Any): Seq[EuclideanVector[_3D]] = {
     any match {
       case list: List[Any] =>
         list.map{ a =>
           any2Double(a)
-        }.grouped(3).map(a=>Vector(a(0),a(1),a(2))).toSeq
+        }.grouped(3).map(a=>EuclideanVector(a(0),a(1),a(2))).toSeq
       case _ =>
         throw new NumberFormatException("Could not make list of doubles from " + any)
     }

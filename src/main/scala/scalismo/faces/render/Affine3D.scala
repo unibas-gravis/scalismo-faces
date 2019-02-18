@@ -17,10 +17,10 @@
 package scalismo.faces.render
 
 import breeze.linalg.DenseMatrix
-import scalismo.geometry.{Point, SquareMatrix, Vector, _3D}
+import scalismo.geometry.{Point, SquareMatrix, EuclideanVector, _3D}
 
 /** affine transform in 3D */
-case class Affine3D(A: SquareMatrix[_3D], b: Vector[_3D]) extends InvertibleTransform3D with Transform4x4 {
+case class Affine3D(A: SquareMatrix[_3D], b: EuclideanVector[_3D]) extends InvertibleTransform3D with Transform4x4 {
   /** inverted version of this transform */
   override def inverted: Affine3D = {
     val Ainv = SquareMatrix.inv(A)
@@ -31,7 +31,7 @@ case class Affine3D(A: SquareMatrix[_3D], b: Vector[_3D]) extends InvertibleTran
   override def apply(x: Point[_3D]): Point[_3D] = (Affine3D.mult(A, x.toVector) + b).toPoint
 
   /** apply transform to a 3d vector */
-  override def apply(v: Vector[_3D]): Vector[_3D] = Affine3D.mult(A, v)
+  override def apply(v: EuclideanVector[_3D]): EuclideanVector[_3D] = Affine3D.mult(A, v)
 
   override def matrix4: DenseMatrix[Double] =
     DenseMatrix.vertcat(
@@ -52,8 +52,8 @@ object Affine3D {
 
   /** fast matrix multiplication for 3D (scalismo generic is not optimal) */
   @inline
-  private def mult(m: SquareMatrix[_3D], v: Vector[_3D]): Vector[_3D] = {
-    Vector(
+  private def mult(m: SquareMatrix[_3D], v: EuclideanVector[_3D]): EuclideanVector[_3D] = {
+    EuclideanVector(
       m(0, 0) * v.x + m(0, 1) * v.y + m(0, 2) * v.z,
       m(1, 0) * v.x + m(1, 1) * v.y + m(1, 2) * v.z,
       m(2, 0) * v.x + m(2, 1) * v.y + m(2, 2) * v.z)

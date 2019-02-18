@@ -16,7 +16,7 @@
 
 package scalismo.faces.sampling.face.evaluators
 
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.image.{LabeledPixelImage, PixelImage}
 import scalismo.faces.parameters.RenderParameter
 import scalismo.faces.sampling.face.ParametricImageRenderer

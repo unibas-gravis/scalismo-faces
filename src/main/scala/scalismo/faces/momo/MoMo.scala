@@ -19,8 +19,8 @@ package scalismo.faces.momo
 
 import breeze.linalg.{DenseMatrix, DenseVector}
 import scalismo.common._
-import scalismo.faces.color.{RGB, RGBA}
-import scalismo.faces.mesh.VertexColorMesh3D
+import scalismo.color.{RGB, RGBA}
+import scalismo.mesh.VertexColorMesh3D
 import scalismo.geometry._
 import scalismo.mesh.{TriangleMesh3D, _}
 import scalismo.statisticalmodel._
@@ -142,7 +142,7 @@ object MoMo {
   def apply(referenceMesh: TriangleMesh3D,
             shape: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], Point[_3D]],
             color: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], RGB],
-            expression: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]],
+            expression: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]],
             landmarks: Map[String, Landmark[_3D]]): MoMoExpress = {
     MoMoExpress(referenceMesh, shape, color, expression, landmarks)
   }
@@ -159,7 +159,7 @@ object MoMo {
   def apply(referenceMesh: TriangleMesh3D,
             shape: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], Point[_3D]],
             color: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], RGB],
-            expression: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]]): MoMoExpress = {
+            expression: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]]): MoMoExpress = {
     MoMoExpress(referenceMesh, shape, color, expression, Map.empty)
   }
 
@@ -257,7 +257,7 @@ object MoMo {
     val colorSamples = samplesColor.map { (sample: VertexColorMesh3D) => DiscreteField[_3D, UnstructuredPointsDomain[_3D], RGB](domain, sample.color.pointData.map{_.toRGB}) }
     val expressionSamples = samplesExpression.map { case NeutralWithExpression(neutral, exp) =>
       val difference = domain.pointIds.map { pointId => exp.shape.pointSet.point(pointId) - neutral.shape.pointSet.point(pointId) }
-      DiscreteField[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]](domain, difference.toIndexedSeq)
+      DiscreteField[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](domain, difference.toIndexedSeq)
     }
 
     val shapeModel = ModelHelpers.createUsingPPCA[_3D, UnstructuredPointsDomain[_3D], Point[_3D]](domain, shapeSamples, shapeNoiseVariance)
@@ -267,7 +267,7 @@ object MoMo {
       reference,
       shapeModel,
       colorModel,
-      ModelHelpers.createUsingPPCA[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]](domain, expressionSamples, expressionNoiseVariance))
+      ModelHelpers.createUsingPPCA[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](domain, expressionSamples, expressionNoiseVariance))
   }
 }
 
@@ -285,7 +285,7 @@ object MoMo {
 case class MoMoExpress(override val referenceMesh: TriangleMesh3D,
                        shape: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], Point[_3D]],
                        color: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], RGB],
-                       expression: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]],
+                       expression: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]],
                        override val landmarks: Map[String, Landmark[_3D]])
   extends MoMo {
 
@@ -545,7 +545,7 @@ case class MoMoExpress(override val referenceMesh: TriangleMesh3D,
   }
 
   // converters to deal with discrete fields
-  private def discreteFieldToShape(shapeField: DiscreteField[_3D, UnstructuredPointsDomain[_3D], Point[_3D]], expressionField: DiscreteField[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]]): TriangleMesh3D = {
+  private def discreteFieldToShape(shapeField: DiscreteField[_3D, UnstructuredPointsDomain[_3D], Point[_3D]], expressionField: DiscreteField[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]]): TriangleMesh3D = {
     val points = shapeField.data.zip(expressionField.data).map{case(s, e) => s + e}
     TriangleMesh3D(points, referenceMesh.triangulation)
   }

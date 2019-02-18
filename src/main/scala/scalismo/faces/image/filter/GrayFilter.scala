@@ -16,7 +16,7 @@
 
 package scalismo.faces.image.filter
 
-import scalismo.faces.color.RGB
+import scalismo.color.RGB
 import scalismo.faces.image.PixelImage
 
 /** replace all colors by gray values */

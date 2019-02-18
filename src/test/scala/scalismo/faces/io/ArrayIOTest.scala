@@ -19,7 +19,7 @@ package scalismo.faces.io
 import java.io.File
 
 import scalismo.faces.FacesTestSuite
-import scalismo.faces.color.RGB
+import scalismo.color.RGB
 import scalismo.faces.io.GravisArrayIO.GravisTypeIO
 
 import scala.reflect.ClassTag

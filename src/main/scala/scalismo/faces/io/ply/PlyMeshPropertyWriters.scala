@@ -19,7 +19,7 @@ import java.io.{OutputStream, OutputStreamWriter}
 import java.nio.ByteOrder
 
 import scalismo.common.PointId
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.mesh.VertexPropertyPerTriangle
 import scalismo.geometry.{_2D, _}
 import scalismo.mesh.{BarycentricCoordinates, SurfacePointProperty, TriangleId, TriangleProperty}
@@ -72,15 +72,15 @@ object PlyMeshPropertyWriters {
     }
   }
 
-  abstract class VertexVector[D <: Dim](override val property: SurfacePointProperty[Vector[D]] ) extends SurfacePointPropertyWriter[Vector[D]] {
+  abstract class VertexVector[D <: Dim](override val property: SurfacePointProperty[EuclideanVector[D]] ) extends SurfacePointPropertyWriter[EuclideanVector[D]] {
     val numberFormat: PlyHelpers.PlyTypes.Value = PlyTypes.float
     private val writer = new SequenceWriter[Float]()
 
-    override def write(vec: Vector[D], osw: OutputStreamWriter): Unit = {
+    override def write(vec:EuclideanVector[D], osw: OutputStreamWriter): Unit = {
       writer.write(vec.toArray.map(_.toFloat), osw)
     }
 
-    override def write(vec: Vector[D], os: OutputStream, bo: ByteOrder): Unit = {
+    override def write(vec:EuclideanVector[D], os: OutputStream, bo: ByteOrder): Unit = {
       writer.write(vec.toArray.map(_.toFloat), os, bo)
     }
   }
@@ -115,16 +115,16 @@ object PlyMeshPropertyWriters {
     }
   }
 
-  abstract class FaceVertexVectors[D<:Dim]( override val property: VertexPropertyPerTriangle[Vector[D]]) extends VertexPerTrianglePropertyWriter[Vector[D]] {
+  abstract class FaceVertexVectors[D<:Dim]( override val property: VertexPropertyPerTriangle[EuclideanVector[D]]) extends VertexPerTrianglePropertyWriter[EuclideanVector[D]] {
     val numberFormat: PlyHelpers.PlyTypes.Value = PlyTypes.float
     private val writer = new ListWriter[Float]
 
-    override def write(seq: Seq[Vector[D]], osw: OutputStreamWriter): Unit = {
+    override def write(seq: Seq[EuclideanVector[D]], osw: OutputStreamWriter): Unit = {
       val s = seq.flatMap(_.toArray).map(_.toFloat)
       writer.write(s,osw)
     }
 
-    override def write(seq: Seq[Vector[D]], os: OutputStream, bo: ByteOrder): Unit = {
+    override def write(seq: Seq[EuclideanVector[D]], os: OutputStream, bo: ByteOrder): Unit = {
       val s = seq.flatMap(_.toArray).map(_.toFloat)
       writer.write(s,os,bo)
     }
@@ -174,7 +174,7 @@ object PlyMeshPropertyWriters {
     }
   }
 
-  class VertexNormal(property: SurfacePointProperty[Vector[_3D]])
+  class VertexNormal(property: SurfacePointProperty[EuclideanVector[_3D]])
     extends VertexVector[_3D](property)
   {
     override def writeHeader(osw: OutputStreamWriter): Unit = {
@@ -241,15 +241,15 @@ object PlyMeshPropertyWriters {
     }
   }
 
-  class FaceNormal( override val property: TriangleProperty[Vector[_3D]]) extends TrianglePropertyWriter[Vector[_3D]] {
+  class FaceNormal( override val property: TriangleProperty[EuclideanVector[_3D]]) extends TrianglePropertyWriter[EuclideanVector[_3D]] {
     val numberFormat: PlyHelpers.PlyTypes.Value = PlyTypes.float
     private val writer = new SequenceWriter[Float]()
 
-    override def write(vec: Vector[_3D], osw: OutputStreamWriter): Unit = {
+    override def write(vec: EuclideanVector[_3D], osw: OutputStreamWriter): Unit = {
       writer.write(vec.toArray.map(_.toFloat), osw)
     }
 
-    override def write(vec: Vector[_3D], os: OutputStream, bo: ByteOrder): Unit = {
+    override def write(vec: EuclideanVector[_3D], os: OutputStream, bo: ByteOrder): Unit = {
       writer.write(vec.toArray.map(_.toFloat), os, bo)
     }
 
@@ -299,7 +299,7 @@ object PlyMeshPropertyWriters {
     }
   }
 
-  class FaceVertexNormals(override val property: VertexPropertyPerTriangle[Vector[_3D]]) extends FaceVertexVectors[_3D](property) {
+  class FaceVertexNormals(override val property: VertexPropertyPerTriangle[EuclideanVector[_3D]]) extends FaceVertexVectors[_3D](property) {
     override def writeHeader(osw: OutputStreamWriter): Unit = {
       osw.write("%s %s %s %s %s\n".format(PLY.property,PLY.list,PlyTypes.uchar,numberFormat,PLY.normals))
     }

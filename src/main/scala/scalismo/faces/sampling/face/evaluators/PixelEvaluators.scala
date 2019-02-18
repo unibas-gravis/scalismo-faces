@@ -16,7 +16,8 @@
 
 package scalismo.faces.sampling.face.evaluators
 
-import scalismo.faces.color.{HSV, RGB}
+import scalismo.color.RGB
+import scalismo.faces.color.HSV
 import scalismo.sampling.DistributionEvaluator
 import scalismo.sampling.evaluators.PairEvaluator
 

@@ -15,7 +15,7 @@
  */
 package scalismo.faces.image.pyramid
 
-import scalismo.faces.color.ColorSpaceOperations
+import scalismo.color.ColorSpaceOperations
 import scalismo.faces.image.filter.{ImageFilter, IsotropicGaussianFilter, ResampleFilter}
 import scalismo.faces.image.{AccessMode, InterpolationKernel, PixelImage}
 

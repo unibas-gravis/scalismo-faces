@@ -17,7 +17,7 @@
 package scalismo.faces.image
 
 import scalismo.faces.FacesTestSuite
-import scalismo.faces.color.{ColorSpaceOperations, RGB, RGBA}
+import scalismo.color.{ColorSpaceOperations, RGB, RGBA}
 import scalismo.faces.image.AccessMode.Strict
 import scalismo.faces.image.filter.ImageFilter
 import scalismo.faces.image.pyramid.{GaussPyramid, LaplacePyramid}

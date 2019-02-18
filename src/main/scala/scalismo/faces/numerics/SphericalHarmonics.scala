@@ -16,7 +16,7 @@
 
 package scalismo.faces.numerics
 
-import scalismo.geometry.{Vector, _3D}
+import scalismo.geometry.{EuclideanVector, _3D}
 
 import scala.annotation.switch
 import scala.math._
@@ -38,7 +38,7 @@ object SHIndex {
 
 /** service functions for real spherical harmonics */
 object SphericalHarmonics {
-  type SHBasisFunction = ((Vector[_3D]) => Double)
+  type SHBasisFunction = ((EuclideanVector[_3D]) => Double)
 
   val N0: Double = sqrt(1.0 / Pi) / 2.0
 
@@ -61,35 +61,35 @@ object SphericalHarmonics {
 
   //https://en.wikipedia.org/wiki/Table_of_spherical_harmonics#Real_spherical_harmonics
   private val shBasisPredefined = Map[SHIndex, SHBasisFunction](
-    SHIndex(0, 0) -> ((v: Vector[_3D]) => N0),
+    SHIndex(0, 0) -> ((v: EuclideanVector[_3D]) => N0),
 
-    SHIndex(1, -1) -> ((v: Vector[_3D]) => N1 * v.y),
-    SHIndex(1, 0) -> ((v: Vector[_3D]) => N1 * v.z),
-    SHIndex(1, 1) -> ((v: Vector[_3D]) => N1 * v.x),
+    SHIndex(1, -1) -> ((v: EuclideanVector[_3D]) => N1 * v.y),
+    SHIndex(1, 0) -> ((v: EuclideanVector[_3D]) => N1 * v.z),
+    SHIndex(1, 1) -> ((v: EuclideanVector[_3D]) => N1 * v.x),
 
-    SHIndex(2, -2) -> ((v: Vector[_3D]) => N2_1 * v.x * v.y),
-    SHIndex(2, -1) -> ((v: Vector[_3D]) => N2_1 * v.y * v.z),
-    SHIndex(2, 0) -> ((v: Vector[_3D]) => N2_0 * (2 * v.z * v.z - v.x * v.x - v.y * v.y)),
-    SHIndex(2, 1) -> ((v: Vector[_3D]) => N2_1 * v.z * v.x),
-    SHIndex(2, 2) -> ((v: Vector[_3D]) => N2_2 * (v.x * v.x - v.y * v.y)),
+    SHIndex(2, -2) -> ((v: EuclideanVector[_3D]) => N2_1 * v.x * v.y),
+    SHIndex(2, -1) -> ((v: EuclideanVector[_3D]) => N2_1 * v.y * v.z),
+    SHIndex(2, 0) -> ((v: EuclideanVector[_3D]) => N2_0 * (2 * v.z * v.z - v.x * v.x - v.y * v.y)),
+    SHIndex(2, 1) -> ((v: EuclideanVector[_3D]) => N2_1 * v.z * v.x),
+    SHIndex(2, 2) -> ((v: EuclideanVector[_3D]) => N2_2 * (v.x * v.x - v.y * v.y)),
 
-    SHIndex(3, -3) -> ((v: Vector[_3D]) => N3_3 * (3 * v.x * v.x - v.y * v.y) * v.y),
-    SHIndex(3, -2) -> ((v: Vector[_3D]) => N3_2 * 2 * (v.x * v.y * v.z)),
-    SHIndex(3, -1) -> ((v: Vector[_3D]) => N3_1 * (4 * v.z * v.z - v.x * v.x - v.y * v.y) * v.y),
-    SHIndex(3, 0) -> ((v: Vector[_3D]) => N3_0 * (2 * v.z * v.z - 3 * v.x * v.x - 3 * v.y * v.y) * v.z),
-    SHIndex(3, 1) -> ((v: Vector[_3D]) => N3_1 * (4 * v.z * v.z - v.x * v.x - v.y * v.y) * v.x),
-    SHIndex(3, 2) -> ((v: Vector[_3D]) => N3_2 * (v.x * v.x - v.y * v.y) * v.z),
-    SHIndex(3, 3) -> ((v: Vector[_3D]) => N3_3 * (v.x * v.x - 3 * v.y * v.y) * v.x),
+    SHIndex(3, -3) -> ((v: EuclideanVector[_3D]) => N3_3 * (3 * v.x * v.x - v.y * v.y) * v.y),
+    SHIndex(3, -2) -> ((v: EuclideanVector[_3D]) => N3_2 * 2 * (v.x * v.y * v.z)),
+    SHIndex(3, -1) -> ((v: EuclideanVector[_3D]) => N3_1 * (4 * v.z * v.z - v.x * v.x - v.y * v.y) * v.y),
+    SHIndex(3, 0) -> ((v: EuclideanVector[_3D]) => N3_0 * (2 * v.z * v.z - 3 * v.x * v.x - 3 * v.y * v.y) * v.z),
+    SHIndex(3, 1) -> ((v: EuclideanVector[_3D]) => N3_1 * (4 * v.z * v.z - v.x * v.x - v.y * v.y) * v.x),
+    SHIndex(3, 2) -> ((v: EuclideanVector[_3D]) => N3_2 * (v.x * v.x - v.y * v.y) * v.z),
+    SHIndex(3, 3) -> ((v: EuclideanVector[_3D]) => N3_3 * (v.x * v.x - 3 * v.y * v.y) * v.x),
 
-    SHIndex(4, -4) -> ((v: Vector[_3D]) => N4_4 * 4 * v.x * v.y * (v.x * v.x - v.y * v.y)),
-    SHIndex(4, -3) -> ((v: Vector[_3D]) => N4_3 * (3 * v.x * v.x - v.y * v.y) * v.y * v.z),
-    SHIndex(4, -2) -> ((v: Vector[_3D]) => N4_2 * 2 * v.x * v.y * (7 * v.z * v.z - 1.0)),
-    SHIndex(4, -1) -> ((v: Vector[_3D]) => N4_1 * v.y * v.z * (7 * v.z * v.z - 3.0)),
-    SHIndex(4, 0) -> ((v: Vector[_3D]) => N4_0 * (35 * v.z * v.z * v.z * v.z - 30 * v.z * v.z + 3.0)),
-    SHIndex(4, 1) -> ((v: Vector[_3D]) => N4_1 * v.x * v.z * (7 * v.z * v.z - 3.0)),
-    SHIndex(4, 2) -> ((v: Vector[_3D]) => N4_2 * (v.x * v.x - v.y * v.y) * (7 * v.z * v.z - 1.0)),
-    SHIndex(4, 3) -> ((v: Vector[_3D]) => N4_3 * v.x * v.z * (v.x * v.x - 3 * v.y * v.y)),
-    SHIndex(4, 4) -> ((v: Vector[_3D]) => N4_4 * (v.x * v.x * (v.x * v.x - 3 * v.y * v.y) - v.y * v.y * (3 * v.x * v.x - v.y * v.y)))
+    SHIndex(4, -4) -> ((v: EuclideanVector[_3D]) => N4_4 * 4 * v.x * v.y * (v.x * v.x - v.y * v.y)),
+    SHIndex(4, -3) -> ((v: EuclideanVector[_3D]) => N4_3 * (3 * v.x * v.x - v.y * v.y) * v.y * v.z),
+    SHIndex(4, -2) -> ((v: EuclideanVector[_3D]) => N4_2 * 2 * v.x * v.y * (7 * v.z * v.z - 1.0)),
+    SHIndex(4, -1) -> ((v: EuclideanVector[_3D]) => N4_1 * v.y * v.z * (7 * v.z * v.z - 3.0)),
+    SHIndex(4, 0) -> ((v: EuclideanVector[_3D]) => N4_0 * (35 * v.z * v.z * v.z * v.z - 30 * v.z * v.z + 3.0)),
+    SHIndex(4, 1) -> ((v: EuclideanVector[_3D]) => N4_1 * v.x * v.z * (7 * v.z * v.z - 3.0)),
+    SHIndex(4, 2) -> ((v: EuclideanVector[_3D]) => N4_2 * (v.x * v.x - v.y * v.y) * (7 * v.z * v.z - 1.0)),
+    SHIndex(4, 3) -> ((v: EuclideanVector[_3D]) => N4_3 * v.x * v.z * (v.x * v.x - 3 * v.y * v.y)),
+    SHIndex(4, 4) -> ((v: EuclideanVector[_3D]) => N4_4 * (v.x * v.x * (v.x * v.x - 3 * v.y * v.y) - v.y * v.y * (3 * v.x * v.x - v.y * v.y)))
   )
 
   /** analytic fall-back to get an arbitrary SH basis function ... slow! */
@@ -100,13 +100,13 @@ object SphericalHarmonics {
 
   /** get proper function and wrap with a normalization */
   private def shBasisFunctionFromMap(index: SHIndex): SHBasisFunction = {
-    def norm(v: Vector[_3D]): Vector[_3D] = v.normalize
+    def norm(v: EuclideanVector[_3D]): EuclideanVector[_3D] = v.normalize
     val sh = shBasisFunctionFull(index)
     // work with normalized vector - direction
-    (v: Vector[_3D]) => sh(norm(v))
+    (v: EuclideanVector[_3D]) => sh(norm(v))
   }
 
-  /** cache SH basis in fast Vector */
+  /** cache SH basis in fast EuclideanVector */
   private val shBasisPredefinedTabulated: IndexedSeq[SHBasisFunction] = {
     IndexedSeq.tabulate(shBasisPredefined.size) { i => shBasisFunctionFromMap(SHIndex(i)) }
   }
@@ -145,16 +145,16 @@ object SphericalHarmonics {
   def numberOfBandsForCoefficients(coefficients: Int): Int = sqrt(coefficients - 1).toInt
 
   /** direction calculation of Spherical Harmonics basis function */
-  def shBasisFunctionDirect(i: Int, direction: Vector[_3D]): Double = {
+  def shBasisFunctionDirect(i: Int, direction: EuclideanVector[_3D]): Double = {
     val l = lFromIndex(i)
     val m = i - l * l - l
     shBasisFunctionDirect(l, m, direction)
   }
 
   /** direct calculation of SH basis function, only for l < 5 (c++ nostalgia version) */
-  def shBasisFunctionDirect(l: Int, m: Int, direction: Vector[_3D]): Double = {
+  def shBasisFunctionDirect(l: Int, m: Int, direction: EuclideanVector[_3D]): Double = {
     //https://en.wikipedia.org/wiki/Table_of_spherical_harmonics#Real_spherical_harmonics
-    val v: Vector[_3D] = direction.normalize
+    val v: EuclideanVector[_3D] = direction.normalize
 
     val x = v.x
     val y = v.y

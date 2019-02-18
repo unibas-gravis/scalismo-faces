@@ -15,7 +15,7 @@
  */
 package scalismo.faces.image.pyramid
 
-import scalismo.faces.color.ColorSpaceOperations
+import scalismo.color.ColorSpaceOperations
 import scalismo.faces.image.AccessMode.MirroredPositionFunctional
 import scalismo.faces.image.filter.ResampleFilter
 import scalismo.faces.image.{InterpolationKernel, PixelImage}

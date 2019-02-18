@@ -16,7 +16,7 @@
 
 package scalismo.faces.numerics
 
-import scalismo.faces.color.ColorSpaceOperations
+import scalismo.color.ColorSpaceOperations
 import scalismo.faces.image._
 import scalismo.faces.image.filter.{ImageFilter, ResampleFilter}
 import scalismo.faces.utils.LanguageUtilities.iterate

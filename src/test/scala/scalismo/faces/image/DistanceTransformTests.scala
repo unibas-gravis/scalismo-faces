@@ -18,14 +18,14 @@ package scalismo.faces.image
 
 import scalismo.faces.FacesTestSuite
 import scalismo.faces.image.filter.DistanceTransform
-import scalismo.geometry.Vector2D
+import scalismo.geometry.EuclideanVector2D
 
 class DistanceTransformTests extends FacesTestSuite {
 
   /** slow and explicit test implementation of distance transform: explicit calculation everywhere */
   def stupidDistanceTransform(image: PixelImage[Boolean]): PixelImage[Double] = {
     PixelImage(image.width, image.height, (x, y) => {
-      val distToEachImagePoint = PixelImage.view(image.width, image.height, (x1, y1) => Vector2D(x - x1, y - y1).norm)
+      val distToEachImagePoint = PixelImage.view(image.width, image.height, (x1, y1) => EuclideanVector2D(x - x1, y - y1).norm)
       val maskedDistances = distToEachImagePoint.zip(image).mapLazy{case(dist, obj) => if (obj) dist else Double.PositiveInfinity}
       val minDistance = maskedDistances.values.min
       minDistance
@@ -33,8 +33,8 @@ class DistanceTransformTests extends FacesTestSuite {
   }
 
   describe("In DistanceTransform") {
-    val simpleImage = PixelImage(50, 50, (x, y) => Vector2D(x - 25, y - 15).norm <= 5)
-    val twoObjects = PixelImage(50, 50, (x, y) => Vector2D(x - 25, y - 15).norm <= 5 || Vector2D(x - 45, y - 45).norm <= 10)
+    val simpleImage = PixelImage(50, 50, (x, y) => EuclideanVector2D(x - 25, y - 15).norm <= 5)
+    val twoObjects = PixelImage(50, 50, (x, y) => EuclideanVector2D(x - 25, y - 15).norm <= 5 || EuclideanVector2D(x - 45, y - 45).norm <= 10)
 
     it("our reference distance transform is correct for the simple image") {
       val distanceImage = stupidDistanceTransform(simpleImage)
@@ -49,8 +49,8 @@ class DistanceTransformTests extends FacesTestSuite {
       val distanceImage = stupidDistanceTransform(twoObjects)
       distanceImage(12, 15) shouldBe 8.0 +- 1e-5
       distanceImage(12, 35) shouldBe math.sqrt(13*13 + 20*20) - 5 +- 1
-      distanceImage(25, 35) shouldBe (Vector2D(25, 35) - Vector2D(45, 45)).norm - 10 +- 0.5
-      distanceImage(32, 35) shouldBe (Vector2D(32, 35) - Vector2D(45, 45)).norm - 10 +- 0.5
+      distanceImage(25, 35) shouldBe (EuclideanVector2D(25, 35) - EuclideanVector2D(45, 45)).norm - 10 +- 0.5
+      distanceImage(32, 35) shouldBe (EuclideanVector2D(32, 35) - EuclideanVector2D(45, 45)).norm - 10 +- 0.5
       distanceImage(32, 15) shouldBe 2.0 +- 1e-5
     }
 

@@ -1,5 +1,7 @@
 package scalismo.faces.color
 
+import scalismo.color.RGB
+
 
 /**
   * This contains the gamma correction.

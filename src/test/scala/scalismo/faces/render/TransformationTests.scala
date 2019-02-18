@@ -17,7 +17,7 @@
 package scalismo.faces.render
 
 import scalismo.faces.FacesTestSuite
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.image.{PixelImage, PixelImageOperations}
 import scalismo.faces.parameters.RenderParameter
 import scalismo.geometry._
@@ -30,7 +30,7 @@ class TransformationTests extends FacesTestSuite {
         val y = (rnd.scalaRandom.nextDouble() - 0.5) * math.Pi
         val z = (rnd.scalaRandom.nextDouble() - 0.5) * math.Pi
         val dec = Rotation3D.decomposeRotationXYZ(Rotation3D.fromEulerXYZ(x, y, z))
-        val diff = Vector(x, y, z) - Vector(dec._1, dec._2, dec._3)
+        val diff = EuclideanVector(x, y, z) - EuclideanVector(dec._1, dec._2, dec._3)
         val res = diff.x + diff.y + diff.z
         res
       }
@@ -63,20 +63,20 @@ class TransformationTests extends FacesTestSuite {
     val x = Point(1.0, 2.0, 3.0)
     val y = Point(1.0, 1.0, 3.0)
     it("centers on correct point") {
-      val vT = RenderTransforms.viewTransformLookAt(origin, x, Vector3D.unitY)
+      val vT = RenderTransforms.viewTransformLookAt(origin, x, EuclideanVector3D.unitY)
       val d = x.toVector.norm
       isClose(vT(x), Point(0.0, 0.0, -d)) shouldBe true
     }
 
     it("respects upright vector direction") {
-      val vT = RenderTransforms.viewTransformLookAt(origin, x.copy(y = 0), -Vector3D.unitY)
+      val vT = RenderTransforms.viewTransformLookAt(origin, x.copy(y = 0), - EuclideanVector3D.unitY)
       val d = x.toVector.norm
       vT(x).y shouldBe -2.0
       vT(y).y shouldBe -1.0
     }
 
     it("moves the camera and looks back") {
-      val vT = RenderTransforms.viewTransformLookAt(x, origin, Vector3D.unitY)
+      val vT = RenderTransforms.viewTransformLookAt(x, origin, EuclideanVector3D.unitY)
       val d = x.toVector.norm
       isClose(vT(origin), Point(0.0, 0.0, -d)) shouldBe true
       isClose(vT(x), origin) shouldBe true

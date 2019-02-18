@@ -16,7 +16,7 @@
 
 package scalismo.faces.sampling.face.evaluators
 
-import scalismo.faces.color.{RGB, RGBA}
+import scalismo.color.{RGB, RGBA}
 import scalismo.faces.image.{ImageBuffer, PixelImage, PixelImageDomain}
 import scalismo.sampling.DistributionEvaluator
 import scalismo.sampling.evaluators.PairEvaluator

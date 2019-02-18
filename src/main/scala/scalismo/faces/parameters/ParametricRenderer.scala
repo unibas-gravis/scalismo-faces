@@ -16,11 +16,11 @@
 
 package scalismo.faces.parameters
 
-import scalismo.faces.color.RGBA
+import scalismo.color.RGBA
 import scalismo.faces.image.PixelImage
-import scalismo.faces.mesh.{ColorNormalMesh3D, VertexColorMesh3D}
+import scalismo.faces.mesh.ColorNormalMesh3D
 import scalismo.faces.render.{PixelShader, TriangleFilters, TriangleRenderer, ZBuffer}
-import scalismo.mesh.{MeshSurfaceProperty, TriangleMesh3D}
+import scalismo.mesh.{MeshSurfaceProperty, TriangleMesh3D, VertexColorMesh3D}
 
 import scala.reflect.ClassTag
 
