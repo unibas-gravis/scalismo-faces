@@ -14,7 +14,7 @@ scalacOptions ++= (CrossVersion.partialVersion(scalaVersion.value) match {
 resolvers += Resolver.jcenterRepo
 
 libraryDependencies  ++= Seq(
-    "ch.unibas.cs.gravis" %% "scalismo" % "vertexColor",
+    "ch.unibas.cs.gravis" %% "scalismo" % "0.17-RC1",
     "ch.unibas.cs.gravis" % "scalismo-native-all" % "4.0.0",
     "org.scalatest" %% "scalatest" % "3.0.0" % "test"
 )
