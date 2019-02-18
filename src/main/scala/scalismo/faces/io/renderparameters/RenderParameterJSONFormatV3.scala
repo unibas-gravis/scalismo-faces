@@ -35,7 +35,7 @@ trait RenderParameterJSONFormatV3 extends RenderParameterJSONFormatV2 {
     override def read(json: JsValue): ViewParameter = {
       val fields = json.asJsObject(s"expected Pose object, got: $json").fields
       ViewParameter(
-        translation = fields("translation").convertTo[Vector[_3D]],
+        translation = fields("translation").convertTo[EuclideanVector[_3D]],
         roll = fields("roll").convertTo[Double],
         yaw = fields("yaw").convertTo[Double],
         pitch = fields("pitch").convertTo[Double])
@@ -55,8 +55,8 @@ trait RenderParameterJSONFormatV3 extends RenderParameterJSONFormatV2 {
       val fields = json.asJsObject(s"expected Camera object, got: $json").fields
       Camera(
         focalLength = fields("focalLength").convertTo[Double],
-        sensorSize = fields("sensorSize").convertTo[Vector[_2D]],
-        principalPoint = fields("principalPoint").convertTo[Vector[_2D]].toPoint,
+        sensorSize = fields("sensorSize").convertTo[EuclideanVector[_2D]],
+        principalPoint = fields("principalPoint").convertTo[EuclideanVector[_2D]].toPoint,
         near = fields("near").convertTo[Double],
         far = fields("far").convertTo[Double],
         orthographic = fields("orthographic").convertTo[Boolean])

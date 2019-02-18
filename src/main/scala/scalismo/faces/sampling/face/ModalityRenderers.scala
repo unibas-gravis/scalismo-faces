@@ -19,7 +19,7 @@ package scalismo.faces.sampling.face
 import scalismo.color.{RGB, RGBA}
 import scalismo.faces.image.PixelImage
 import scalismo.faces.parameters.{ColorTransform, ParametricRenderer, RenderParameter}
-import scalismo.geometry.{Point, Vector, _3D}
+import scalismo.geometry.{Point, EuclideanVector, _3D}
 import scalismo.mesh.{BarycentricCoordinates, SurfacePointProperty, TriangleId}
 
 
@@ -44,9 +44,9 @@ object ModalityRenderers {
   object NormalsRenderer {
     def apply(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer) = new NormalsRenderer(correspondenceMoMoRenderer)
   }
-  class NormalsRenderer(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer) extends ParametricImageRenderer[Option[Vector[_3D]]] {
+  class NormalsRenderer(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer) extends ParametricImageRenderer[Option[EuclideanVector[_3D]]] {
 
-    override def renderImage(parameters: RenderParameter): PixelImage[Option[Vector[_3D]]] = {
+    override def renderImage(parameters: RenderParameter): PixelImage[Option[EuclideanVector[_3D]]] = {
       val correspondenceImage = correspondenceMoMoRenderer.renderCorrespondenceImage(parameters)
       correspondenceImage.map { optFrag =>
         optFrag.map { fragment =>
@@ -108,7 +108,7 @@ object ModalityRenderers {
     }
   }
 
-  def colorNormalImage(normals: PixelImage[Option[Vector[_3D]]], clearColor: RGBA) : PixelImage[RGBA] = {
+  def colorNormalImage(normals: PixelImage[Option[EuclideanVector[_3D]]], clearColor: RGBA) : PixelImage[RGBA] = {
     normals.map { opt =>
       opt.map { normal =>
         val v = normal * 0.5

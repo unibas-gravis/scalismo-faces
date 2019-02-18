@@ -23,7 +23,7 @@ import scalismo.faces.image.PixelImage
 import scalismo.faces.parameters.{RenderParameter, SphericalHarmonicsLight}
 import scalismo.faces.render.{ColorTransform, TextureExtraction}
 import scalismo.faces.sampling.face.ParametricModel
-import scalismo.geometry.{Vector, _3D}
+import scalismo.geometry.{EuclideanVector, _3D}
 import scalismo.mesh._
 import scalismo.utils.Random
 
@@ -72,7 +72,7 @@ class SphericalHarmonicsOptimizer(val renderer: ParametricModel,
         r
     }
     if(points.nonEmpty) { //If the face is outside the face This is cannot be done outside the function, because number of points depends on visibility.
-    val lightField: IndexedSeq[Vector[_3D]] = SphericalHarmonicsSolver.solveSHSystemDeconvolve(points, SphericalHarmonicsLight.lambertKernel)
+    val lightField: IndexedSeq[EuclideanVector[_3D]] = SphericalHarmonicsSolver.solveSHSystemDeconvolve(points, SphericalHarmonicsLight.lambertKernel)
       SphericalHarmonicsLight(lightField)
     }else {
       rps.environmentMap

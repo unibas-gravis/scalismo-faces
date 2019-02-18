@@ -28,16 +28,16 @@ object ModelHelpers {
 
 
   /**
-    *  Converts a deformation model (DLRGP for Vector[_3D]) to a point distribution model (DLRGP for Point[_3D]).
-    * @param model DLRGP Vector[_3D] model
+    *  Converts a deformation model (DLRGP for EuclideanVector[_3D]) to a point distribution model (DLRGP for Point[_3D]).
+    * @param model DLRGP EuclideanVector[_3D] model
     * @param reference Reference used to map the deformation model to a point model.
     * @return DLRGP Point[_3D] model
     */
-  def vectorToPointDLRGP(model: DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]],
+  def vectorToPointDLRGP(model: DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]],
                          reference: TriangleMesh[_3D])
   : DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], Point[_3D]] = {
-    def vectorFieldToPointField( pf: DiscreteField[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]],
-                                 f: (Vector[_3D], PointId) => Point[_3D]
+    def vectorFieldToPointField( pf: DiscreteField[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]],
+                                 f: (EuclideanVector[_3D], PointId) => Point[_3D]
                                ) = new DiscreteField[_3D, UnstructuredPointsDomain[_3D], Point[_3D]](
       pf.domain,
       pf.valuesWithIds.map{ case (v,i) =>f(v, i)}.toIndexedSeq
@@ -46,37 +46,37 @@ object ModelHelpers {
     val newKLBasis = model.klBasis.map( b =>
       DiscreteLowRankGaussianProcess.Eigenpair[_3D, UnstructuredPointsDomain[_3D], Point[_3D]](
         b.eigenvalue,
-        vectorFieldToPointField( b.eigenfunction, (v: Vector[_3D], _) => v.toPoint )
+        vectorFieldToPointField( b.eigenfunction, (v: EuclideanVector[_3D], _) => v.toPoint )
       )
     )
-    val newMeanField = vectorFieldToPointField(model.mean, (v: Vector[_3D], i: PointId) => reference.pointSet.point(i)+v)
+    val newMeanField = vectorFieldToPointField(model.mean, (v: EuclideanVector[_3D], i: PointId) => reference.pointSet.point(i)+v)
 
     DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], Point[_3D]](newMeanField, newKLBasis)
   }
 
   /**
-    *  Converts a point distribution model (DLRGP for Point[_3D]) to a deformation model (DLRGP for Vector[_3D]).
+    *  Converts a point distribution model (DLRGP for Point[_3D]) to a deformation model (DLRGP for EuclideanVector[_3D]).
     * @param model DLRGP Point[_3D] model
     * @param reference Reference used to map the point model to a deformation model.
-    * @return DLRGP Vector[_3D] model
+    * @return DLRGP EuclideanVector[_3D] model
     */
-  def pointToVectorDLRGP(model: DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], Point[_3D]], reference: TriangleMesh[_3D]): DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]] = {
+  def pointToVectorDLRGP(model: DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], Point[_3D]], reference: TriangleMesh[_3D]): DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]] = {
     def pointFieldToVectorField( pf: DiscreteField[_3D, UnstructuredPointsDomain[_3D], Point[_3D]],
-                                 f: (Point[_3D], PointId) => Vector[_3D]
-                               ) = new DiscreteField[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]](
+                                 f: (Point[_3D], PointId) => EuclideanVector[_3D]
+                               ) = new DiscreteField[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](
       pf.domain,
       pf.valuesWithIds.map{ case (v,i) =>f(v, i)}.toIndexedSeq
     )
 
     val newKLBasis = model.klBasis.map( b =>
-      DiscreteLowRankGaussianProcess.Eigenpair[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]](
+      DiscreteLowRankGaussianProcess.Eigenpair[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](
         b.eigenvalue,
         pointFieldToVectorField( b.eigenfunction, (v: Point[_3D], _) => v.toVector )
       )
     )
     val newMeanField = pointFieldToVectorField(model.mean, (p: Point[_3D], i: PointId) => p-reference.pointSet.point(i) )
 
-    DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]](newMeanField, newKLBasis)
+    DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](newMeanField, newKLBasis)
   }
 
   /**

@@ -18,11 +18,11 @@ package scalismo.faces.render
 
 import breeze.linalg.DenseVector
 import scalismo.faces.FacesTestSuite
-import scalismo.geometry.{Point, Vector, _2D, _3D}
+import scalismo.geometry.{Point, EuclideanVector, _2D, _3D}
 
 class ProjectionTests extends FacesTestSuite {
 
-  val frustum: Frustum = Frustum.fromFocalWithSensor(50, Vector(35, 26), 0.5e3, 50e3)
+  val frustum: Frustum = Frustum.fromFocalWithSensor(50, EuclideanVector(35, 26), 0.5e3, 50e3)
 
   def p2d(p: Point[_3D]): Point[_2D] = Point(p.x, p.y)
 

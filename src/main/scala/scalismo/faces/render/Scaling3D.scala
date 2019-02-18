@@ -17,13 +17,13 @@
 package scalismo.faces.render
 
 import breeze.linalg.DenseMatrix
-import scalismo.geometry.{Point, SquareMatrix, Vector, _3D}
+import scalismo.geometry.{Point, SquareMatrix, EuclideanVector, _3D}
 
 /** scaling transfrom in 3D */
 case class Scaling3D(fx: Double, fy: Double, fz: Double) extends InvertibleTransform3D with Transform4x4 {
 
   override def apply(x: Point[_3D]): Point[_3D] = this(x.toVector).toPoint
-  override def apply(v: Vector[_3D]): Vector[_3D] = Vector(v.x * fx, v.y * fy, v.z * fz)
+  override def apply(v: EuclideanVector[_3D]): EuclideanVector[_3D] = EuclideanVector(v.x * fx, v.y * fy, v.z * fz)
 
   override def inverted: Scaling3D = Scaling3D(1.0 / fx, 1.0 / fy, 1.0 / fz)
 
@@ -41,7 +41,7 @@ case class Scaling3D(fx: Double, fy: Double, fz: Double) extends InvertibleTrans
       (fx, 0.0, 0.0),
       (0.0, fy, 0.0),
       (0.0, 0.0, fz)),
-    Vector(0.0, 0.0, 0.0)
+    EuclideanVector(0.0, 0.0, 0.0)
   )
 }
 

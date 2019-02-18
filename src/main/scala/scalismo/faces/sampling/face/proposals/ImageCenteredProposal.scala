@@ -19,7 +19,7 @@ package scalismo.faces.sampling.face.proposals
 import scalismo.faces.landmarks.TLMSLandmark2D
 import scalismo.faces.parameters.RenderParameter
 import scalismo.faces.sampling.face.ParametricLandmarksRenderer
-import scalismo.geometry.{Point, Vector}
+import scalismo.geometry.{Point, EuclideanVector}
 import scalismo.sampling.{ProposalGenerator, TransitionProbability}
 
 /**
@@ -66,13 +66,13 @@ class ImageCenteredProposal(val proposal: ProposalGenerator[RenderParameter] wit
     // expected shift between from and to
     val lmFrom = lmRenderer.renderLandmark(lmId, from).get
     val lmTo = lmRenderer.renderLandmark(lmId, to).get
-    val expectedShift =Vector(
+    val expectedShift = EuclideanVector(
       2 * (lmTo.point.x - lmFrom.point.x) / to.imageSize.width,
       2 * (lmTo.point.y - lmFrom.point.y) / to.imageSize.height
     )
 
     // actual shift
-    val actualShift = Vector(
+    val actualShift = EuclideanVector(
       to.camera.principalPoint.x - from.camera.principalPoint.x,
       -(to.camera.principalPoint.y - from.camera.principalPoint.y)
     )

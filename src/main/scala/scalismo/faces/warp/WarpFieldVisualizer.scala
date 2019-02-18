@@ -19,15 +19,15 @@ package scalismo.faces.warp
 import scalismo.color.RGB
 import scalismo.faces.color.HSV
 import scalismo.faces.image.PixelImage
-import scalismo.geometry.{Vector, _2D}
+import scalismo.geometry.{EuclideanVector, _2D}
 
 object WarpFieldVisualizer {
 
   /** render warp field as color image with hue indicating the direction of the warp */
-  def renderWarpFieldColor(field: PixelImage[Vector[_2D]]): PixelImage[RGB] = {
+  def renderWarpFieldColor(field: PixelImage[EuclideanVector[_2D]]): PixelImage[RGB] = {
     val maxLen = field.values.map(_.norm).max
 
-    def makeRGB(vec: Vector[_2D]): RGB = {
+    def makeRGB(vec: EuclideanVector[_2D]): RGB = {
       val len = vec.norm
       val dir = math.atan2(vec.y, vec.x)
       // map dir to hue

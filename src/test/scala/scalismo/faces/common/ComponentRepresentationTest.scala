@@ -19,7 +19,7 @@ package scalismo.faces.common
 import scalismo.faces.FacesTestSuite
 import scalismo.color.{RGB, RGBA}
 import scalismo.common.ComponentRepresentation
-import scalismo.geometry.{Vector, _2D, _3D}
+import scalismo.geometry.{EuclideanVector, _2D, _3D}
 
 class ComponentRepresentationTest extends FacesTestSuite {
 
@@ -58,12 +58,12 @@ class ComponentRepresentationTest extends FacesTestSuite {
     }
   }
 
-  describe("A ComponentRepresentation[Vector[_2D]]") {
-    testComponentRepresentation[Vector[_2D]](2)
+  describe("A ComponentRepresentation[EuclideanVector[_2D]]") {
+    testComponentRepresentation[EuclideanVector[_2D]](2)
   }
 
-  describe("A ComponentRepresentation[Vector[_3D]]") {
-    testComponentRepresentation[Vector[_3D]](3)
+  describe("A ComponentRepresentation[EuclideanVector[_3D]]") {
+    testComponentRepresentation[EuclideanVector[_3D]](3)
   }
 
   describe("A ComponentRepresentation[RGB]") {

@@ -310,9 +310,9 @@ trait RenderParameterJSONFormatV2 extends RenderParameterJSONFormatLegacy {
     override def read(json: JsValue): ColorNormalMesh3D = {
       val fields = json.asJsObject(s"expected Mesh object, got: $json").fields
 
-      val points  = fields("points").convertTo[IndexedSeq[Vector[_3D]]].map(_.toPoint)
+      val points  = fields("points").convertTo[IndexedSeq[EuclideanVector[_3D]]].map(_.toPoint)
       val color   = fields("color").convertTo[MeshSurfaceProperty[RGBA]]
-      val normals = fields("normals").convertTo[MeshSurfaceProperty[Vector[_3D]]]
+      val normals = fields("normals").convertTo[MeshSurfaceProperty[EuclideanVector[_3D]]]
       val triangles = fields("triangles").convertTo[IndexedSeq[TriangleCell]]
 
       val triangulation = TriangleList(triangles)
@@ -333,7 +333,7 @@ trait RenderParameterJSONFormatV2 extends RenderParameterJSONFormatLegacy {
     override def read(json: JsValue): VertexColorMesh3D = {
       val fields = json.asJsObject(s"expected VertexColorMesh3D object, got: $json").fields
 
-      val points  = fields("points").convertTo[IndexedSeq[Vector[_3D]]].map(_.toPoint)
+      val points  = fields("points").convertTo[IndexedSeq[EuclideanVector[_3D]]].map(_.toPoint)
       val color   = fields("color").convertTo[IndexedSeq[RGBA]]
       val triangles = fields("triangles").convertTo[IndexedSeq[TriangleCell]]
 
@@ -398,7 +398,7 @@ trait RenderParameterJSONFormatV2 extends RenderParameterJSONFormatLegacy {
       DirectionalLight(
         ambient = fields("ambient").convertTo[RGB],
         diffuse = fields("diffuse").convertTo[RGB],
-        direction = fields("direction").convertTo[Vector[_3D]],
+        direction = fields("direction").convertTo[EuclideanVector[_3D]],
         specular = fields("specular").convertTo[RGB],
         shininess = fields("shininess").convertTo[Double])
     }
@@ -413,7 +413,7 @@ trait RenderParameterJSONFormatV2 extends RenderParameterJSONFormatLegacy {
     override def read(json: JsValue): SphericalHarmonicsLight = {
       val fields = json.asJsObject(s"expected Spherical Harmonics object, got: $json").fields
       SphericalHarmonicsLight(
-        coefficients = fields("coefficients").convertTo[IndexedSeq[Vector[_3D]]]
+        coefficients = fields("coefficients").convertTo[IndexedSeq[EuclideanVector[_3D]]]
       )
     }
   }
@@ -440,11 +440,11 @@ trait RenderParameterJSONFormatV2 extends RenderParameterJSONFormatLegacy {
                               near: Double,
                               orthographic: Boolean,
                               pitch: Double,
-                              principalPoint: Vector[_2D],
+                              principalPoint: EuclideanVector[_2D],
                               roll: Double,
-                              sensorSize: Vector[_2D],
+                              sensorSize: EuclideanVector[_2D],
                               skewFactor: Double,
-                              translation: Vector[_3D],
+                              translation: EuclideanVector[_3D],
                               yaw: Double) {
     def toCamera(imageSize: ImageSize): Camera = {
       val pp = Point(2 * principalPoint.x/imageSize.width, 2 * principalPoint.y/imageSize.height)

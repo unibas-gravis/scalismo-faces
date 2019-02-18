@@ -22,7 +22,7 @@ import scalismo.faces.FacesTestSuite
 import scalismo.color.RGBA
 import scalismo.faces.parameters.{MoMoInstance, Pose, RenderParameter}
 import scalismo.faces.utils.LanguageUtilities
-import scalismo.geometry.Vector
+import scalismo.geometry.EuclideanVector
 
 class CorrespondenceMoMoRendererTest extends FacesTestSuite {
   describe("A CorrespondenceMoMoRenderer") {
@@ -31,7 +31,7 @@ class CorrespondenceMoMoRendererTest extends FacesTestSuite {
     val corrMoMoRenderer = CorrespondenceMoMoRenderer(randomMomo).cached(0)
     val param = RenderParameter.defaultSquare.
       withMoMo(MoMoInstance.zero(randomMomo, new URI("randomModel"))).
-      withPose(Pose(1.0, Vector(0,0,-10), 0,0,0))
+      withPose(Pose(1.0, EuclideanVector(0,0,-10), 0,0,0))
 
     def diffRGBA(a: RGBA, b: RGBA) = math.abs(a.r - b.r) + math.abs(a.g - b.g) + math.abs(a.b - b.b) + math.abs(a.a - b.a)
 

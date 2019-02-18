@@ -19,7 +19,7 @@ import breeze.linalg.{DenseMatrix, DenseVector, min, norm}
 import breeze.numerics.abs
 import scalismo.common.{DiscreteField, PointId, UnstructuredPointsDomain}
 import scalismo.faces.FacesTestSuite
-import scalismo.geometry.{Point, Vector, _3D}
+import scalismo.geometry.{Point, EuclideanVector, _3D}
 import scalismo.statisticalmodel.{DiscreteLowRankGaussianProcess, ModelHelpers}
 
 class ModelHelperTests extends FacesTestSuite {
@@ -84,10 +84,10 @@ class ModelHelperTests extends FacesTestSuite {
       val trainingMeshes = (0 until (3 + rnd.scalaRandom.nextInt(50))).map( _ => randomGridMesh(cols,rows) )
 
       val trainingFields = trainingMeshes.map { mesh =>
-        DiscreteField[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]](reference.shape.pointSet,mesh.shape.pointSet.points.zip(reference.shape.pointSet.points).map(a => a._2 - a._1).toIndexedSeq)
+        DiscreteField[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](reference.shape.pointSet,mesh.shape.pointSet.points.zip(reference.shape.pointSet.points).map(a => a._2 - a._1).toIndexedSeq)
       }
 
-      val scalismoModel = DiscreteLowRankGaussianProcess.createUsingPCA[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]](reference.shape.pointSet,trainingFields.map(_.interpolateNearestNeighbor()))
+      val scalismoModel = DiscreteLowRankGaussianProcess.createUsingPCA[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](reference.shape.pointSet,trainingFields.map(_.interpolateNearestNeighbor()))
       val facesModel = ModelHelpers.createUsingPCA(reference.shape.pointSet,trainingFields)
     }
 
@@ -129,7 +129,7 @@ class ModelHelperTests extends FacesTestSuite {
       val deformationModel = f.facesModel
       val pointModel = ModelHelpers.vectorToPointDLRGP(deformationModel,reference)
 
-      val sample: DiscreteField[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]] = deformationModel.sample()
+      val sample: DiscreteField[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]] = deformationModel.sample()
       val coeffs: DenseVector[Double] = deformationModel.coefficients(sample)
 
       val pointSample = pointModel.instance(coeffs)
@@ -153,7 +153,7 @@ class ModelHelperTests extends FacesTestSuite {
       val deformationModel = ModelHelpers.pointToVectorDLRGP(pointModel,reference)
 
       val coeffs: DenseVector[Double] = {
-        val sample: DiscreteField[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]] = deformationModel.sample()
+        val sample: DiscreteField[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]] = deformationModel.sample()
         deformationModel.coefficients(sample)
       }
 

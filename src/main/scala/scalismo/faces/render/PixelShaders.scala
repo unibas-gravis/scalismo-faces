@@ -38,8 +38,8 @@ object PixelShaders {
   case class LambertShader(albedo: MeshSurfaceProperty[RGBA],
                            ambientLight: RGB,
                            diffuseLight: RGB,
-                           lightDirection: Vector[_3D],
-                           normals: MeshSurfaceProperty[Vector[_3D]]) extends PixelShader[RGBA] {
+                           lightDirection: EuclideanVector[_3D],
+                           normals: MeshSurfaceProperty[EuclideanVector[_3D]]) extends PixelShader[RGBA] {
     override def apply(triangleId: TriangleId, worldBCC: BarycentricCoordinates, screenCoordinates: Point[_3D]): RGBA = {
       val c = albedo(triangleId, worldBCC)
       val n = normals(triangleId, worldBCC).normalize
@@ -55,7 +55,7 @@ object PixelShaders {
   object LambertShader {
     /** Lambertian BRDF, constant value */
     case class LambertBRDF(albedo: RGB) extends BRDF[RGB] {
-      override def apply(lightDirection: Vector[_3D], viewDirection: Vector[_3D]): RGB = albedo
+      override def apply(lightDirection: EuclideanVector[_3D], viewDirection: EuclideanVector[_3D]): RGB = albedo
     }
   }
 
@@ -65,7 +65,7 @@ object PixelShaders {
                                      ambientLight: RGB,
                                      diffuseLight: RGB,
                                      pointLight: Point[_3D],
-                                     normals: MeshSurfaceProperty[Vector[_3D]]) extends PixelShader[RGBA] {
+                                     normals: MeshSurfaceProperty[EuclideanVector[_3D]]) extends PixelShader[RGBA] {
     override def apply(triangleId: TriangleId, worldBCC: BarycentricCoordinates, screenCoordinates: Point[_3D]): RGBA = {
       val p = position(triangleId, worldBCC)
       val c = albedo(triangleId, worldBCC)
@@ -91,8 +91,8 @@ object PixelShaders {
   case class InverseDiffuseShader(reflectance: MeshSurfaceProperty[RGBA],
                                   ambientLight: RGB,
                                   diffuseLight: RGB,
-                                  lightDirection: Vector[_3D],
-                                  normals: MeshSurfaceProperty[Vector[_3D]]) extends PixelShader[RGBA] {
+                                  lightDirection: EuclideanVector[_3D],
+                                  normals: MeshSurfaceProperty[EuclideanVector[_3D]]) extends PixelShader[RGBA] {
     override def apply(triangleId: TriangleId, worldBCC: BarycentricCoordinates, screenCoordinates: Point[_3D]): RGBA = {
       val r = reflectance(triangleId, worldBCC)
       val n = normals(triangleId, worldBCC).normalize
@@ -110,9 +110,9 @@ object PixelShaders {
     * @param normals   normals in world space
     */
   case class BlinnPhongSpecularShader(specularLight: RGB,
-                                      lightDirection: Vector[_3D],
+                                      lightDirection: EuclideanVector[_3D],
                                       positions: MeshSurfaceProperty[Point[_3D]],
-                                      normals: MeshSurfaceProperty[Vector[_3D]],
+                                      normals: MeshSurfaceProperty[EuclideanVector[_3D]],
                                       eyePosition: Point[_3D],
                                       shininess: Double) extends PixelShader[RGBA] {
     override def apply(triangleId: TriangleId, worldBCC: BarycentricCoordinates, screenCoordinates: Point[_3D]): RGBA = {
@@ -124,13 +124,13 @@ object PixelShaders {
 
   object BlinnPhongSpecularShader {
 
-    case class BlinnPhongBRDF(shininess: Double, normal: Vector[_3D]) extends BRDF[Double] {
-      override def apply(lightDirection: Vector[_3D], viewDirection: Vector[_3D]): Double = {
+    case class BlinnPhongBRDF(shininess: Double, normal: EuclideanVector[_3D]) extends BRDF[Double] {
+      override def apply(lightDirection: EuclideanVector[_3D], viewDirection: EuclideanVector[_3D]): Double = {
         BlinnPhongSpecularShader.brdf(shininess, normal, lightDirection, viewDirection)
       }
     }
 
-    def brdf(shininess: Double, normal: Vector[_3D], lightDirection: Vector[_3D], viewDirection: Vector[_3D]): Double = {
+    def brdf(shininess: Double, normal: EuclideanVector[_3D], lightDirection: EuclideanVector[_3D], viewDirection: EuclideanVector[_3D]): Double = {
       val h = (viewDirection + lightDirection).normalize
       val cos = normal.normalize.dot(h)
       math.pow(math.max(cos, 0.0), shininess)
@@ -139,8 +139,8 @@ object PixelShaders {
 
   /** Lambertian shader with efficient Spherical Harmonics environment map representation */
   case class SphericalHarmonicsLambertShader(albedo: MeshSurfaceProperty[RGBA],
-                                             environmentMap: IndexedSeq[Vector[_3D]],
-                                             normals: MeshSurfaceProperty[Vector[_3D]]) extends PixelShader[RGBA] {
+                                             environmentMap: IndexedSeq[EuclideanVector[_3D]],
+                                             normals: MeshSurfaceProperty[EuclideanVector[_3D]]) extends PixelShader[RGBA] {
     override def apply(triangleId: TriangleId,
                        worldBCC: BarycentricCoordinates,
                        screenCoordinates: Point[_3D]): RGBA = SphericalHarmonicsLambertShader.shade(
@@ -150,9 +150,9 @@ object PixelShaders {
   }
 
   object SphericalHarmonicsLambertShader {
-    def shade(c: RGBA, n: Vector[_3D], environmentMap: IndexedSeq[Vector[_3D]]): RGBA = {
+    def shade(c: RGBA, n: EuclideanVector[_3D], environmentMap: IndexedSeq[EuclideanVector[_3D]]): RGBA = {
       val numCoeffs = math.min(environmentMap.size, 9)
-      var radiance = Vector3D.zero
+      var radiance = EuclideanVector3D.zero
 
       var r = 0.0
       var g = 0.0
@@ -181,8 +181,8 @@ object PixelShaders {
     * Because the environment map is smooth this approximation should not be too bad.
     */
   case class SphericalHarmonicsSpecularShader(specularExp: Double,
-                                              environmentMap: IndexedSeq[Vector[_3D]],
-                                              normalsWorld: MeshSurfaceProperty[Vector[_3D]],
+                                              environmentMap: IndexedSeq[EuclideanVector[_3D]],
+                                              normalsWorld: MeshSurfaceProperty[EuclideanVector[_3D]],
                                               positionsWorld: MeshSurfaceProperty[Point[_3D]]) extends PixelShader[RGBA] {
     override def apply(triangleId: TriangleId,
                        worldBCC: BarycentricCoordinates,
@@ -192,9 +192,9 @@ object PixelShaders {
   }
 
   object SphericalHarmonicsSpecularShader {
-    def specularPart(posWorld: Point[_3D], normalWorld: Vector[_3D], specularExp: Double, environmentMap: IndexedSeq[Vector[_3D]]): RGBA = {
+    def specularPart(posWorld: Point[_3D], normalWorld: EuclideanVector[_3D], specularExp: Double, environmentMap: IndexedSeq[EuclideanVector[_3D]]): RGBA = {
       /** BRDF: find outgoing vector for given view vector (reflect) */
-      val vecToEye: Vector3D = (Point3D(0, 0, 0) - posWorld).normalize
+      val vecToEye: EuclideanVector3D = (Point3D(0, 0, 0) - posWorld).normalize
       val viewAdjusted = vecToEye * vecToEye.dot(normalWorld)
       val reflected = normalWorld + (normalWorld - viewAdjusted)
       /** Read out value in environment map in out direction for specularity */
@@ -218,11 +218,11 @@ object PixelShaders {
   /** Oren-Nayar reflectance model for diffuse reflectance with micro-facets */
   case class OrenNayarShader(albedo: MeshSurfaceProperty[RGBA],
                              roughness: MeshSurfaceProperty[Double],
-                             normals: MeshSurfaceProperty[Vector[_3D]],
+                             normals: MeshSurfaceProperty[EuclideanVector[_3D]],
                              position: MeshSurfaceProperty[Point[_3D]],
                              ambientLight: RGB,
                              diffuseLight: RGB,
-                             lightDirection: Vector[_3D],
+                             lightDirection: EuclideanVector[_3D],
                              eyePosition: Point[_3D]) extends PixelShader[RGBA] {
 
     override def apply(triangleId: TriangleId, worldBCC: BarycentricCoordinates, screenCoordinates: Point[_3D]): RGBA = {
@@ -241,14 +241,14 @@ object PixelShaders {
 
   object OrenNayarShader {
 
-    case class OrenNayarBRDF(normal: Vector[_3D], albedo: RGB, roughness: Double) extends BRDF[RGB] {
-      override def apply(lightDirection: Vector[_3D], view: Vector[_3D]): RGB = {
+    case class OrenNayarBRDF(normal: EuclideanVector[_3D], albedo: RGB, roughness: Double) extends BRDF[RGB] {
+      override def apply(lightDirection: EuclideanVector[_3D], view: EuclideanVector[_3D]): RGB = {
         val r = OrenNayarShader.reflectanceFactor(roughness, normal, lightDirection, view)
         albedo * r
       }
     }
 
-    def reflectanceFactor(roughness: Double, normal: Vector[_3D], lightDirection: Vector[_3D], view: Vector[_3D]): Double = {
+    def reflectanceFactor(roughness: Double, normal: EuclideanVector[_3D], lightDirection: EuclideanVector[_3D], view: EuclideanVector[_3D]): Double = {
       val A = 1.0 - 0.5 * (roughness / (roughness + 0.33))
       val B = 0.45 * (roughness / (roughness + 0.09))
 
@@ -273,8 +273,8 @@ object PixelShaders {
               position: Point[_3D],
               lightAmbient: RGB,
               lightDiffuse: RGB,
-              lightDirection: Vector[_3D],
-              normal: Vector[_3D],
+              lightDirection: EuclideanVector[_3D],
+              normal: EuclideanVector[_3D],
               eyePosition: Point[_3D]): RGBA = {
 
       val view = (eyePosition - position).normalize
@@ -290,9 +290,9 @@ object PixelShaders {
   case class CookTorranceSpecularShader(lightSpecular: RGB,
                                         frontalReflectance: MeshSurfaceProperty[Double],
                                         roughness: MeshSurfaceProperty[Double],
-                                        normals: MeshSurfaceProperty[Vector[_3D]],
+                                        normals: MeshSurfaceProperty[EuclideanVector[_3D]],
                                         positions: MeshSurfaceProperty[Point[_3D]],
-                                        lightDirection: Vector[_3D],
+                                        lightDirection: EuclideanVector[_3D],
                                         eyePosition: Point[_3D]) extends PixelShader[RGBA] {
 
     override def apply(triangleId: TriangleId, worldBCC: BarycentricCoordinates, screenCoordinates: Point[_3D]): RGBA = {
@@ -310,16 +310,16 @@ object PixelShaders {
 
   object CookTorranceSpecularShader {
 
-    case class CookTorranceBRDF(frontalReflectance: Double, roughness: Double, normal: Vector[_3D]) extends BRDF[Double] {
-      override def apply(lightDirection: Vector[_3D], viewDirection: Vector[_3D]): Double = {
+    case class CookTorranceBRDF(frontalReflectance: Double, roughness: Double, normal: EuclideanVector[_3D]) extends BRDF[Double] {
+      override def apply(lightDirection: EuclideanVector[_3D], viewDirection: EuclideanVector[_3D]): Double = {
         CookTorranceSpecularShader.brdf(frontalReflectance, roughness, normal, lightDirection, viewDirection)
       }
     }
 
-    def brdf(frontalReflectance: Double, roughness: Double, normal: Vector[_3D], lightDirection: Vector[_3D], viewDirection: Vector[_3D]): Double = {
+    def brdf(frontalReflectance: Double, roughness: Double, normal: EuclideanVector[_3D], lightDirection: EuclideanVector[_3D], viewDirection: EuclideanVector[_3D]): Double = {
       val eps = 1e-5
       val en = math.max(eps, viewDirection.dot(normal))
-      val h: Vector[_3D] = {
+      val h: EuclideanVector[_3D] = {
         val d = lightDirection + viewDirection
         if (d.norm2 > eps * eps)
           d.normalize
@@ -341,9 +341,9 @@ object PixelShaders {
     def shade(lightSpecular: RGB,
               frontalReflectance: Double,
               roughness: Double,
-              normal: Vector[_3D],
+              normal: EuclideanVector[_3D],
               position: Point[_3D],
-              lightDirection: Vector[_3D],
+              lightDirection: EuclideanVector[_3D],
               eyePosition: Point[_3D]): RGBA = {
       val view = (eyePosition - position).normalize
       val r = CookTorranceSpecularShader.brdf(frontalReflectance, roughness, normal, lightDirection, view)
@@ -362,18 +362,18 @@ object PixelShaders {
 object ReflectanceHelper {
   // Note the removal of the 1/pi factor from the Beckmann distribution
   /** Beckmann distribution */
-  def beckmann(n: Vector[_3D], h: Vector[_3D], m: Double, eps: Double): Double = {
+  def beckmann(n: EuclideanVector[_3D], h: EuclideanVector[_3D], m: Double, eps: Double): Double = {
     val cosAlpha = math.max(eps, n.dot(h))
     math.exp(-(1.0 - cosAlpha * cosAlpha) / (cosAlpha * cosAlpha * m * m)) / (m * m * cosAlpha * cosAlpha * cosAlpha * cosAlpha)
   }
 
   /** Schlick approximation to Fresnel terms */
-  def schlickFresnel(e: Vector[_3D], h: Vector[_3D], r0: Double, lambda: Double): Double = {
+  def schlickFresnel(e: EuclideanVector[_3D], h: EuclideanVector[_3D], r0: Double, lambda: Double): Double = {
     r0 + (1.0 - r0) * math.pow(1.0 - math.abs(e.dot(h)), 5.0)
   }
 
   /** Schlick approximation to Fresnel terms */
-  def schlickFresnel(e: Vector[_3D], h: Vector[_3D], r0: Double): Double = {
+  def schlickFresnel(e: EuclideanVector[_3D], h: EuclideanVector[_3D], r0: Double): Double = {
     schlickFresnel(e, h, r0, 5.0)
   }
 }

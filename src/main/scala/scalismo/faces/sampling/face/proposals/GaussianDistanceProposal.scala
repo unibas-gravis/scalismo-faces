@@ -17,7 +17,7 @@
 package scalismo.faces.sampling.face.proposals
 
 import scalismo.faces.parameters.RenderParameter
-import scalismo.geometry.Vector
+import scalismo.geometry.EuclideanVector
 import scalismo.sampling.evaluators.GaussianEvaluator
 import scalismo.sampling.{ProposalGenerator, SymmetricTransitionRatio, TransitionProbability}
 import scalismo.utils.Random
@@ -35,7 +35,7 @@ case class GaussianDistanceProposal(sdev: Double, compensateScaling: Boolean)(im
 
     val factor = if (compensateScaling) (cameraDistance - shift) / cameraDistance else 1.0
     current.copy(
-      pose = current.pose.copy(translation = current.pose.translation + Vector(0.0, 0.0, shift)),
+      pose = current.pose.copy(translation = current.pose.translation + EuclideanVector(0.0, 0.0, shift)),
       camera = current.camera.copy(focalLength = factor * current.camera.focalLength)
     )
   }

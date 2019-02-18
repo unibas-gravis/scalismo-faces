@@ -17,7 +17,7 @@
 package scalismo.faces.sampling.face.evaluators
 
 import scalismo.faces.FacesTestSuite
-import scalismo.geometry.{Point, Point2D, Vector}
+import scalismo.geometry.{Point, Point2D, EuclideanVector}
 
 class FaceBoxEvaluatorTest extends FacesTestSuite {
 
@@ -35,7 +35,7 @@ class FaceBoxEvaluatorTest extends FacesTestSuite {
     it("is read properly") {
       fb = FaceBox.fromYAML(yamlCodeBox).get
       fb.topLeft shouldBe Point(66, 111)
-      fb.size shouldBe Vector(355, 355)
+      fb.size shouldBe EuclideanVector(355, 355)
       fb.certainty shouldBe 0.9623 +- 1e-4
     }
 

@@ -36,14 +36,14 @@ object GaussianTranslationProposal {
   /**
     * Constructs a translation proposal, which only shifts in the xy-plane and leaves the z-value constant.
     */
-  def apply(sdev: Vector2D)(implicit rnd: Random) : GaussianTranslationProposal = {
+  def apply(sdev: EuclideanVector2D)(implicit rnd: Random) : GaussianTranslationProposal = {
     Gaussian3DTranslationProposalConstantZ(sdev)
   }
 
   /**
     * Constructs a full 3d translation proposal.
     */
-  def apply(sdev: Vector3D)(implicit rnd: Random) : GaussianTranslationProposal = {
+  def apply(sdev: EuclideanVector3D)(implicit rnd: Random) : GaussianTranslationProposal = {
     Gaussian3DTranslationProposal(sdev)
   }
 
@@ -53,10 +53,10 @@ object GaussianTranslationProposal {
   * Random translation proposal in 3D which is parallel to the xy plane.
   * The z-value, i.e. the  distance to the camera is constant.
   */
-private[proposals] case class Gaussian3DTranslationProposalConstantZ(sdev: Vector[_2D])(implicit rnd: Random)
+private[proposals] case class Gaussian3DTranslationProposalConstantZ(sdev: EuclideanVector[_2D])(implicit rnd: Random)
     extends GaussianTranslationProposal {
   override def propose(current: Pose): Pose = current.copy(
-    translation = Vector(
+    translation = EuclideanVector(
       current.translation.x + rnd.scalaRandom.nextGaussian() * sdev.x,
       current.translation.y + rnd.scalaRandom.nextGaussian() * sdev.y,
       current.translation.z)
@@ -78,10 +78,10 @@ private[proposals] case class Gaussian3DTranslationProposalConstantZ(sdev: Vecto
 /**
   * Full random translation proposal in 3D.
   */
-private[proposals] case class Gaussian3DTranslationProposal(sdev: Vector[_3D])(implicit rnd: Random)
+private[proposals] case class Gaussian3DTranslationProposal(sdev: EuclideanVector[_3D])(implicit rnd: Random)
   extends GaussianTranslationProposal {
   override def propose(current: Pose): Pose = current.copy(
-    translation = Vector(
+    translation = EuclideanVector(
       current.translation.x + rnd.scalaRandom.nextGaussian() * sdev.x,
       current.translation.y + rnd.scalaRandom.nextGaussian() * sdev.y,
       current.translation.z + rnd.scalaRandom.nextGaussian() * sdev.z)

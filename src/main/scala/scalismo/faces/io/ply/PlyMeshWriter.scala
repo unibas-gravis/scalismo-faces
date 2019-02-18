@@ -25,7 +25,7 @@ import scalismo.faces.io.ply.PlyHelpers.PlyHeader._
 import scalismo.faces.io.ply.PlyHelpers._
 import scalismo.faces.io.ply.PlyMeshPropertyWriters._
 import scalismo.faces.mesh.{IndirectProperty, TextureMappedProperty, VertexPropertyPerTriangle}
-import scalismo.geometry.{IntVector, Point, Vector, _2D, _3D}
+import scalismo.geometry.{IntVector, Point, EuclideanVector, _2D, _3D}
 import scalismo.mesh.{MeshSurfaceProperty, SurfacePointProperty, TriangleProperty}
 
 import scala.reflect.io.Path
@@ -48,7 +48,7 @@ private[io] case class PlyMeshWriter(url: String,
                                      vertices: Option[IndexedSeq[Point[_3D]]] = None,
                                      faces: Option[IndexedSeq[IntVector[_3D]]] = None,
                                      color: Option[MeshSurfaceProperty[RGBA]] = None,
-                                     normals: Option[MeshSurfaceProperty[Vector[_3D]]] = None,
+                                     normals: Option[MeshSurfaceProperty[EuclideanVector[_3D]]] = None,
                                      plyFormat: PlyFormat = PlyFormat.ASCII,
                                      headerFormat: PlyHeader = PlyHeader.meshlab) {
 
@@ -87,7 +87,7 @@ private[io] case class PlyMeshWriter(url: String,
     }
 
     val _vNormals = normals.flatMap {
-      case n: SurfacePointProperty[Vector[_3D]] => Some(new VertexNormal(n))
+      case n: SurfacePointProperty[EuclideanVector[_3D]] => Some(new VertexNormal(n))
       case _ => None
     }
 
@@ -156,12 +156,12 @@ private[io] case class PlyMeshWriter(url: String,
     }
 
     val _faceNormals = normals.flatMap {
-      case tn: TriangleProperty[Vector[_3D]] => Some(new FaceNormal(tn))
+      case tn: TriangleProperty[EuclideanVector[_3D]] => Some(new FaceNormal(tn))
       case _ => None
     }
 
     val _vertexNormalsPerFace = normals.flatMap {
-      case vn: VertexPropertyPerTriangle[Vector[_3D]] => Some(new FaceVertexNormals(vn))
+      case vn: VertexPropertyPerTriangle[EuclideanVector[_3D]] => Some(new FaceVertexNormals(vn))
       case _ => None
     }
 

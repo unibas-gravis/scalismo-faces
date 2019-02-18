@@ -22,7 +22,7 @@ import scalismo.geometry._
 /** camera parameterization */
 case class Camera(focalLength: Double,
                   principalPoint: Point[_2D],
-                  sensorSize: Vector[_2D],
+                  sensorSize: EuclideanVector[_2D],
                   near: Double,
                   far: Double,
                   orthographic: Boolean) {
@@ -44,7 +44,7 @@ case class Camera(focalLength: Double,
 }
 
 object Camera {
-  val sensor35mm = Vector(36, 24)
+  val sensor35mm = EuclideanVector(36, 24)
 
   def for35mmFilm(focalLength: Double) = Camera(focalLength, Point2D.origin, sensor35mm, orthographic = false, near = 10, far = 1000e3)
 }

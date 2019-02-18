@@ -69,8 +69,8 @@ class MSHMeshIOTests extends FacesTestSuite {
       def pointToFloatToDouble = (p: Point[_3D]) => {
         Point3D(p(0).toFloat.toDouble, p(1).toFloat.toDouble, p(2).toFloat.toDouble)
       }
-      def vectorToFloatToDouble = (v: Vector[_3D]) => {
-        Vector3D(v(0).toFloat.toDouble, v(1).toFloat.toDouble, v(2).toFloat.toDouble)
+      def vectorToFloatToDouble = (v: EuclideanVector[_3D]) => {
+        EuclideanVector3D(v(0).toFloat.toDouble, v(1).toFloat.toDouble, v(2).toFloat.toDouble)
       }
       def textureToFloatToDouble = (t: Option[MSHTexture]) => {
         t match {

@@ -17,11 +17,11 @@
 package scalismo.faces.parameters
 
 import scalismo.faces.render._
-import scalismo.geometry.{Vector, _3D}
+import scalismo.geometry.{EuclideanVector, _3D}
 
 /** face pose parameters */
 case class Pose(scaling: Double,
-                translation: Vector[_3D],
+                translation: EuclideanVector[_3D],
                 roll: Double,
                 yaw: Double,
                 pitch: Double) {
@@ -30,7 +30,7 @@ case class Pose(scaling: Double,
   def withScaling(scaling: Double): Pose = copy(scaling = scaling)
 
   /** change translation */
-  def withTranslation(translation: Vector[_3D]): Pose = copy(translation = translation)
+  def withTranslation(translation: EuclideanVector[_3D]): Pose = copy(translation = translation)
 
   /** change roll angle */
   def withRoll(roll: Double): Pose = copy(roll = roll)
@@ -69,8 +69,8 @@ case class Pose(scaling: Double,
 }
 
 object Pose {
-  val neutral = Pose(1.0, Vector(0.0, 0.0, 0.0), 0.0, 0.0, 0.0)
-  val away1m = Pose(1.0, Vector(0.0, 0.0, -1000.0), 0.0, 0.0, 0.0)
+  val neutral = Pose(1.0, EuclideanVector(0.0, 0.0, 0.0), 0.0, 0.0, 0.0)
+  val away1m = Pose(1.0, EuclideanVector(0.0, 0.0, -1000.0), 0.0, 0.0, 0.0)
 
   def fromTransform3D(t: Transform3D): Option[Pose] = {
     t match {

@@ -20,7 +20,7 @@ import breeze.linalg.DenseMatrix
 import scalismo.geometry._
 
 /** quaternion to handle rotation */
-case class Quaternion(r: Double, v: Vector[_3D]) {
+case class Quaternion(r: Double, v: EuclideanVector[_3D]) {
   def norm: Double = math.sqrt(r*r + v.norm2)
 
   def normalize: Quaternion = this / norm
@@ -44,7 +44,7 @@ case class Quaternion(r: Double, v: Vector[_3D]) {
 }
 
 /** rotation in 3D in angle/axis parameterization */
-case class Rotation3D(phi: Double, axis: Vector[_3D]) extends InvertibleTransform3D with Transform4x4 {
+case class Rotation3D(phi: Double, axis: EuclideanVector[_3D]) extends InvertibleTransform3D with Transform4x4 {
   private val normalizedAxis = axis.normalize // axis must be normalized
 
   /** quaternion describing this rotation */
@@ -63,7 +63,7 @@ case class Rotation3D(phi: Double, axis: Vector[_3D]) extends InvertibleTransfor
   override def apply(x: Point[_3D]): Point[_3D] = (rotationMatrix * x.toVector).toPoint
 
   /** rotate vector */
-  override def apply(v: Vector[_3D]): Vector[_3D] = rotationMatrix * v
+  override def apply(v: EuclideanVector[_3D]): EuclideanVector[_3D] = rotationMatrix * v
 
   /** inverted rotation */
   override def inverted: Rotation3D = Rotation3D(-phi, normalizedAxis)
@@ -85,15 +85,15 @@ case class Rotation3D(phi: Double, axis: Vector[_3D]) extends InvertibleTransfor
       DenseMatrix((0.0, 0.0, 0.0, 1.0))
     )
 
-  def toAffine3D: Affine3D = Affine3D(rotationMatrix, Vector(0.0, 0.0, 0.0))
+  def toAffine3D: Affine3D = Affine3D(rotationMatrix, EuclideanVector(0.0, 0.0, 0.0))
 }
 
 object Rotation3D {
   /** build rotation from quaternion */
   def fromQuaternion(q: Quaternion): Rotation3D = {
-    val Quaternion(r: Double, v: Vector[_3D]) = q
+    val Quaternion(r: Double, v: EuclideanVector[_3D]) = q
     val phi = 2 * math.atan2(v.norm, r)
-    val axis = if (phi != 0.0) v / math.sin(phi / 2.0) else Vector3D.unitX
+    val axis = if (phi != 0.0) v / math.sin(phi / 2.0) else EuclideanVector3D.unitX
     Rotation3D(phi, axis)
   }
 
@@ -102,11 +102,11 @@ object Rotation3D {
     rotationZ(z) compose rotationY(y) compose rotationX(x)
   }
 
-  def rotationX(phi: Double) = Rotation3D(phi, Vector3D.unitX)
+  def rotationX(phi: Double) = Rotation3D(phi, EuclideanVector3D.unitX)
 
-  def rotationY(phi: Double) = Rotation3D(phi, Vector3D.unitY)
+  def rotationY(phi: Double) = Rotation3D(phi, EuclideanVector3D.unitY)
 
-  def rotationZ(phi: Double) = Rotation3D(phi, Vector3D.unitZ)
+  def rotationZ(phi: Double) = Rotation3D(phi, EuclideanVector3D.unitZ)
 
   /** find Euler angles for given rotation */
   def decomposeRotationXYZ(rotation: Rotation3D): (Double, Double, Double) = {

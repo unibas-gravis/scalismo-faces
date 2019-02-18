@@ -18,7 +18,7 @@ package scalismo.faces.mesh
 
 import scalismo.color.RGBA
 import scalismo.faces.render.Transform3D
-import scalismo.geometry.{Vector, _3D}
+import scalismo.geometry.{EuclideanVector, _3D}
 import scalismo.mesh._
 
 /**
@@ -42,7 +42,7 @@ case class ColorMesh3D(shape: TriangleMesh3D, color: MeshSurfaceProperty[RGBA]) 
   * @param color color of mesh surface
   * @param normals normal of mesh surface
   */
-case class ColorNormalMesh3D(shape: TriangleMesh3D, color: MeshSurfaceProperty[RGBA], normals: MeshSurfaceProperty[Vector[_3D]]) {
+case class ColorNormalMesh3D(shape: TriangleMesh3D, color: MeshSurfaceProperty[RGBA], normals: MeshSurfaceProperty[EuclideanVector[_3D]]) {
   // @todo wait for scalismo to fix issue #138
   //  require(shape.triangulation == color.triangulation)
   //  require(shape.triangulation == normals.triangulation)
@@ -76,7 +76,7 @@ case class TexturedMesh3D(shape: TriangleMesh3D, texture: TextureMappedProperty[
   * */
 case class OptionalColorNormalMesh3D(shape: TriangleMesh3D,
                                      color: Option[MeshSurfaceProperty[RGBA]],
-                                     normals: Option[MeshSurfaceProperty[Vector[_3D]]]) {
+                                     normals: Option[MeshSurfaceProperty[EuclideanVector[_3D]]]) {
 
   def hasColor: Boolean = color.isDefined
 

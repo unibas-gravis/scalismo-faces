@@ -18,42 +18,42 @@ package scalismo.faces.warp
 
 import scalismo.faces.image.{PixelImage, PushPullInterpolation}
 import scalismo.faces.numerics.{GenericMultigridPoissonSolver, ImageDomainPoissonSolver}
-import scalismo.geometry.{Vector, _2D}
+import scalismo.geometry.{EuclideanVector, _2D}
 
 /** completes a warp field to be defined on the whole image */
 trait WarpExtrapolator {
-  def apply(field: PixelImage[Option[Vector[_2D]]]): PixelImage[Vector[_2D]]
+  def apply(field: PixelImage[Option[EuclideanVector[_2D]]]): PixelImage[EuclideanVector[_2D]]
 }
 
-/** fill missing warp values with no warp (Vector(0, 0)) */
+/** fill missing warp values with no warp (EuclideanVector(0, 0)) */
 case object ZeroExtrapolator extends WarpExtrapolator {
-  override def apply(field: PixelImage[Option[Vector[_2D]]]): PixelImage[Vector[_2D]] = field.map(_.getOrElse(Vector(0, 0)))
+  override def apply(field: PixelImage[Option[EuclideanVector[_2D]]]): PixelImage[EuclideanVector[_2D]] = field.map(_.getOrElse(EuclideanVector(0, 0)))
 }
 
 /** fill missing warp values with constant value */
-case class ConstantWarpExtrapolator(value: Vector[_2D]) extends WarpExtrapolator {
-  override def apply(field: PixelImage[Option[Vector[_2D]]]): PixelImage[Vector[_2D]] = field.map(_.getOrElse(value))
+case class ConstantWarpExtrapolator(value: EuclideanVector[_2D]) extends WarpExtrapolator {
+  override def apply(field: PixelImage[Option[EuclideanVector[_2D]]]): PixelImage[EuclideanVector[_2D]] = field.map(_.getOrElse(value))
 }
 
 /** fill missing warp values by Laplace interpolation (solving Laplace equation for undefined regions) */
-case class PoissonExtrapolator(solver: ImageDomainPoissonSolver[Vector[_2D]]) extends WarpExtrapolator {
-  override def apply(field: PixelImage[Option[Vector[_2D]]]): PixelImage[Vector[_2D]] = {
+case class PoissonExtrapolator(solver: ImageDomainPoissonSolver[EuclideanVector[_2D]]) extends WarpExtrapolator {
+  override def apply(field: PixelImage[Option[EuclideanVector[_2D]]]): PixelImage[EuclideanVector[_2D]] = {
     val mask = field.map(_.isEmpty).buffer
     val initial = PushPullExtrapolator(4)(field)
-    val zeroImage: PixelImage[Vector[_2D]] = PixelImage(field.width, field.height, (x, y) => Vector(0f, 0f))
+    val zeroImage: PixelImage[EuclideanVector[_2D]] = PixelImage(field.width, field.height, (x, y) => EuclideanVector(0f, 0f))
     solver.solvePoisson(initial, mask, zeroImage)
   }
 }
 
 object PoissonExtrapolator {
-  def apply() = new PoissonExtrapolator(GenericMultigridPoissonSolver[Vector[_2D]])
+  def apply() = new PoissonExtrapolator(GenericMultigridPoissonSolver[EuclideanVector[_2D]])
 }
 
 /** fill missing warp values by Push-Pull interpolation (image pyramid averaging) */
 case class PushPullExtrapolator(minSize: Int = 1) extends WarpExtrapolator {
-  override def apply(field: PixelImage[Option[Vector[_2D]]]): PixelImage[Vector[_2D]] = {
+  override def apply(field: PixelImage[Option[EuclideanVector[_2D]]]): PixelImage[EuclideanVector[_2D]] = {
     val mask = field.map(p => if (p.isDefined) 1.0 else 0.0).buffer
-    val initial = field.map(_.getOrElse(Vector(0, 0))).buffer
+    val initial = field.map(_.getOrElse(EuclideanVector(0, 0))).buffer
     PushPullInterpolation.fill(initial, mask, minSize).buffer
   }
 }

@@ -29,30 +29,30 @@ import spray.json._
 trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
   val version = "V1.0"
 
-  implicit val vector1DFormat: JsonFormat[Vector[_1D]] = new JsonFormat[Vector[_1D]] {
-    override def write(vec: Vector[_1D]): JsValue = JsArray(JsNumber(vec.x))
+  implicit val vector1DFormat: JsonFormat[EuclideanVector[_1D]] = new JsonFormat[EuclideanVector[_1D]] {
+    override def write(vec: EuclideanVector[_1D]): JsValue = JsArray(JsNumber(vec.x))
 
-    override def read(json: JsValue): Vector[_1D] = json match {
-      case JsArray(Seq(JsNumber(x))) => Vector(x.toDouble)
-      case _ => deserializationError("Expected Vector[_1D], got:" + json)
+    override def read(json: JsValue): EuclideanVector[_1D] = json match {
+      case JsArray(Seq(JsNumber(x))) => EuclideanVector(x.toDouble)
+      case _ => deserializationError("Expected EuclideanVector[_1D], got:" + json)
     }
   }
 
-  implicit val vector2DFormat: JsonFormat[Vector[_2D]] = new JsonFormat[Vector[_2D]] {
-    override def write(vec: Vector[_2D]): JsValue = JsArray(JsNumber(vec.x), JsNumber(vec.y))
+  implicit val vector2DFormat: JsonFormat[EuclideanVector[_2D]] = new JsonFormat[EuclideanVector[_2D]] {
+    override def write(vec: EuclideanVector[_2D]): JsValue = JsArray(JsNumber(vec.x), JsNumber(vec.y))
 
-    override def read(json: JsValue): Vector[_2D] = json match {
-      case JsArray(Seq(JsNumber(x), JsNumber(y))) => Vector(x.toDouble, y.toDouble)
-      case _ => deserializationError("Expected Vector[_2D], got:" + json)
+    override def read(json: JsValue): EuclideanVector[_2D] = json match {
+      case JsArray(Seq(JsNumber(x), JsNumber(y))) => EuclideanVector(x.toDouble, y.toDouble)
+      case _ => deserializationError("Expected EuclideanVector[_2D], got:" + json)
     }
   }
 
-  implicit val vector3DFormat: JsonFormat[Vector[_3D]] = new JsonFormat[Vector[_3D]] {
-    override def write(vec: Vector[_3D]): JsValue = JsArray(JsNumber(vec.x), JsNumber(vec.y), JsNumber(vec.z))
+  implicit val vector3DFormat: JsonFormat[EuclideanVector[_3D]] = new JsonFormat[EuclideanVector[_3D]] {
+    override def write(vec: EuclideanVector[_3D]): JsValue = JsArray(JsNumber(vec.x), JsNumber(vec.y), JsNumber(vec.z))
 
-    override def read(json: JsValue): Vector[_3D] = json match {
-      case JsArray(Seq(JsNumber(x), JsNumber(y), JsNumber(z))) => Vector(x.toDouble, y.toDouble, z.toDouble)
-      case _ => deserializationError("Expected Vector[_3D], got:" + json)
+    override def read(json: JsValue): EuclideanVector[_3D] = json match {
+      case JsArray(Seq(JsNumber(x), JsNumber(y), JsNumber(z))) => EuclideanVector(x.toDouble, y.toDouble, z.toDouble)
+      case _ => deserializationError("Expected EuclideanVector[_3D], got:" + json)
     }
   }
 
@@ -110,7 +110,7 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
       val fields = json.asJsObject(s"expected Pose object, got: $json").fields
       Pose(
         scaling = fields("scaling").convertTo[Double],
-        translation = fields("translation").convertTo[Vector[_3D]],
+        translation = fields("translation").convertTo[EuclideanVector[_3D]],
         roll = fields("roll").convertTo[Double],
         yaw = fields("yaw").convertTo[Double],
         pitch = fields("pitch").convertTo[Double])
@@ -122,11 +122,11 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
                                   near: Double,
                                   orthographic: Boolean,
                                   pitch: Double,
-                                  principlePoint: Vector[_2D],
+                                  principlePoint: EuclideanVector[_2D],
                                   roll: Double,
-                                  sensorSize: Vector[_2D],
+                                  sensorSize: EuclideanVector[_2D],
                                   skewFactor: Double,
-                                  translation: Vector[_3D],
+                                  translation: EuclideanVector[_3D],
                                   yaw: Double) {
     def toCamera(imageSize: ImageSize): Camera = {
       val pp = Point(2 * principlePoint.x/imageSize.width, 2 * principlePoint.y/imageSize.height)
@@ -190,7 +190,7 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
       DirectionalLight(
         ambient = fields("ambient").convertTo[RGB],
         diffuse = fields("diffuse").convertTo[RGB],
-        direction = fields("direction").convertTo[Vector[_3D]],
+        direction = fields("direction").convertTo[EuclideanVector[_3D]],
         specular = fields("specular").convertTo[RGB])
     }
   }
@@ -211,7 +211,7 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
   implicit val sphericalHarmonicsLightFormat: RootJsonFormat[SphericalHarmonicsLight] = new RootJsonFormat[SphericalHarmonicsLight] {
 
     override def write(shl: SphericalHarmonicsLight): JsValue = {
-      def convertSHLToJz(shl: IndexedSeq[Vector[_3D]]): IndexedSeq[Vector[_3D]] = {
+      def convertSHLToJz(shl: IndexedSeq[EuclideanVector[_3D]]): IndexedSeq[EuclideanVector[_3D]] = {
         if (shl.isEmpty)
           shl
         else if (shl.size > 9)
@@ -228,7 +228,7 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
 
     override def read(value: JsValue): SphericalHarmonicsLight = {
       // need to convert from V1 order to our own order (jz order -> ss order)
-      def convertJzToSHL(shl: IndexedSeq[Vector[_3D]]): IndexedSeq[Vector[_3D]] = {
+      def convertJzToSHL(shl: IndexedSeq[EuclideanVector[_3D]]): IndexedSeq[EuclideanVector[_3D]] = {
         if (shl.isEmpty)
           shl
         else if (shl.size > 9)
@@ -240,7 +240,7 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
         }
       }
 
-      val shl = value.convertTo[IndexedSeq[Vector[_3D]]]
+      val shl = value.convertTo[IndexedSeq[EuclideanVector[_3D]]]
       SphericalHarmonicsLight(convertJzToSHL(shl))
     }
   }

@@ -25,7 +25,7 @@ import scalismo.color.{RGB, RGBA}
 import scalismo.faces.image.{AccessMode, PixelImage, PixelImageDomain}
 import scalismo.faces.mesh.{ColorNormalMesh3D, TextureMappedProperty}
 import scalismo.faces.momo.{MoMo, PancakeDLRGP}
-import scalismo.geometry.{Landmark, Point, Vector, Vector3D, _2D, _3D}
+import scalismo.geometry.{Landmark, Point, EuclideanVector, EuclideanVector3D, _2D, _3D}
 import scalismo.mesh._
 import scalismo.statisticalmodel.ModelHelpers
 import scalismo.utils.Random
@@ -41,7 +41,7 @@ class FacesTestSuite extends FunSpec with Matchers {
 
   def randomRGBA(implicit rnd: Random) = RGBA(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
 
-  def randomVector3D(implicit rnd: Random) = Vector3D(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
+  def randomVector3D(implicit rnd: Random) = EuclideanVector3D(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
 
   def randomDouble(implicit rnd: Random): Double = rnd.scalaRandom.nextDouble()
 
@@ -60,12 +60,12 @@ class FacesTestSuite extends FunSpec with Matchers {
 
   def randomInt(max: Int)(implicit rnd: Random): Int = rnd.scalaRandom.nextInt(max)
 
-  def randomDirection(implicit rnd: Random): Vector[_2D] = Vector.fromPolar(1.0, rnd.scalaRandom.nextDouble() * 2.0 * math.Pi)
+  def randomDirection(implicit rnd: Random): EuclideanVector[_2D] = EuclideanVector.fromPolar(1.0, rnd.scalaRandom.nextDouble() * 2.0 * math.Pi)
 
   def randomGridMesh(cols: Int = 3, rows: Int = 3, sdev: Double = 0.25)(implicit rnd: Random): VertexColorMesh3D = {
     val n = cols * rows
 
-    val points = IndexedSeq.tabulate(n)(i => Point(i % cols, i / cols, 0f)).map(p => p + Vector(rnd.scalaRandom.nextGaussian(), rnd.scalaRandom.nextGaussian(), rnd.scalaRandom.nextGaussian()) * sdev)
+    val points = IndexedSeq.tabulate(n)(i => Point(i % cols, i / cols, 0f)).map(p => p + EuclideanVector(rnd.scalaRandom.nextGaussian(), rnd.scalaRandom.nextGaussian(), rnd.scalaRandom.nextGaussian()) * sdev)
     val colors = IndexedSeq.fill(n)(randomRGBA)
     // mesh structure
     val triangles = new ArrayBuffer[TriangleCell](n * 2)
@@ -144,7 +144,7 @@ class FacesTestSuite extends FunSpec with Matchers {
     assert(expressionMean.length == expressionPCABases.rows, "rows is not correct")
     assert(expressionPCABases.cols == rank, "model is of incorrect rank")
     assert(expressionVariance.length == expressionPCABases.cols, "wrong number of variances")
-    val expression = ModelHelpers.buildFrom[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]](reference.shape.pointSet, expressionMean, expressionVariance, expressionPCABases)
+    val expression = ModelHelpers.buildFrom[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](reference.shape.pointSet, expressionMean, expressionVariance, expressionPCABases)
 
     def randomName = randomString(10)
     def randomPointOnRef = reference.shape.pointSet.points.toIndexedSeq(rnd.scalaRandom.nextInt(reference.shape.pointSet.numberOfPoints))
@@ -158,7 +158,7 @@ class FacesTestSuite extends FunSpec with Matchers {
       randomLandmarks.toMap)
   }
 
-  def randomGridModelExpress(rank: Int = 10, sdev: Double = 5.0, noise: Double = 0.05, cols: Int = 5, rows: Int = 5)(implicit rnd: Random): PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]] = {
+  def randomGridModelExpress(rank: Int = 10, sdev: Double = 5.0, noise: Double = 0.05, cols: Int = 5, rows: Int = 5)(implicit rnd: Random): PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]] = {
 
     val reference = randomGridMesh(cols, rows)
     val expressionN = 3 * cols * rows
@@ -167,7 +167,7 @@ class FacesTestSuite extends FunSpec with Matchers {
     val expressionPCABases = expressionDecomposition.q
     val expressionVariance = DenseVector.fill[Double](expressionN)(rnd.scalaRandom.nextDouble * sdev)
     val expressionNoise = rnd.scalaRandom.nextDouble * noise
-    PancakeDLRGP(ModelHelpers.buildFrom[_3D, UnstructuredPointsDomain[_3D], Vector[_3D]](reference.shape.pointSet, expressionMean, expressionVariance, expressionPCABases))
+    PancakeDLRGP(ModelHelpers.buildFrom[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](reference.shape.pointSet, expressionMean, expressionVariance, expressionPCABases))
 
   }
 }

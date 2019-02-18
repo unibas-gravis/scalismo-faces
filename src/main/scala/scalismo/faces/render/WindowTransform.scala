@@ -16,7 +16,7 @@
 
 package scalismo.faces.render
 
-import scalismo.geometry.{Point, Vector, _3D}
+import scalismo.geometry.{Point, EuclideanVector, _3D}
 
 /** transform a point from normalized coordinates [-1,1]x[-1,1]x[-1,1] to window coordinates [0,w]x[0,h]x[near,far] (y still upwards!) used by renderer */
 case class WindowTransform(width: Int, height: Int, near: Double = 0.0, far: Double = 1.0) extends InvertibleTransform3D {
@@ -27,7 +27,7 @@ case class WindowTransform(width: Int, height: Int, near: Double = 0.0, far: Dou
   )
 
   /** apply transform to a 3d vector */
-  override def apply(v: Vector[_3D]): Vector[_3D] = Vector(
+  override def apply(v: EuclideanVector[_3D]): EuclideanVector[_3D] = EuclideanVector(
     width / 2.0 * (v.x + 1.0),
     height / 2.0 * (-v.y + 1.0),
     (far - near) / 2.0 * v.z + (far + near) / 2.0
@@ -46,7 +46,7 @@ case class InverseWindowTransform(width: Int, height: Int, near: Double = 0.0, f
   )
 
   /** apply transform to a 3d vector */
-  override def apply(v: Vector[_3D]): Vector[_3D] = Vector(
+  override def apply(v: EuclideanVector[_3D]): EuclideanVector[_3D] = EuclideanVector(
     v.x * 2.0 / width - 1,
     - (v.y * 2.0 / height - 1),
     (v.z - (far + near) / 2) * 2.0 / (far - near)
@@ -90,7 +90,7 @@ case class WindowBoxTransform(width: Int, height: Int, widthBox: Int, heightBox:
     (far - near) / 2.0 * p.z + (far + near) / 2.0 // z same as WindowTransform
   )
 
-  override def apply(p: Vector[_3D]): Vector[_3D] = Vector(
+  override def apply(p: EuclideanVector[_3D]): EuclideanVector[_3D] = EuclideanVector(
     (p.x * ratioWidth - xInBoxScaledCoords) * widthBox,
     (-p.y * ratioHeight - yInBoxScaledCoords) * heightBox,
     (far - near) / 2.0 * p.z + (far + near) / 2.0 // z same as WindowTransform
@@ -111,7 +111,7 @@ case class InverseWindowBoxTransform(width: Int, height: Int, widthBox: Int, hei
     (p.z - (far + near) / 2) * 2.0 / (far - near) // z same as WindowTransform
   )
 
-  override def apply(p: Vector[_3D]): Vector[_3D] = Vector(
+  override def apply(p: EuclideanVector[_3D]): EuclideanVector[_3D] = EuclideanVector(
     (p.x / widthBox + xInBoxScaledCoords) / ratioWidth,
     -(p.y / heightBox + yInBoxScaledCoords) / ratioHeight,
     (p.z - (far + near) / 2) * 2.0 / (far - near) // z same as WindowTransform

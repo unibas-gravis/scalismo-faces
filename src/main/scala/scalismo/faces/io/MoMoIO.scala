@@ -27,7 +27,7 @@ import scalismo.common.{DiscreteDomain, PointId, UnstructuredPointsDomain, Vecto
 import scalismo.color.RGB
 import scalismo.faces.momo.{MoMo, MoMoBasic, MoMoExpress, PancakeDLRGP}
 import scalismo.faces.utils.ResourceManagement
-import scalismo.geometry.{Landmark, Point, Vector, _3D}
+import scalismo.geometry.{Landmark, Point, EuclideanVector, _3D}
 import scalismo.io.{HDF5File, HDF5Utils, LandmarkIO, NDArray}
 import scalismo.mesh.{TriangleCell, TriangleList, TriangleMesh3D}
 import scalismo.statisticalmodel.ModelHelpers
@@ -123,7 +123,7 @@ object MoMoIO {
     // expression model defaults to empty model
     if (h5file.exists(path.expression)) {
       val expressionMesh = readGravisModelRepresenter(h5file, path.expression).get
-      val expressionModel = readStatisticalModel3D[Vector[_3D]](h5file, path.expression, expressionMesh.pointSet).get
+      val expressionModel = readStatisticalModel3D[EuclideanVector[_3D]](h5file, path.expression, expressionMesh.pointSet).get
       if (shapeMesh.pointSet != expressionMesh.pointSet)
         throw new Exception("expression model does not share a domain, different underlying point sets")
       MoMo(shapeMesh, shapeModel, colorModel, expressionModel, landmarks)

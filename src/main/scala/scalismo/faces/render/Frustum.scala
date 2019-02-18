@@ -17,7 +17,7 @@
 package scalismo.faces.render
 
 import scalismo.geometry.Point._
-import scalismo.geometry.{Point, Vector, _2D}
+import scalismo.geometry.{Point, EuclideanVector, _2D}
 
 /** viewing frustum for camera projections, defines the viewing volume, see also: OpenGL */
 case class Frustum(left: Double, right: Double, bottom: Double, top: Double, near: Double, far: Double) {
@@ -78,7 +78,7 @@ case class Frustum(left: Double, right: Double, bottom: Double, top: Double, nea
 }
 
 object Frustum {
-  import scalismo.geometry.Vector._
+  import scalismo.geometry.EuclideanVector._
   /**
    * construct frustum from field of view, both horizontal and vertical
    *
@@ -131,7 +131,7 @@ object Frustum {
    * @param near        near plane (absolute value)
    * @param far         far plane (absolute value)
    */
-  def fromFocalWithSensor(focalLength: Double, sensorSize: Vector[_2D], near: Double, far: Double): Frustum = {
+  def fromFocalWithSensor(focalLength: Double, sensorSize: EuclideanVector[_2D], near: Double, far: Double): Frustum = {
     require(sensorSize.x > 0.0 && sensorSize.y > 0.0, "sensor size must be positive")
     fromFocal(focalLength / sensorSize.y, sensorSize.x / sensorSize.y, near, far)
   }

@@ -20,7 +20,7 @@ import java.io.{File, InputStream}
 
 import scalismo.faces.parameters.RenderParameter
 import scalismo.faces.sampling.face.ParametricLandmarksRenderer
-import scalismo.geometry.{Point, Vector, _2D}
+import scalismo.geometry.{Point, EuclideanVector, _2D}
 import scalismo.sampling.DistributionEvaluator
 
 import scala.io.Source
@@ -32,11 +32,11 @@ import scala.util.Try
   * @param renderer parametric landmarks renderer, needs to know Seq("center.nose.tip", "left.eye.corner_outer", "right.eye.corner_outer", "right.lips.corner", "left.lips.corner")
   * @param faceBox target face box
   * @param scaleEvaluator evaluates scale mismatch (as relative factor, 1.0 is a perfect match)
-  * @param positionEvaluator evaluates position mismatch (as offset, Vector(0, 0) is a perfect match) */
+  * @param positionEvaluator evaluates position mismatch (as offset, EuclideanVector(0, 0) is a perfect match) */
 class FaceBoxEvaluator(renderer: ParametricLandmarksRenderer,
                        faceBox: FaceBox,
                        scaleEvaluator: DistributionEvaluator[Double],
-                       positionEvaluator: DistributionEvaluator[Vector[_2D]])
+                       positionEvaluator: DistributionEvaluator[EuclideanVector[_2D]])
   extends DistributionEvaluator[RenderParameter] {
 
   // lmIds to estimate face scale
@@ -67,7 +67,7 @@ class FaceBoxEvaluator(renderer: ParametricLandmarksRenderer,
 
 /** a face detection candidate */
 case class FaceBox(topLeft: Point[_2D], bottomRight: Point[_2D], certainty: Double) {
-  val size: Vector[_2D] = bottomRight - topLeft
+  val size: EuclideanVector[_2D] = bottomRight - topLeft
   val center: Point[_2D] = topLeft + 0.5 *: size
   val scale: Double = size.norm / 3.0
 }
@@ -77,7 +77,7 @@ object FaceBox {
     // read file line by line
     val lines = Source.fromString(yaml).getLines()
     // extract position and scale
-    var boxPosition: Option[(Point[_2D], Vector[_2D])] = None
+    var boxPosition: Option[(Point[_2D], EuclideanVector[_2D])] = None
     var certainty: Option[Double] = None
     // extraction patterns
     val boxMatcher = "FaceBox:\\[([0-9.]+),([0-9.]+),([0-9.]+),([0-9.]+)\\]".r
@@ -88,7 +88,7 @@ object FaceBox {
       trimmed match {
         case boxMatcher(tlx, tly, sx, sy) =>
           val topLeft = Point(tlx.toDouble, tly.toDouble)
-          val size = Vector(sx.toDouble, sy.toDouble)
+          val size = EuclideanVector(sx.toDouble, sy.toDouble)
           boxPosition = Some(topLeft, size)
         case certaintyMatcher(c, _, _) =>
           certainty = Some(c.toDouble)

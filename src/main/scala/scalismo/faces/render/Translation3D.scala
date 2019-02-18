@@ -17,13 +17,12 @@
 package scalismo.faces.render
 
 import breeze.linalg.DenseMatrix
-import scalismo.geometry.Vector._
-import scalismo.geometry.{Point, SquareMatrix, Vector, _3D}
+import scalismo.geometry.{Point, SquareMatrix, EuclideanVector, _3D}
 
 /** 3D translation */
-case class Translation3D(t: Vector[_3D]) extends InvertibleTransform3D with Transform4x4 {
+case class Translation3D(t: EuclideanVector[_3D]) extends InvertibleTransform3D with Transform4x4 {
   override def apply(x: Point[_3D]): Point[_3D] = x + t
-  override def apply(v: Vector[_3D]): Vector[_3D] = v // a vector is not changed by a translation
+  override def apply(v: EuclideanVector[_3D]): EuclideanVector[_3D] = v // a vector is not changed by a translation
 
   override def inverted: Translation3D = Translation3D(-t)
 

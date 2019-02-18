@@ -17,10 +17,10 @@
 package scalismo.faces.parameters
 
 import scalismo.faces.render.{Affine3D, RenderTransforms}
-import scalismo.geometry.{Point, Point3D, Vector, _3D}
+import scalismo.geometry.{Point, Point3D, EuclideanVector, _3D}
 
 /** parameters describing the view setup (camera transform) */
-case class ViewParameter(translation: Vector[_3D],
+case class ViewParameter(translation: EuclideanVector[_3D],
                          pitch: Double,
                          yaw: Double,
                          roll: Double) {
@@ -36,8 +36,8 @@ case class ViewParameter(translation: Vector[_3D],
 }
 
 object ViewParameter {
-  val neutral = ViewParameter(Vector(0f, 0f, 0f), 0f, 0f, 0f)
-  val away1m = ViewParameter(Vector(0f, 0f, 1000f), 0f, 0f, 0f)
+  val neutral = ViewParameter(EuclideanVector(0f, 0f, 0f), 0f, 0f, 0f)
+  val away1m = ViewParameter(EuclideanVector(0f, 0f, 1000f), 0f, 0f, 0f)
 
   def fromPose(pose: Pose): ViewParameter = ViewParameter(pose.translation, pitch = pose.pitch, yaw = pose.yaw, roll = pose.roll)
 }

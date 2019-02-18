@@ -23,18 +23,18 @@ trait Transform3D { self =>
   /** apply transform to a 3d point */
   def apply(x: Point[_3D]): Point[_3D]
   /** apply transform to a 3d vector */
-  def apply(v: Vector[_3D]): Vector[_3D]
+  def apply(v: EuclideanVector[_3D]): EuclideanVector[_3D]
   /** compose with other transform */
   def compose(t: Transform3D): Transform3D = new Transform3D {
     override def apply(x: Point[_3D]): Point[_3D] = self(t(x))
-    override def apply(v: Vector[_3D]): Vector[_3D] = self(t(v))
+    override def apply(v: EuclideanVector[_3D]): EuclideanVector[_3D] = self(t(v))
   }
 }
 
 object Transform3D {
   val identity = new Transform3D {
     override def apply(x: Point[_3D]): Point[_3D] = x
-    override def apply(v: Vector[_3D]): Vector[_3D] = v
+    override def apply(v: EuclideanVector[_3D]): EuclideanVector[_3D] = v
   }
 }
 
@@ -48,20 +48,20 @@ trait InvertibleTransform3D extends Transform3D { self: Transform3D =>
     new InvertibleTransform3D {
       thisTransform =>
       override def apply(x: Point[_3D]): Point[_3D] = t(u(x))
-      override def apply(v: Vector[_3D]): Vector[_3D] = t(u(v))
+      override def apply(v: EuclideanVector[_3D]): EuclideanVector[_3D] = t(u(v))
       override def inverted = new InvertibleTransform3D {
         override def apply(x: Point[_3D]): Point[_3D] = u.inverted(t.inverted(x))
-        override def apply(v: Vector[_3D]): Vector[_3D] = u.inverted(t.inverted(v))
+        override def apply(v: EuclideanVector[_3D]): EuclideanVector[_3D] = u.inverted(t.inverted(v))
         override def inverted: InvertibleTransform3D {
           def inverted: InvertibleTransform3D with Object {
             def inverted: Any
 
-            def apply(v: Vector[_3D]): Vector[_3D]
+            def apply(v: EuclideanVector[_3D]): EuclideanVector[_3D]
 
             def apply(x: Point[_3D]): Point[_3D]
           }
 
-          def apply(v: Vector[_3D]): Vector[_3D]
+          def apply(v: EuclideanVector[_3D]): EuclideanVector[_3D]
 
           def apply(x: Point[_3D]): Point[_3D]
         } = thisTransform
@@ -85,10 +85,10 @@ case class Matrix4Transform(override val matrix4: DenseMatrix[Double]) extends T
     Point(tp(0) / tp(3), tp(1) / tp(3), tp(2) / tp(3))
   }
 
-  override def apply(v: Vector[_3D]): Vector[_3D] = {
+  override def apply(v: EuclideanVector[_3D]): EuclideanVector[_3D] = {
     val v4 = DenseVector(v.x, v.y, v.z, 0.0)
     val tp = matrix4 * v4
-    Vector(tp(0), tp(1), tp(2))
+    EuclideanVector(tp(0), tp(1), tp(2))
   }
 
   /** inverted version of this transform */

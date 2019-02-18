@@ -21,7 +21,7 @@ import scalismo.mesh.BarycentricCoordinates
 
 object RenderTransforms {
   /** default model transform, consisting of scaling, 3 (Euler) rotations (x, y, z) and translation */
-  def modelTransform(translation: Vector[_3D], scaling: Double, pitch: Double, yaw: Double, roll: Double): Affine3D = {
+  def modelTransform(translation: EuclideanVector[_3D], scaling: Double, pitch: Double, yaw: Double, roll: Double): Affine3D = {
     val rotX = Rotation3D.rotationX(pitch)
     val rotY = Rotation3D.rotationY(yaw)
     val rotZ = Rotation3D.rotationZ(roll)
@@ -37,7 +37,7 @@ object RenderTransforms {
    * @param lookAt   center point of the camera, looks at given point
    * @param upright  upwards direction of camera
    */
-  def viewTransformLookAt(position: Point[_3D], lookAt: Point[_3D], upright: Vector[_3D]): Affine3D = {
+  def viewTransformLookAt(position: Point[_3D], lookAt: Point[_3D], upright: EuclideanVector[_3D]): Affine3D = {
     // rotations according to lookAt and upright, as in gluLookAt
     val f = (lookAt - position).normalize
     val up = upright.normalize
@@ -50,12 +50,12 @@ object RenderTransforms {
     )
     // translation: camera center
     val p = position.toVector
-    val t = Vector(-s dot p, -u dot p, f dot p)
+    val t = EuclideanVector(-s dot p, -u dot p, f dot p)
     Affine3D(M, t)
   }
 
   /** default camera/view transform, consists of three rotations (Euler, xyz) and a translation of the camera center (inverts) */
-  def viewTransform(translation: Vector[_3D], pitch: Double, yaw: Double, roll: Double): Affine3D = {
+  def viewTransform(translation: EuclideanVector[_3D], pitch: Double, yaw: Double, roll: Double): Affine3D = {
     val rotX = Rotation3D.rotationX(pitch)
     val rotY = Rotation3D.rotationY(yaw)
     val rotZ = Rotation3D.rotationZ(roll)
