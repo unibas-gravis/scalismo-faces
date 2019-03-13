@@ -57,7 +57,7 @@ The current maintainers of the project (people who can merge pull requests) are:
 
 * [Ghazi Bouabene](https://github.com/ghazi-bouabene)
 * [Bernhard Egger](https://github.com/BernhardEgger)
-* [Andreas Forster](https://github.com/Andreas-Forster)
+* [Andreas Morel-Forster](https://github.com/Andreas-Forster)
 * [Thomas Gerig](https://github.com/gerith)
 * [Andreas Schneider](https://github.com/andreas-schneider)
 * [Sandro Schönborn](https://github.com/sschoenborn)
