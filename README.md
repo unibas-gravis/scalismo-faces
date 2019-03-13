@@ -49,18 +49,18 @@ Documentation
 
 There is also a [scalismo-faces google group](https://groups.google.com/forum/#!forum/scalismo-faces) for general questions and discussion.
 
-Contributors
-------------
-
-- Sandro Schönborn
-- Andreas Schneider
-- Andreas Forster
-- Bernhard Egger
-
 Maintainers
 -----------
 
-- University of Basel, Graphics and Vision research: [@unibas-gravis](https://github.com/unibas-gravis), [homepage](http://gravis.cs.unibas.ch)
+The project is developed and maintained by the [Graphics and Vision Research group](https://gravis.dmi.unibas.ch), [University of Basel](https://www.unibas.ch) in collaboration with [Shapemeans GmbH](https://www.shapemeans.com).
+The current maintainers of the project (people who can merge pull requests) are: 
+
+* [Ghazi Bouabene](https://github.com/ghazi-bouabene)
+* [Bernhard Egger](https://github.com/BernhardEgger)
+* [Andreas Morel-Forster](https://github.com/Andreas-Forster)
+* [Thomas Gerig](https://github.com/gerith)
+* [Andreas Schneider](https://github.com/andreas-schneider)
+* [Sandro Schönborn](https://github.com/sschoenborn)
 
 Contribution
 ------------
