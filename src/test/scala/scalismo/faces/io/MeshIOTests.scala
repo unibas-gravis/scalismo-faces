@@ -21,8 +21,9 @@ import java.io.File
 import scalismo.faces.FacesTestSuite
 import scalismo.color.RGBA
 import scalismo.faces.mesh.{ColorNormalMesh3D, OptionalColorNormalMesh3D, TextureMappedProperty}
-import scalismo.geometry.{Point, _2D}
-import scalismo.mesh.{BarycentricCoordinates, SurfacePointProperty, TriangleId, VertexColorMesh3D}
+import scalismo.faces.render.Transform3D
+import scalismo.geometry._
+import scalismo.mesh._
 
 class MeshIOTests extends FacesTestSuite {
 
@@ -220,5 +221,24 @@ class MeshIOTests extends FacesTestSuite {
         testWriteReadCyclePLY(mesh)
       }
     }
+
+    describe("can correctly write and read transformed meshes") {
+      val rndMeshTex: ColorNormalMesh3D = randomGridMeshWithTexture(5, 5)
+      val rndMesh: ColorNormalMesh3D = ColorNormalMesh3D(VertexColorMesh3D(rndMeshTex.shape, SurfacePointProperty.averagedPointProperty(rndMeshTex.color)))
+
+      it("a mesh with texture and normals") {
+        val mesh = OptionalColorNormalMesh3D(rndMeshTex.shape, Some(rndMeshTex.color), Some(rndMesh.normals))
+
+        val trafo = new  Transform3D {
+          override def apply(x: Point[_3D]): Point[_3D] = x + EuclideanVector(100,0,0)
+          override def apply(v: EuclideanVector[_3D]): EuclideanVector[_3D] = v+ EuclideanVector(100,0,0)
+        }
+
+        val transformed = mesh.transform(trafo)
+        testWriteReadCyclePLY(transformed)
+
+      }
+    }
+
   }
 }
