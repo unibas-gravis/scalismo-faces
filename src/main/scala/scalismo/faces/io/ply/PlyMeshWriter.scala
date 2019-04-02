@@ -88,7 +88,7 @@ private[io] case class PlyMeshWriter(url: String,
 
     val _vNormals = normals.flatMap {
       case n: SurfacePointProperty[EuclideanVector[_3D]] => Some(new VertexNormal(n))
-      case n: MappedSurfaceProperty[EuclideanVector[_3D],_] => {
+      case n: MappedSurfaceProperty[_,_] => {
         // fully evaluate the lazy mapped surface property
         val surfaceProp =  SurfacePointProperty.averagedPointProperty(n)
         Some(new VertexNormal(surfaceProp))
