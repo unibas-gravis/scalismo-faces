@@ -240,7 +240,7 @@ object PlyMeshReader {
         if (triangleNormals.isDefined) {
           TriangleProperty(triangleList, triangleNormals.get)
         } else {
-          throw new IOException("Could not read any surface color.")
+          throw new IOException("Could not read any surface normals.")
         }
       }
     }

@@ -25,8 +25,8 @@ import scalismo.faces.io.ply.PlyHelpers.PlyHeader._
 import scalismo.faces.io.ply.PlyHelpers._
 import scalismo.faces.io.ply.PlyMeshPropertyWriters._
 import scalismo.faces.mesh.{IndirectProperty, TextureMappedProperty, VertexPropertyPerTriangle}
-import scalismo.geometry.{IntVector, Point, EuclideanVector, _2D, _3D}
-import scalismo.mesh.{MeshSurfaceProperty, SurfacePointProperty, TriangleProperty}
+import scalismo.geometry._
+import scalismo.mesh._
 
 import scala.reflect.io.Path
 
@@ -88,6 +88,11 @@ private[io] case class PlyMeshWriter(url: String,
 
     val _vNormals = normals.flatMap {
       case n: SurfacePointProperty[EuclideanVector[_3D]] => Some(new VertexNormal(n))
+      case n: MappedSurfaceProperty[_,_] => {
+        // fully evaluate the lazy mapped surface property
+        val surfaceProp =  SurfacePointProperty.averagedPointProperty(n)
+        Some(new VertexNormal(surfaceProp))
+      }
       case _ => None
     }
 
