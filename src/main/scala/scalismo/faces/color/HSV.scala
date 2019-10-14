@@ -67,8 +67,15 @@ object HSV {
       val m = 1.0 - l
       val h1 = obj1.hue
       val h2 = obj2.hue
+
+      val hue_nonSanitized = math.atan2(l * math.sin(h1) + m * math.cos(h1), l * math.sin(h2) + m * math.cos(h2))
+      val hue =   if(hue_nonSanitized < 0){
+        hue_nonSanitized % (2 * Math.PI) + (2 * Math.PI)
+      } else {
+        hue_nonSanitized % (2 * Math.PI)
+      }
       HSV(
-        math.atan2(l * math.sin(h1) + m * math.cos(h1), l * math.sin(h2) + m * math.cos(h2)),
+        hue,
         obj1.saturation * l + obj2.saturation * m,
         obj1.value * l + obj2.value * m
       )

@@ -34,7 +34,13 @@ object WarpFieldVisualizer {
       // map len to value
       val value = len / maxLen
       val saturation = 1.0
-      val hue = dir
+
+      // since HSV to RGB conversion expects a number between 0 and 2 Pi, we need to sanitize dir (atan2 can return negative numbers)
+      val hue = if(dir < 0){
+        dir % (2 * Math.PI) + (2 * Math.PI)
+      } else {
+        dir % (2 * Math.PI)
+      }
       HSV(hue, saturation, value).toRGB
     }
     field.map(makeRGB)
