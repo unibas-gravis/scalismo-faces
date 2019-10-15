@@ -3,10 +3,12 @@ language: scala
 env:
  - SCALISMO_PLATFORM=linux64
 
+jdk:
+  - openjdk8
+
 scala:
-  - 2.12.1
+  - 2.12.8
 
 script:
-  - jdk_switcher use oraclejdk8
   - travis_wait sbt ++$TRAVIS_SCALA_VERSION update
   - sbt ++$TRAVIS_SCALA_VERSION -Djava.awt.headless=true compile test
