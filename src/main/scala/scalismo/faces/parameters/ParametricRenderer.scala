@@ -20,6 +20,7 @@ import scalismo.color.RGBA
 import scalismo.faces.image.PixelImage
 import scalismo.faces.mesh.ColorNormalMesh3D
 import scalismo.faces.render.{PixelShader, TriangleFilters, TriangleRenderer, ZBuffer}
+import scalismo.geometry.Point3D
 import scalismo.mesh.{MeshSurfaceProperty, TriangleMesh3D, VertexColorMesh3D}
 
 import scala.reflect.ClassTag
@@ -39,7 +40,7 @@ object ParametricRenderer {
     val buffer = ZBuffer(parameter.imageSize.width, parameter.imageSize.height, clearColor)
 
     val worldMesh = mesh.transform(parameter.modelViewTransform)
-    val backfaceCullingFilter = TriangleFilters.backfaceCullingFilter(worldMesh.shape, parameter.view.eyePosition)
+    val backfaceCullingFilter = TriangleFilters.backfaceCullingFilter(worldMesh.shape, Point3D.origin)
 
     TriangleRenderer.renderMesh(
       mesh.shape,
@@ -66,7 +67,7 @@ object ParametricRenderer {
     val buffer = ZBuffer(parameter.imageSize.width, parameter.imageSize.height, clearColor)
 
     val worldMesh = mesh.transform(parameter.modelViewTransform)
-    val backfaceCullingFilter = TriangleFilters.backfaceCullingFilter(worldMesh.shape, parameter.view.eyePosition)
+    val backfaceCullingFilter = TriangleFilters.backfaceCullingFilter(worldMesh.shape, Point3D.origin)
 
     TriangleRenderer.renderMesh[A](
       mesh.shape,
