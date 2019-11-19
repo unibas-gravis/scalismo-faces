@@ -15,11 +15,15 @@
  */
 package scalismo.faces.momo
 
-import breeze.linalg.{DenseMatrix, DenseVector, min, norm}
+import breeze.linalg.{*, DenseMatrix, DenseVector, min, norm}
 import breeze.numerics.abs
+import org.scalactic.TolerantNumerics
+import scalismo.color.RGBA
 import scalismo.common.{DiscreteField, PointId, UnstructuredPointsDomain}
 import scalismo.faces.FacesTestSuite
-import scalismo.geometry.{Point, EuclideanVector, _3D}
+import scalismo.faces.mesh.BinaryMask
+import scalismo.geometry.{EuclideanVector, Point, _3D}
+import scalismo.mesh.{SurfacePointProperty, VertexColorMesh3D}
 import scalismo.statisticalmodel.{DiscreteLowRankGaussianProcess, ModelHelpers}
 
 class ModelHelperTests extends FacesTestSuite {
@@ -48,6 +52,16 @@ class ModelHelperTests extends FacesTestSuite {
       }
       for (i <- 0 until A.rows) {
         A(i, j) should be ( s*B(i,j) +- threshold )
+      }
+    }
+  }
+
+  def matricesNearlyEqual(A: DenseMatrix[Double], B: DenseMatrix[Double], threshold: Double = 1E-6) {
+    A.cols shouldBe B.cols
+    A.rows shouldBe B.rows
+    for(j <- 0 until A.cols) {
+      for (i <- 0 until A.rows) {
+        A(i, j) should be ( B(i,j) +- threshold )
       }
     }
   }
@@ -256,6 +270,95 @@ class ModelHelperTests extends FacesTestSuite {
       val reducedMesh = Fixture.reducedMesh
       val distortedMesh = reducedMesh.copy(triangulation = reducedMesh.triangulation.copy(triangles = scala.util.Random.shuffle(reducedMesh.triangulation.triangles)))
       assert(ModelHelpers.maskMoMo(Fixture.randomModel,distortedMesh).isFailure)
+    }
+  }
+
+
+  describe("Reconstructive model") {
+
+    class Fixture {
+      val cols = 3 + rnd.scalaRandom.nextInt(20)
+      val rows = 3 + rnd.scalaRandom.nextInt(20)
+
+      val reference = randomGridMesh(cols,rows)
+      val trainingMeshes = (0 until (3 + rnd.scalaRandom.nextInt(50))).map( _ => randomGridMesh(cols,rows) )
+
+      val trainingFields = trainingMeshes.map { mesh =>
+        DiscreteField[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](reference.shape.pointSet,mesh.shape.pointSet.points.zip(reference.shape.pointSet.points).map(a => a._2 - a._1).toIndexedSeq)
+      }
+
+      val mask = {
+        // we account for the fact that when reducing a mesh based of points,
+        // more points can drop out if they are no longer contained in a triangle
+        val proposedMask = BinaryMask(IndexedSeq.fill[Boolean](reference.shape.pointSet.numberOfPoints-2)(rnd.scalaRandom.nextDouble()>0.05):+false:+true)
+        val referenceMasker = reference.shape.operations.maskPoints(proposedMask)
+        val reducedReference = referenceMasker.transformedMesh
+        BinaryMask.createFromMeshes(reference.shape,reducedReference)
+      }
+
+      def maskMesh(mesh: VertexColorMesh3D) = {
+        val meshMasker = mesh.shape.operations.maskPoints(mask)
+        VertexColorMesh3D(meshMasker.transformedMesh, meshMasker.applyToSurfaceProperty(mesh.color).asInstanceOf[SurfacePointProperty[RGBA]])
+      }
+
+      def maskField(field: DiscreteField[_3D,UnstructuredPointsDomain[_3D],EuclideanVector[_3D]]):DiscreteField[_3D,UnstructuredPointsDomain[_3D],EuclideanVector[_3D]] =  {
+        DiscreteField(UnstructuredPointsDomain(mask.cut(field.domain.pointSequence)),mask.cut(field.data))
+      }
+
+      val maskedReference = maskMesh(reference)
+      val maskedMeshes = trainingMeshes.map(maskMesh)
+      val maskedTrainingFields = maskedMeshes.map { mesh =>
+        DiscreteField[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](maskedReference.shape.pointSet,mesh.shape.pointSet.points.zip(maskedReference.shape.pointSet.points).map(a => a._2 - a._1).toIndexedSeq)
+      }
+
+      val maskedModel = ModelHelpers.createUsingPCA(maskedReference.shape.pointSet,maskedTrainingFields)
+      val reconstructiveModel = ModelHelpers.createReconstructiveUsingPCA(reference.shape.pointSet,trainingFields,mask)
+
+    }
+
+    it ("should return the same instance in the masked area as the masked model") {
+      for (i <- 0 until 20) {
+        val fixture = new Fixture()
+        val masked = fixture.maskedModel
+        val reconstructive = fixture.reconstructiveModel
+        val coeffs = DenseVector.fill(masked.rank)(rnd.scalaRandom.nextGaussian())
+        val instance = masked.instance(coeffs)
+        val reconstructed = fixture.maskField(reconstructive.instance(coeffs))
+
+        require(instance equals reconstructed)
+      }
+    }
+
+
+    it ("should return the same as calculating the reconstruction of eigenvectors") {
+      val fixture = new Fixture()
+      val domain = fixture.maskedReference.shape.pointSet
+      val discreteFields = fixture.maskedTrainingFields
+      val threshold = 1e-8
+
+      val X = ModelHelpers.buildDataMatrixWithSamplesInCols[_3D,UnstructuredPointsDomain[_3D],EuclideanVector[_3D]](domain, discreteFields)
+      val (x0,xmean) = ModelHelpers.removeColMean(X)
+      val (basis, variance, mean) = ModelHelpers.calculatePPCABasis(X,0.0,threshold)
+
+      val XC = ModelHelpers.buildDataMatrixWithSamplesInCols[_3D,UnstructuredPointsDomain[_3D],EuclideanVector[_3D]](fixture.reference.shape.pointSet,fixture.trainingFields)
+      val (xC0,xcmean) = ModelHelpers.removeColMean(XC.copy)
+      val C = DenseMatrix((0 until basis.cols).map{i =>
+        val col = basis(::,i).toDenseVector
+        x0.toDenseMatrix \ col
+      }:_*)
+      val basisC = xC0 * C.t
+
+      val M = ModelHelpers.buildColumnIndexingVectorForMask[_3D,UnstructuredPointsDomain[_3D],EuclideanVector[_3D]](domain, fixture.mask)
+      val (basisR, varianceR, meanR) = ModelHelpers.calculateMaskedPPCABasis(XC,M,0.0,threshold)
+
+      val nearEquality =  TolerantNumerics.tolerantDoubleEquality(1.0e-8)
+
+      require(xcmean.size == meanR.size,s"${xcmean.size} != ${meanR.size}")
+      vectorsNearlyEqual(xcmean,meanR)
+
+      require(basisC.rows == basisR.rows,s"${basisC.rows} != ${basisR.rows}")
+      require(basisC.cols == basisR.cols,s"${basisC.cols} != ${basisR.cols}")
+      matricesNearlyEqual(basisC,basisR)
     }
   }
 
