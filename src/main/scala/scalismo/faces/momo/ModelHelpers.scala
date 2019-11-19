@@ -18,17 +18,19 @@ package scalismo.statisticalmodel
 import breeze.linalg.svd.SVD
 import breeze.linalg.{*, DenseMatrix, DenseVector}
 import scalismo.common._
+import scalismo.faces.mesh.BinaryMask
 import scalismo.faces.momo.{MoMo, PancakeDLRGP}
 import scalismo.geometry._
 import scalismo.mesh.TriangleMesh
 
+import scala.collection.immutable
 import scala.util.{Failure, Success, Try}
 
 object ModelHelpers {
 
-
   /**
     *  Converts a deformation model (DLRGP for EuclideanVector[_3D]) to a point distribution model (DLRGP for Point[_3D]).
+    *
     * @param model DLRGP EuclideanVector[_3D] model
     * @param reference Reference used to map the deformation model to a point model.
     * @return DLRGP Point[_3D] model
@@ -97,14 +99,40 @@ object ModelHelpers {
     * @param threshold      The minimal value to keep the basis.
     * @return A discrete low rank GP learned from the samples.
     */
-  def createUsingPCA[D <: Dim: NDSpace, DDomain <: DiscreteDomain[D], Value](domain: DDomain,
-                                               discreteFields: Seq[DiscreteField[D, DDomain, Value]],
-                                               threshold: Double = 1.0e-8)
-                                               (implicit vectorizer: Vectorizer[Value])
-  : DiscreteLowRankGaussianProcess[D, DDomain, Value] = {
+  def createUsingPCA[D <: Dim: NDSpace, DDomain <: DiscreteDomain[D], Value](
+    domain: DDomain,
+    discreteFields: Seq[DiscreteField[D, DDomain, Value]],
+    threshold: Double = 1.0e-8
+  )(
+    implicit vectorizer: Vectorizer[Value]
+  ): DiscreteLowRankGaussianProcess[D, DDomain, Value] = {
     val X = buildDataMatrixWithSamplesInCols[D, DDomain, Value](domain, discreteFields)
     val (basis, variance, mean) = calculatePPCABasis(X,0.0,threshold)
     DiscreteLowRankGaussianProcess(domain,mean,variance,basis)
+  }
+
+  /**
+    * Method to build a reconstructive model.
+    * The statistics is only calculated in the region indicated by the mask. Then a full
+    * model is calculated based on the completion predicted by the input data.
+    * @param domain domain of the full model
+    * @param discreteFields data to build the full model from
+    * @param mask indicates the region over which the statistic is calculated
+    * @param threshold removes eigenvalue/eigenvector pairs if the eigenvalue is below the threshold
+    */
+  def createReconstructiveUsingPCA[D <: Dim: NDSpace, DDomain <: DiscreteDomain[D], Value](
+    domain: DDomain,
+    discreteFields: Seq[DiscreteField[D, DDomain, Value]],
+    mask: BinaryMask,
+    threshold: Double = 1.0e-8
+  )(
+    implicit vectorizer: Vectorizer[Value]
+  ): DiscreteLowRankGaussianProcess[D, DDomain, Value] = {
+    val X = buildDataMatrixWithSamplesInCols[D, DDomain, Value](domain, discreteFields)
+    val M = buildColumnIndexingVectorForMask[D, DDomain, Value](domain, mask)
+    val (basis, variance, mean) = calculateMaskedPPCABasis(X,M,0.0,threshold)
+
+    DiscreteLowRankGaussianProcess(domain, mean, variance, basis)
   }
 
 
@@ -195,11 +223,11 @@ object ModelHelpers {
     * @param threshold Threshold for keeping components.
     * @return (basis,variance,mean)
     */
-  def calculatePPCABasis[D <: Dim : NDSpace, DDomain <: DiscreteDomain[D], Value](X: DenseMatrix[Double],
-                                                 noiseVariance: Double,
-                                                 threshold: Double = 1.0e-8)
-                                                (implicit vectorizer: Vectorizer[Value])
-  : (DenseMatrix[Double], DenseVector[Double], DenseVector[Double]) = {
+  def calculatePPCABasis(
+    X: DenseMatrix[Double],
+    noiseVariance: Double,
+    threshold: Double = 1.0e-8
+  ): (DenseMatrix[Double], DenseVector[Double], DenseVector[Double]) = {
     val m = X.rows
     val n = X.cols
 
@@ -218,16 +246,77 @@ object ModelHelpers {
     (eVec(::, 0 until rank), rVal(0 until rank), meanVec)
   }
 
+
+  /**
+    * @param X Data matrix.
+    * @param M selection or rows to perform the PPCA on it
+    * @param noiseVariance External estimate of the noise variance.
+    * @param threshold Threshold for keeping components.
+    * @return (basis,variance,mean)
+    */
+  def calculateMaskedPPCABasis(
+    X: DenseMatrix[Double],
+    M: IndexedSeq[Int],
+    noiseVariance: Double,
+    threshold: Double = 1.0e-8
+  ): (DenseMatrix[Double], DenseVector[Double], DenseVector[Double]) = {
+    val m = M.size
+    val n = X.cols
+
+    val (x0, meanVec) = removeColMean(X)
+
+    // decide what to do depending on the dimensions
+    val (eVec, eVal) = if (n < m) {
+      decomposeMaskedGramMatrix(x0,M,threshold)
+    } else {
+      ???
+    }
+
+    val rVal = eVal.map(_ - noiseVariance)
+    val rank = rVal.toArray.count(_ > threshold)
+
+    (eVec(::, 0 until rank), rVal(0 until rank), meanVec)
+  }
+
   /**
     * Calculate the orthonormal basis and the variances of XX' using the Gram matrix X'X.
     *
     * @return The cols of the matrix hold the orthonormal eigenvectors and the vector the eigenvalues.
     */
   def decomposeGramMatrix(X: DenseMatrix[Double], threshold: Double = 1.0e-8): (DenseMatrix[Double], DenseVector[Double]) = {
-    val m = X.rows
     val n = X.cols
 
     val G = X.t * X
+
+    val SVD(u, s, _) = breeze.linalg.svd(G * (1.0 / (n-1)))
+
+    // calculate factor for eigenvectors
+    val S = s.map(t => Math.sqrt(t * n))
+    val SInv = s.map(t => if (Math.sqrt(t) > 1.0e-14) 1.0 / Math.sqrt(t * (n-1)) else 0.0)
+
+    // a Matrix with the scaled eigenvectors
+    val U = X * u * breeze.linalg.diag(SInv)
+
+    val rank = s.toArray.count(_ > threshold)
+
+    (U(::, 0 until rank), s(0 until rank))
+  }
+
+  /**
+    * Calculate the orthonormal basis and the variances of XX' using the Gram matrix X'X.
+    *
+    * @return The cols of the matrix hold the orthonormal eigenvectors and the vector the eigenvalues.
+    */
+  def decomposeMaskedGramMatrix(
+    X: DenseMatrix[Double],
+    M: IndexedSeq[Int],
+    threshold: Double = 1.0e-8
+  ): (DenseMatrix[Double], DenseVector[Double]) = {
+
+    val n = X.cols
+
+    val X0 = X(M,::).toDenseMatrix
+    val G = X0.t * X0
 
     val SVD(u, s, vt) = breeze.linalg.svd(G * (1.0 / (n-1)))
 
@@ -248,13 +337,16 @@ object ModelHelpers {
     *
     * @return The cols of the matrix hold the orthonormal eigenvectors and the vector the eigenvalues.
     */
-  def decomposeCovarianceMatrix(X: DenseMatrix[Double], threshold: Double = 1.0e-8): (DenseMatrix[Double], DenseVector[Double]) = {
-    val m = X.rows
+  def decomposeCovarianceMatrix(
+    X: DenseMatrix[Double],
+    threshold: Double = 1.0e-8
+  ): (DenseMatrix[Double], DenseVector[Double]) = {
+
     val n = X.cols
 
     val Cov = X * X.t * (1.0 / (n-1))
 
-    val SVD(u, s, v) = breeze.linalg.svd(Cov)
+    val SVD(u, s, _) = breeze.linalg.svd(Cov)
     val rank = s.toArray.count(_ > threshold)
 
     (u(::, 0 until rank), s(0 until rank))
@@ -268,6 +360,7 @@ object ModelHelpers {
     * @return
     */
   def removeRowMean(X: DenseMatrix[Double]): (DenseMatrix[Double], DenseVector[Double]) = {
+
     val X0 = X
     val m: DenseVector[Double] = breeze.stats.mean(X0(::, *)).t.toDenseVector
     for (i <- 0 until X0.rows) {
@@ -294,9 +387,12 @@ object ModelHelpers {
   /**
     * Build matrix with the samples stored in rows.
     */
-  def buildDataMatrixWithSamplesInRows[D <: Dim : NDSpace, DDomain <: DiscreteDomain[D], Value](domain: DiscreteDomain[D], discreteFields: Seq[DiscreteField[D, DDomain, Value]])
-                                                                 (implicit vectorizer: Vectorizer[Value])
-  : DenseMatrix[Double] = {
+  def buildDataMatrixWithSamplesInRows[D <: Dim : NDSpace, DDomain <: DiscreteDomain[D], Value](
+    domain: DiscreteDomain[D],
+    discreteFields: Seq[DiscreteField[D, DDomain, Value]]
+  )(
+    implicit vectorizer: Vectorizer[Value]
+  ): DenseMatrix[Double] = {
 
     val dim = vectorizer.dim
     val n = discreteFields.size
@@ -321,9 +417,12 @@ object ModelHelpers {
   /**
     * Build matrix with the samples stored in cols.
     */
-  def buildDataMatrixWithSamplesInCols[D <: Dim : NDSpace, DDomain <: DiscreteDomain[D], Value](domain: DDomain, discreteFields: Seq[DiscreteField[D, DDomain, Value]])
-                                                                 (implicit vectorizer: Vectorizer[Value])
-  : DenseMatrix[Double] = {
+  def buildDataMatrixWithSamplesInCols[D <: Dim : NDSpace, DDomain <: DiscreteDomain[D], Value](
+    domain: DDomain,
+    discreteFields: Seq[DiscreteField[D, DDomain, Value]]
+  )(
+    implicit vectorizer: Vectorizer[Value]
+  ): DenseMatrix[Double] = {
 
     val dim = vectorizer.dim
     val n = discreteFields.size
@@ -344,5 +443,23 @@ object ModelHelpers {
       }
     }
     X
+  }
+
+  def buildColumnIndexingVectorForMask[D <: Dim : NDSpace, DDomain <: DiscreteDomain[D], Value](
+    domain: DDomain,
+    mask: BinaryMask
+  )(
+    implicit vectorizer: Vectorizer[Value]
+  ): IndexedSeq[Int] = {
+
+    val dim = vectorizer.dim
+    val p = domain.numberOfPoints
+    val m = p * dim
+
+    val q = mask.entries.zipWithIndex.filter(_._1).flatMap { case (b,i) =>
+        val s = i * dim until (i + 1) * dim
+        s
+    }
+    q
   }
 }
