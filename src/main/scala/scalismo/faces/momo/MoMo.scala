@@ -179,8 +179,7 @@ object MoMo {
     */
   def fromStatisticalMeshModel(shape: StatisticalMeshModel,
                                color: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], RGB],
-                               shapeNoiseVariance: Double = 0.0,
-                               colorNoiseVariance: Double = 0.0): MoMoBasic = {
+                               shapeNoiseVariance: Double = 0.0): MoMoBasic = {
     val shapeModel = PancakeDLRGP(ModelHelpers.vectorToPointDLRGP(shape.gp, shape.referenceMesh), shapeNoiseVariance)
     MoMoBasic(shape.referenceMesh, shapeModel, color)
   }
