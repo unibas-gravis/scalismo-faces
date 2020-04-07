@@ -23,7 +23,7 @@ import scalismo.faces.momo.{MoMo, PancakeDLRGP}
 import scalismo.geometry._
 import scalismo.mesh.TriangleMesh
 
-import scala.collection.immutable
+import scala.language.higherKinds
 import scala.util.{Failure, Success, Try}
 
 object ModelHelpers {
@@ -35,25 +35,25 @@ object ModelHelpers {
     * @param reference Reference used to map the deformation model to a point model.
     * @return DLRGP Point[_3D] model
     */
-  def vectorToPointDLRGP(model: DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]],
+  def vectorToPointDLRGP(model: DiscreteLowRankGaussianProcess[_3D, TriangleMesh, EuclideanVector[_3D]],
                          reference: TriangleMesh[_3D])
-  : DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], Point[_3D]] = {
-    def vectorFieldToPointField( pf: DiscreteField[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]],
+  : DiscreteLowRankGaussianProcess[_3D, TriangleMesh, Point[_3D]] = {
+    def vectorFieldToPointField( pf: DiscreteField[_3D, TriangleMesh, EuclideanVector[_3D]],
                                  f: (EuclideanVector[_3D], PointId) => Point[_3D]
-                               ) = new DiscreteField[_3D, UnstructuredPointsDomain[_3D], Point[_3D]](
+                               ) = new DiscreteField[_3D, TriangleMesh, Point[_3D]](
       pf.domain,
       pf.valuesWithIds.map{ case (v,i) =>f(v, i)}.toIndexedSeq
     )
 
     val newKLBasis = model.klBasis.map( b =>
-      DiscreteLowRankGaussianProcess.Eigenpair[_3D, UnstructuredPointsDomain[_3D], Point[_3D]](
+      DiscreteLowRankGaussianProcess.Eigenpair[_3D, TriangleMesh, Point[_3D]](
         b.eigenvalue,
         vectorFieldToPointField( b.eigenfunction, (v: EuclideanVector[_3D], _) => v.toPoint )
       )
     )
     val newMeanField = vectorFieldToPointField(model.mean, (v: EuclideanVector[_3D], i: PointId) => reference.pointSet.point(i)+v)
 
-    DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], Point[_3D]](newMeanField, newKLBasis)
+    DiscreteLowRankGaussianProcess[_3D, TriangleMesh, Point[_3D]](newMeanField, newKLBasis)
   }
 
   /**
@@ -62,29 +62,29 @@ object ModelHelpers {
     * @param reference Reference used to map the point model to a deformation model.
     * @return DLRGP EuclideanVector[_3D] model
     */
-  def pointToVectorDLRGP(model: DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], Point[_3D]], reference: TriangleMesh[_3D]): DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]] = {
-    def pointFieldToVectorField( pf: DiscreteField[_3D, UnstructuredPointsDomain[_3D], Point[_3D]],
+  def pointToVectorDLRGP(model: DiscreteLowRankGaussianProcess[_3D, TriangleMesh, Point[_3D]], reference: TriangleMesh[_3D]): DiscreteLowRankGaussianProcess[_3D, TriangleMesh, EuclideanVector[_3D]] = {
+    def pointFieldToVectorField( pf: DiscreteField[_3D, TriangleMesh, Point[_3D]],
                                  f: (Point[_3D], PointId) => EuclideanVector[_3D]
-                               ) = new DiscreteField[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](
+                               ) = new DiscreteField[_3D, TriangleMesh, EuclideanVector[_3D]](
       pf.domain,
       pf.valuesWithIds.map{ case (v,i) =>f(v, i)}.toIndexedSeq
     )
 
     val newKLBasis = model.klBasis.map( b =>
-      DiscreteLowRankGaussianProcess.Eigenpair[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](
+      DiscreteLowRankGaussianProcess.Eigenpair[_3D, TriangleMesh, EuclideanVector[_3D]](
         b.eigenvalue,
         pointFieldToVectorField( b.eigenfunction, (v: Point[_3D], _) => v.toVector )
       )
     )
     val newMeanField = pointFieldToVectorField(model.mean, (p: Point[_3D], i: PointId) => p-reference.pointSet.point(i) )
 
-    DiscreteLowRankGaussianProcess[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](newMeanField, newKLBasis)
+    DiscreteLowRankGaussianProcess[_3D, TriangleMesh, EuclideanVector[_3D]](newMeanField, newKLBasis)
   }
 
   /**
     * Helper function to build a DLRGP. Simply provides access to the constructor.
     */
-  def buildFrom[D <: Dim : NDSpace, DDomain <: DiscreteDomain[D], Value](domain: DDomain, meanVec: DenseVector[Double], d2: DenseVector[Double], U: DenseMatrix[Double])
+  def buildFrom[D <: Dim : NDSpace, DDomain[A] <: DiscreteDomain[A], Value](domain: DDomain[D], meanVec: DenseVector[Double], d2: DenseVector[Double], U: DenseMatrix[Double])
                                           (implicit vectorizer: Vectorizer[Value])
   : DiscreteLowRankGaussianProcess[D, DDomain, Value] = {
     new DiscreteLowRankGaussianProcess[D, DDomain, Value](domain, meanVec, d2, U)
@@ -99,8 +99,8 @@ object ModelHelpers {
     * @param threshold      The minimal value to keep the basis.
     * @return A discrete low rank GP learned from the samples.
     */
-  def createUsingPCA[D <: Dim: NDSpace, DDomain <: DiscreteDomain[D], Value](
-    domain: DDomain,
+  def createUsingPCA[D <: Dim: NDSpace, DDomain[A] <: DiscreteDomain[A], Value](
+    domain: DDomain[D],
     discreteFields: Seq[DiscreteField[D, DDomain, Value]],
     threshold: Double = 1.0e-8
   )(
@@ -120,8 +120,8 @@ object ModelHelpers {
     * @param mask indicates the region over which the statistic is calculated
     * @param threshold removes eigenvalue/eigenvector pairs if the eigenvalue is below the threshold
     */
-  def createReconstructiveUsingPCA[D <: Dim: NDSpace, DDomain <: DiscreteDomain[D], Value](
-    domain: DDomain,
+  def createReconstructiveUsingPCA[D <: Dim: NDSpace, DDomain[A] <: DiscreteDomain[A], Value](
+    domain: DDomain[D],
     discreteFields: Seq[DiscreteField[D, DDomain, Value]],
     mask: BinaryMask,
     threshold: Double = 1.0e-8
@@ -143,13 +143,14 @@ object ModelHelpers {
     * @param discreteFields The training samples.
     * @return A discrete low rank GP learned from the samples.
     */
-  def createUsingPPCA[D <: Dim: NDSpace, DDomain <: DiscreteDomain[D], Value](domain: DDomain,
-                                                discreteFields: Seq[DiscreteField[D, DDomain, Value]],
-                                                noiseVariance: Double,
-                                                threshold: Double = 1.0e-8)
-                                               (implicit vectorizer: Vectorizer[Value])
-  : PancakeDLRGP[D, DDomain, Value] = {
-
+  def createUsingPPCA[D <: Dim: NDSpace, DDomain[A] <: DiscreteDomain[A], Value](
+      domain: DDomain[D],
+      discreteFields: Seq[DiscreteField[D, DDomain, Value]],
+      noiseVariance: Double,
+      threshold: Double = 1.0e-8
+  )(
+    implicit vectorizer: Vectorizer[Value]
+  ): PancakeDLRGP[D, DDomain, Value] = {
     val X = buildDataMatrixWithSamplesInCols[D, DDomain, Value](domain, discreteFields)
     val (basis, variance, mean) = calculatePPCABasis(X,noiseVariance,threshold)
     PancakeDLRGP(DiscreteLowRankGaussianProcess(domain,mean,variance,basis), noiseVariance)
@@ -176,11 +177,22 @@ object ModelHelpers {
     }
 
     val remainingPtIds = maskedMesh.pointSet.pointIds.map(id => op.pointBackMap(id)).toIndexedSeq
-    val maskedModelShape = momo.neutralModel.shape.marginal(remainingPtIds)
-    val maskedModelColor = momo.neutralModel.color.marginal(remainingPtIds)
+    val newRef: TriangleMesh[_3D] = referenceMesh.operations.maskPoints(f => remainingPtIds.contains(f)).transformedMesh
+
+    val maskedModelShape = {
+      val newGP = momo.neutralModel.shape.gpModel.interpolate(NearestNeighborInterpolator()).discretize(newRef)
+      PancakeDLRGP(newGP,momo.neutralModel.shape.noiseVariance)
+    }
+    val maskedModelColor = {
+      val newGP = momo.neutralModel.color.gpModel.interpolate(NearestNeighborInterpolator()).discretize(newRef)
+      PancakeDLRGP(newGP,momo.neutralModel.color.noiseVariance)
+    }
 
     if(momo.hasExpressions){
-      val maskedModelExpressions = momo.expressionModel.get.expression.marginal(remainingPtIds)
+      val maskedModelExpressions = {
+        val newGP = momo.expressionModel.get.expression.gpModel.interpolate(NearestNeighborInterpolator()).discretize(newRef)
+        PancakeDLRGP(newGP,momo.expressionModel.get.expression.noiseVariance)
+      }
       Success(MoMo(maskedMesh, maskedModelShape, maskedModelColor, maskedModelExpressions, momo.landmarks))
     } else {
       Success(MoMo(maskedMesh, maskedModelShape, maskedModelColor, momo.landmarks))
@@ -197,15 +209,27 @@ object ModelHelpers {
     */
 
   def maskMoMo(momo : MoMo, maskMesh: TriangleMesh[_3D]): Try[MoMo] = {
+    val referenceMesh = momo.referenceMesh
 
     val remainingPtIds = maskMesh.pointSet.points.map(p => momo.referenceMesh.pointSet.findClosestPoint(p).id).toIndexedSeq
     val maskedReference = momo.referenceMesh.operations.maskPoints(pid => remainingPtIds.contains(pid)).transformedMesh
     if (maskMesh == maskedReference) {
-      val maskedModelShape = momo.neutralModel.shape.marginal(remainingPtIds)
-      val maskedModelColor = momo.neutralModel.color.marginal(remainingPtIds)
+      val newRef: TriangleMesh[_3D] = referenceMesh.operations.maskPoints(f => remainingPtIds.contains(f)).transformedMesh
 
-      if (momo.hasExpressions) {
-        val maskedModelExpressions = momo.expressionModel.get.expression.marginal(remainingPtIds)
+      val maskedModelShape = {
+        val newGP = momo.neutralModel.shape.gpModel.interpolate(NearestNeighborInterpolator()).discretize(newRef)
+        PancakeDLRGP(newGP,momo.neutralModel.shape.noiseVariance)
+      }
+      val maskedModelColor = {
+        val newGP = momo.neutralModel.color.gpModel.interpolate(NearestNeighborInterpolator()).discretize(newRef)
+        PancakeDLRGP(newGP,momo.neutralModel.color.noiseVariance)
+      }
+
+      if(momo.hasExpressions){
+        val maskedModelExpressions = {
+          val newGP = momo.expressionModel.get.expression.gpModel.interpolate(NearestNeighborInterpolator()).discretize(newRef)
+          PancakeDLRGP(newGP,momo.expressionModel.get.expression.noiseVariance)
+        }
         Success(MoMo(maskMesh, maskedModelShape, maskedModelColor, maskedModelExpressions, momo.landmarks))
       } else {
         Success(MoMo(maskMesh, maskedModelShape, maskedModelColor, momo.landmarks))
@@ -387,7 +411,7 @@ object ModelHelpers {
   /**
     * Build matrix with the samples stored in rows.
     */
-  def buildDataMatrixWithSamplesInRows[D <: Dim : NDSpace, DDomain <: DiscreteDomain[D], Value](
+  def buildDataMatrixWithSamplesInRows[D <: Dim : NDSpace, DDomain[A] <: DiscreteDomain[A], Value](
     domain: DiscreteDomain[D],
     discreteFields: Seq[DiscreteField[D, DDomain, Value]]
   )(
@@ -396,7 +420,7 @@ object ModelHelpers {
 
     val dim = vectorizer.dim
     val n = discreteFields.size
-    val p = domain.numberOfPoints
+    val p = domain.pointSet.numberOfPoints
 
     // create the data matrix
     val X = DenseMatrix.zeros[Double](n, p * dim)
@@ -417,8 +441,8 @@ object ModelHelpers {
   /**
     * Build matrix with the samples stored in cols.
     */
-  def buildDataMatrixWithSamplesInCols[D <: Dim : NDSpace, DDomain <: DiscreteDomain[D], Value](
-    domain: DDomain,
+  def buildDataMatrixWithSamplesInCols[D <: Dim : NDSpace, DDomain[A] <: DiscreteDomain[A], Value](
+    domain: DDomain[D],
     discreteFields: Seq[DiscreteField[D, DDomain, Value]]
   )(
     implicit vectorizer: Vectorizer[Value]
@@ -426,7 +450,7 @@ object ModelHelpers {
 
     val dim = vectorizer.dim
     val n = discreteFields.size
-    val p = domain.numberOfPoints
+    val p = domain.pointSet.numberOfPoints
     val m = p * dim
 
     // create the data matrix
@@ -445,15 +469,15 @@ object ModelHelpers {
     X
   }
 
-  def buildColumnIndexingVectorForMask[D <: Dim : NDSpace, DDomain <: DiscreteDomain[D], Value](
-    domain: DDomain,
+  def buildColumnIndexingVectorForMask[D <: Dim : NDSpace, DDomain[A] <: DiscreteDomain[A], Value](
+    domain: DDomain[D],
     mask: BinaryMask
   )(
     implicit vectorizer: Vectorizer[Value]
   ): IndexedSeq[Int] = {
 
     val dim = vectorizer.dim
-    val p = domain.numberOfPoints
+    val p = domain.pointSet.numberOfPoints
     val m = p * dim
 
     val q = mask.entries.zipWithIndex.filter(_._1).flatMap { case (b,i) =>

@@ -18,11 +18,12 @@ package scalismo.faces.mesh
 import java.io.File
 
 import scalismo.common.UnstructuredPointsDomain.Create
-import scalismo.common.{DiscreteDomain, DiscreteField, PointId, UnstructuredPointsDomain}
+import scalismo.common.{DiscreteDomain, DiscreteField, PointId, UnstructuredPoints, UnstructuredPointsDomain}
 import scalismo.faces.io.GravisArrayIO
 import scalismo.geometry.{Dim, NDSpace, _3D}
 import scalismo.mesh.TriangleMesh
 
+import scala.language.higherKinds
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
 
@@ -46,10 +47,10 @@ case class BinaryMask(entries: IndexedSeq[Boolean]) extends (PointId => Boolean)
   /**
     * Masks a DiscreteField according to the mask.
     */
-  def cut[D <: Dim : NDSpace, DDomain <: DiscreteDomain[D], T](field: DiscreteField[D, DDomain, T])(implicit creator: Create[D]): DiscreteField[D, UnstructuredPointsDomain[D], T] = {
-    require(field.domain.numberOfPoints == entries.size,
+  def cut[D <: Dim : NDSpace: Create, DDomain[A] <: DiscreteDomain[A], T](field: DiscreteField[D, DDomain, T])(implicit creator: UnstructuredPoints.Create[D]): DiscreteField[D, UnstructuredPointsDomain, T] = {
+    require(field.domain.pointSet.numberOfPoints == entries.size,
       "The domain of the field and the mask need to have the same length!!!")
-    val maskedPoints = cut(field.domain.points.toIndexedSeq)
+    val maskedPoints = cut(field.domain.pointSet.points.toIndexedSeq)
     val maskedData = cut(field.data)
     DiscreteField(UnstructuredPointsDomain(maskedPoints), maskedData)
   }
@@ -142,7 +143,7 @@ object BinaryMask {
     * @param masked Mesh that can be made from the original when masking it.
     */
   def createFromMeshes(original: TriangleMesh[_3D], masked: TriangleMesh[_3D]): BinaryMask = {
-    createFromUnstructuredPointsDomains(original.pointSet,masked.pointSet)
+    createFromUnstructuredPoints(original.pointSet,masked.pointSet)
   }
 
   /**
@@ -152,7 +153,7 @@ object BinaryMask {
     * @param original Larger UnstructuredPointsDomain.
     * @param masked Masked version of the larger UnstructuredPointsDomain.
     */
-  def createFromUnstructuredPointsDomains(original: UnstructuredPointsDomain[_3D], masked: UnstructuredPointsDomain[_3D]): BinaryMask = {
+  def createFromUnstructuredPoints(original: UnstructuredPoints[_3D], masked: UnstructuredPoints[_3D]): BinaryMask = {
     val originalPoints = original.points.toIndexedSeq
     val maskedPoints = masked.points.toIndexedSeq
     require(maskedPoints.forall( p => maskedPoints.count(q => q==p)==1 && originalPoints.count(q => q==p)==1),

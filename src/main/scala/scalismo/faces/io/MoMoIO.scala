@@ -27,9 +27,9 @@ import scalismo.common.{DiscreteDomain, PointId, UnstructuredPointsDomain, Vecto
 import scalismo.color.RGB
 import scalismo.faces.momo.{MoMo, MoMoBasic, MoMoExpress, PancakeDLRGP}
 import scalismo.faces.utils.ResourceManagement
-import scalismo.geometry.{Landmark, Point, EuclideanVector, _3D}
+import scalismo.geometry.{EuclideanVector, Landmark, Point, _3D}
 import scalismo.io.{HDF5File, HDF5Utils, LandmarkIO, NDArray}
-import scalismo.mesh.{TriangleCell, TriangleList, TriangleMesh3D}
+import scalismo.mesh.{TriangleCell, TriangleList, TriangleMesh, TriangleMesh3D}
 import scalismo.statisticalmodel.ModelHelpers
 
 import scala.io.Source
@@ -108,10 +108,10 @@ object MoMoIO {
     val path = MoMoPathBuilder(modelPath)
 
     val shapeMesh = readGravisModelRepresenter(h5file, path.shape).get
-    val shapeModel = readStatisticalModel3D[Point[_3D]](h5file, path.shape, shapeMesh.pointSet).get
+    val shapeModel = readStatisticalModel3D[Point[_3D]](h5file, path.shape, shapeMesh).get
 
     val colorMesh = readGravisModelRepresenter(h5file, path.color).get
-    val colorModel = readStatisticalModel3D[RGB](h5file, path.color, colorMesh.pointSet).get
+    val colorModel = readStatisticalModel3D[RGB](h5file, path.color, colorMesh).get
 
     // check shape, color and expression compatibility
     if (shapeMesh.pointSet != colorMesh.pointSet)
@@ -123,7 +123,7 @@ object MoMoIO {
     // expression model defaults to empty model
     if (h5file.exists(path.expression)) {
       val expressionMesh = readGravisModelRepresenter(h5file, path.expression).get
-      val expressionModel = readStatisticalModel3D[EuclideanVector[_3D]](h5file, path.expression, expressionMesh.pointSet).get
+      val expressionModel = readStatisticalModel3D[EuclideanVector[_3D]](h5file, path.expression, expressionMesh).get
       if (shapeMesh.pointSet != expressionMesh.pointSet)
         throw new Exception("expression model does not share a domain, different underlying point sets")
       MoMo(shapeMesh, shapeModel, colorModel, expressionModel, landmarks)
@@ -306,8 +306,8 @@ object MoMoIO {
   /** read a statistical statismo model from a HDF5 file at path modelPath */
   private def readStatisticalModel3D[A](h5file: HDF5File,
                                         modelPath: String,
-                                        referencePoints: UnstructuredPointsDomain[_3D])
-                                       (implicit vectorizer: Vectorizer[A]): Try[PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], A]] = {
+                                        reference: TriangleMesh[_3D])
+                                       (implicit vectorizer: Vectorizer[A]): Try[PancakeDLRGP[_3D, TriangleMesh, A]] = {
     val path = StatisticalModelPathBuilder(modelPath)
 
     for {
@@ -328,7 +328,7 @@ object MoMoIO {
         case v => Failure(new RuntimeException(s"Unsupported version ${v._1}.${v._2}"))
       }
     } yield {
-      PancakeDLRGP(ModelHelpers.buildFrom(referencePoints, meanVector, pcaVarianceVector, pcaBasis), noiseVariance)
+      PancakeDLRGP(ModelHelpers.buildFrom(reference, meanVector, pcaVarianceVector, pcaBasis), noiseVariance)
     }
   }
 
@@ -382,7 +382,7 @@ object MoMoIO {
     h5file.writeNDArray[Int](s"$path/cells", NDArray(IndexedSeq(3, cells.size), cellData.toArray.map(_.id))).get
   }
 
-  private def writeStatisticalModel[A](model: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], A], h5file: HDF5File, modelPath: String): Try[Unit] = Try {
+  private def writeStatisticalModel[A](model: PancakeDLRGP[_3D, TriangleMesh, A], h5file: HDF5File, modelPath: String): Try[Unit] = Try {
     val path = StatisticalModelPathBuilder(modelPath)
     val mean = model.meanVector.map(_.toFloat)
     val variance = model.variance.map(_.toFloat)

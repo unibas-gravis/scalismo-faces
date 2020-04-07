@@ -18,12 +18,13 @@
 package scalismo.faces.momo
 
 import breeze.linalg.{DenseMatrix, DenseVector}
-import scalismo.common._
+import scalismo.common.{DiscreteField, PointId, UnstructuredPointsDomain}
 import scalismo.color.{RGB, RGBA}
 import scalismo.mesh.VertexColorMesh3D
 import scalismo.geometry._
 import scalismo.mesh.{TriangleMesh3D, _}
 import scalismo.statisticalmodel._
+import scalismo.statisticalmodel.dataset.DataCollection
 import scalismo.utils.Random
 
 /** 3D Morphable Model with shape, color and expressions */
@@ -140,33 +141,33 @@ trait MoMo {
 object MoMo {
   /** create a Morphable Model */
   def apply(referenceMesh: TriangleMesh3D,
-            shape: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], Point[_3D]],
-            color: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], RGB],
-            expression: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]],
+            shape: PancakeDLRGP[_3D, TriangleMesh, Point[_3D]],
+            color: PancakeDLRGP[_3D, TriangleMesh, RGB],
+            expression: PancakeDLRGP[_3D, TriangleMesh, EuclideanVector[_3D]],
             landmarks: Map[String, Landmark[_3D]]): MoMoExpress = {
     MoMoExpress(referenceMesh, shape, color, expression, landmarks)
   }
 
   /** create a Morphable Model without expressions */
   def apply(referenceMesh: TriangleMesh3D,
-            shape: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], Point[_3D]],
-            color: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], RGB],
+            shape: PancakeDLRGP[_3D, TriangleMesh, Point[_3D]],
+            color: PancakeDLRGP[_3D, TriangleMesh, RGB],
             landmarks: Map[String, Landmark[_3D]]): MoMoBasic = {
     MoMoBasic(referenceMesh, shape, color, landmarks)
   }
 
   /** create a Morphable Model */
   def apply(referenceMesh: TriangleMesh3D,
-            shape: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], Point[_3D]],
-            color: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], RGB],
-            expression: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]]): MoMoExpress = {
+            shape: PancakeDLRGP[_3D, TriangleMesh, Point[_3D]],
+            color: PancakeDLRGP[_3D, TriangleMesh, RGB],
+            expression: PancakeDLRGP[_3D, TriangleMesh, EuclideanVector[_3D]]): MoMoExpress = {
     MoMoExpress(referenceMesh, shape, color, expression, Map.empty)
   }
 
   /** create a Morphable Model without expressions */
   def apply(referenceMesh: TriangleMesh3D,
-            shape: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], Point[_3D]],
-            color: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], RGB]): MoMoBasic = {
+            shape: PancakeDLRGP[_3D, TriangleMesh, Point[_3D]],
+            color: PancakeDLRGP[_3D, TriangleMesh, RGB]): MoMoBasic = {
     MoMoBasic(referenceMesh, shape, color, Map.empty)
   }
 
@@ -178,7 +179,7 @@ object MoMo {
     * @return New MoMo with the statistics of the two model.
     */
   def fromStatisticalMeshModel(shape: StatisticalMeshModel,
-                               color: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], RGB],
+                               color: PancakeDLRGP[_3D, TriangleMesh, RGB],
                                shapeNoiseVariance: Double = 0.0): MoMoBasic = {
     val shapeModel = PancakeDLRGP(ModelHelpers.vectorToPointDLRGP(shape.gp, shape.referenceMesh), shapeNoiseVariance)
     MoMoBasic(shape.referenceMesh, shapeModel, color)
@@ -205,13 +206,13 @@ object MoMo {
     require(samplesShape.forall(e => e.shape.pointSet.numberOfPoints == reference.pointSet.numberOfPoints), "MoMo samples must be compatible with reference")
     require(samplesColor.forall(e => e.shape.pointSet.numberOfPoints == reference.pointSet.numberOfPoints), "MoMo samples must be compatible with reference")
 
-    val domain = reference.pointSet
+    val domain = reference
 
-    val shapeSamples = samplesShape.map { (sample: VertexColorMesh3D) => DiscreteField[_3D, UnstructuredPointsDomain[_3D], Point[_3D]](domain, sample.shape.pointSet.points.toIndexedSeq) }
-    val colorSamples = samplesColor.map { (sample: VertexColorMesh3D) => DiscreteField[_3D, UnstructuredPointsDomain[_3D], RGB](domain, sample.color.pointData.map{_.toRGB}) }
+    val shapeSamples = samplesShape.map { sample: VertexColorMesh3D => DiscreteField[_3D, TriangleMesh, Point[_3D]](domain, sample.shape.pointSet.points.toIndexedSeq) }
+    val colorSamples = samplesColor.map { sample: VertexColorMesh3D => DiscreteField[_3D, TriangleMesh, RGB](domain, sample.color.pointData.map{_.toRGB}) }
 
-    val shapeModel = ModelHelpers.createUsingPPCA[_3D, UnstructuredPointsDomain[_3D], Point[_3D]](domain, shapeSamples, shapeNoiseVariance)
-    val colorModel = ModelHelpers.createUsingPPCA[_3D, UnstructuredPointsDomain[_3D], RGB](domain, colorSamples, colorNoiseVariance)
+    val shapeModel = ModelHelpers.createUsingPPCA[_3D, TriangleMesh, Point[_3D]](domain, shapeSamples, shapeNoiseVariance)
+    val colorModel = ModelHelpers.createUsingPPCA[_3D, TriangleMesh, RGB](domain, colorSamples, colorNoiseVariance)
 
     MoMo(reference, shapeModel, colorModel)
   }
@@ -250,23 +251,21 @@ object MoMo {
     require(samplesExpression.forall(e => e.neutral.shape.pointSet.numberOfPoints == reference.pointSet.numberOfPoints), "Expression/Neutral samples must be compatible with reference")
     require(samplesExpression.forall(e => e.expression.shape.pointSet.numberOfPoints == reference.pointSet.numberOfPoints), "Expression samples must be compatible with reference")
 
-    val domain = reference.pointSet
-
-    val shapeSamples = samplesShape.map { (sample: VertexColorMesh3D) => DiscreteField[_3D, UnstructuredPointsDomain[_3D], Point[_3D]](domain, sample.shape.pointSet.points.toIndexedSeq) }
-    val colorSamples = samplesColor.map { (sample: VertexColorMesh3D) => DiscreteField[_3D, UnstructuredPointsDomain[_3D], RGB](domain, sample.color.pointData.map{_.toRGB}) }
+    val shapeSamples = samplesShape.map { (sample: VertexColorMesh3D) => DiscreteField[_3D, TriangleMesh, Point[_3D]](reference, sample.shape.pointSet.points.toIndexedSeq) }
+    val colorSamples = samplesColor.map { (sample: VertexColorMesh3D) => DiscreteField[_3D, TriangleMesh, RGB](reference, sample.color.pointData.map{_.toRGB}) }
     val expressionSamples = samplesExpression.map { case NeutralWithExpression(neutral, exp) =>
-      val difference = domain.pointIds.map { pointId => exp.shape.pointSet.point(pointId) - neutral.shape.pointSet.point(pointId) }
-      DiscreteField[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](domain, difference.toIndexedSeq)
+      val difference = reference.pointSet.pointIds.map { pointId => exp.shape.pointSet.point(pointId) - neutral.shape.pointSet.point(pointId) }
+      DiscreteField(reference, difference.toIndexedSeq)
     }
 
-    val shapeModel = ModelHelpers.createUsingPPCA[_3D, UnstructuredPointsDomain[_3D], Point[_3D]](domain, shapeSamples, shapeNoiseVariance)
-    val colorModel = ModelHelpers.createUsingPPCA[_3D, UnstructuredPointsDomain[_3D], RGB](domain, colorSamples, colorNoiseVariance)
+    val shapeModel = ModelHelpers.createUsingPPCA[_3D, TriangleMesh, Point[_3D]](reference, shapeSamples, shapeNoiseVariance)
+    val colorModel = ModelHelpers.createUsingPPCA[_3D, TriangleMesh, RGB](reference, colorSamples, colorNoiseVariance)
 
     MoMo(
       reference,
       shapeModel,
       colorModel,
-      ModelHelpers.createUsingPPCA[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](domain, expressionSamples, expressionNoiseVariance))
+      ModelHelpers.createUsingPPCA[_3D, TriangleMesh, EuclideanVector[_3D]](reference, expressionSamples, expressionNoiseVariance))
   }
 }
 
@@ -282,15 +281,15 @@ object MoMo {
   * @param color              the color model
   */
 case class MoMoExpress(override val referenceMesh: TriangleMesh3D,
-                       shape: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], Point[_3D]],
-                       color: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], RGB],
-                       expression: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]],
+                       shape: PancakeDLRGP[_3D, TriangleMesh, Point[_3D]],
+                       color: PancakeDLRGP[_3D, TriangleMesh, RGB],
+                       expression: PancakeDLRGP[_3D, TriangleMesh, EuclideanVector[_3D]],
                        override val landmarks: Map[String, Landmark[_3D]])
   extends MoMo {
 
   require(shape.domain == color.domain, "shape and color model do not have a matching domain")
-  require(referenceMesh.pointSet == shape.domain, "reference domain does not match model domain")
-  require(referenceMesh.pointSet == expression.domain, "expression model does not have a matching domain")
+  require(referenceMesh == shape.domain, "reference domain does not match model domain")
+  require(referenceMesh == expression.domain, "expression model does not have a matching domain")
 
   def hasExpressions: Boolean = true
 
@@ -544,21 +543,21 @@ case class MoMoExpress(override val referenceMesh: TriangleMesh3D,
   }
 
   // converters to deal with discrete fields
-  private def discreteFieldToShape(shapeField: DiscreteField[_3D, UnstructuredPointsDomain[_3D], Point[_3D]], expressionField: DiscreteField[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]]): TriangleMesh3D = {
+  private def discreteFieldToShape(shapeField: DiscreteField[_3D, TriangleMesh, Point[_3D]], expressionField: DiscreteField[_3D, TriangleMesh, EuclideanVector[_3D]]): TriangleMesh3D = {
     val points = shapeField.data.zip(expressionField.data).map{case(s, e) => s + e}
     TriangleMesh3D(points, referenceMesh.triangulation)
   }
 
-  private def discreteFieldToColor(colorField: DiscreteField[_3D, UnstructuredPointsDomain[_3D], RGB]): SurfacePointProperty[RGBA] = SurfacePointProperty(referenceMesh.triangulation, colorField.data.map(_.toRGBA))
+  private def discreteFieldToColor(colorField: DiscreteField[_3D, TriangleMesh, RGB]): SurfacePointProperty[RGBA] = SurfacePointProperty(referenceMesh.triangulation, colorField.data.map(_.toRGBA))
 
-  private def shapeToDiscreteField(shape: TriangleMesh[_3D]): DiscreteField[_3D, UnstructuredPointsDomain[_3D], Point[_3D]] = DiscreteField(referenceMesh.pointSet, shape.pointSet.points.toIndexedSeq)
+  private def shapeToDiscreteField(shape: TriangleMesh[_3D]): DiscreteField[_3D, TriangleMesh, Point[_3D]] = DiscreteField(referenceMesh, shape.pointSet.points.toIndexedSeq)
 
-  private def colorToDiscreteField(color: SurfacePointProperty[RGBA]): DiscreteField[_3D, UnstructuredPointsDomain[_3D], RGB] = DiscreteField(referenceMesh.pointSet, color.pointData.map(_.toRGB))
+  private def colorToDiscreteField(color: SurfacePointProperty[RGBA]): DiscreteField[_3D, TriangleMesh, RGB] = DiscreteField(referenceMesh, color.pointData.map(_.toRGB))
 }
 
 case class MoMoBasic(override val referenceMesh: TriangleMesh3D,
-                     shape: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], Point[_3D]],
-                     color: PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], RGB],
+                     shape: PancakeDLRGP[_3D, TriangleMesh, Point[_3D]],
+                     color: PancakeDLRGP[_3D, TriangleMesh, RGB],
                      override val landmarks: Map[String, Landmark[_3D]] = Map.empty[String, Landmark[_3D]])
   extends MoMo {
 
@@ -696,12 +695,12 @@ case class MoMoBasic(override val referenceMesh: TriangleMesh3D,
   }
 
   // converters to deal with discrete fields
-  private def discreteFieldToShape(shapeField: DiscreteField[_3D, UnstructuredPointsDomain[_3D], Point[_3D]]): TriangleMesh3D = TriangleMesh3D(shapeField.data, referenceMesh.triangulation)
+  private def discreteFieldToShape(shapeField: DiscreteField[_3D, TriangleMesh, Point[_3D]]): TriangleMesh3D = TriangleMesh3D(shapeField.data, referenceMesh.triangulation)
 
-  private def discreteFieldToColor(colorField: DiscreteField[_3D, UnstructuredPointsDomain[_3D], RGB]): SurfacePointProperty[RGBA] = SurfacePointProperty(referenceMesh.triangulation, colorField.data.map(_.toRGBA))
+  private def discreteFieldToColor(colorField: DiscreteField[_3D, TriangleMesh, RGB]): SurfacePointProperty[RGBA] = SurfacePointProperty(referenceMesh.triangulation, colorField.data.map(_.toRGBA))
 
-  private def shapeToDiscreteField(shape: TriangleMesh[_3D]): DiscreteField[_3D, UnstructuredPointsDomain[_3D], Point[_3D]] = DiscreteField(referenceMesh.pointSet, shape.pointSet.points.toIndexedSeq)
+  private def shapeToDiscreteField(shape: TriangleMesh[_3D]): DiscreteField[_3D, TriangleMesh, Point[_3D]] = DiscreteField(referenceMesh, shape.pointSet.points.toIndexedSeq)
 
-  private def colorToDiscreteField(color: SurfacePointProperty[RGBA]): DiscreteField[_3D, UnstructuredPointsDomain[_3D], RGB] = DiscreteField(referenceMesh.pointSet, color.pointData.map(_.toRGB))
+  private def colorToDiscreteField(color: SurfacePointProperty[RGBA]): DiscreteField[_3D, TriangleMesh, RGB] = DiscreteField(referenceMesh, color.pointData.map(_.toRGB))
 
 }

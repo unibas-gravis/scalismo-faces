@@ -19,11 +19,12 @@ import breeze.linalg.{*, DenseMatrix, DenseVector, min, norm}
 import breeze.numerics.abs
 import org.scalactic.TolerantNumerics
 import scalismo.color.RGBA
-import scalismo.common.{DiscreteField, PointId, UnstructuredPointsDomain}
+import scalismo.common.{DiscreteField, PointId, UnstructuredPoints, UnstructuredPointsDomain}
 import scalismo.faces.FacesTestSuite
 import scalismo.faces.mesh.BinaryMask
 import scalismo.geometry.{EuclideanVector, Point, _3D}
-import scalismo.mesh.{SurfacePointProperty, VertexColorMesh3D}
+import scalismo.mesh.{SurfacePointProperty, TriangleMesh, VertexColorMesh3D}
+import scalismo.statisticalmodel.dataset.DataCollection
 import scalismo.statisticalmodel.{DiscreteLowRankGaussianProcess, ModelHelpers}
 
 class ModelHelperTests extends FacesTestSuite {
@@ -97,12 +98,13 @@ class ModelHelperTests extends FacesTestSuite {
 
       val trainingMeshes = (0 until (3 + rnd.scalaRandom.nextInt(50))).map( _ => randomGridMesh(cols,rows) )
 
-      val trainingFields = trainingMeshes.map { mesh =>
-        DiscreteField[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](reference.shape.pointSet,mesh.shape.pointSet.points.zip(reference.shape.pointSet.points).map(a => a._2 - a._1).toIndexedSeq)
-      }
+      val DC = DataCollection.fromTriangleMeshSequence(reference.shape,trainingMeshes.map(_.shape))
+      val scalismoModel = DiscreteLowRankGaussianProcess.createUsingPCA[_3D, TriangleMesh, EuclideanVector[_3D]](DC)
 
-      val scalismoModel = DiscreteLowRankGaussianProcess.createUsingPCA[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](reference.shape.pointSet,trainingFields.map(_.interpolateNearestNeighbor()))
-      val facesModel = ModelHelpers.createUsingPCA(reference.shape.pointSet,trainingFields)
+      val trainingFields = trainingMeshes.map { mesh =>
+        DiscreteField[_3D, TriangleMesh, EuclideanVector[_3D]](reference.shape,mesh.shape.pointSet.points.zip(reference.shape.pointSet.points).map(a => a._2 - a._1).toIndexedSeq)
+      }
+      val facesModel = ModelHelpers.createUsingPCA(reference.shape,trainingFields)
     }
 
     it("using our PCA method should lead to the same rank than scalismo") {
@@ -143,7 +145,7 @@ class ModelHelperTests extends FacesTestSuite {
       val deformationModel = f.facesModel
       val pointModel = ModelHelpers.vectorToPointDLRGP(deformationModel,reference)
 
-      val sample: DiscreteField[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]] = deformationModel.sample()
+      val sample: DiscreteField[_3D, TriangleMesh, EuclideanVector[_3D]] = deformationModel.sample()
       val coeffs: DenseVector[Double] = deformationModel.coefficients(sample)
 
       val pointSample = pointModel.instance(coeffs)
@@ -167,7 +169,7 @@ class ModelHelperTests extends FacesTestSuite {
       val deformationModel = ModelHelpers.pointToVectorDLRGP(pointModel,reference)
 
       val coeffs: DenseVector[Double] = {
-        val sample: DiscreteField[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]] = deformationModel.sample()
+        val sample: DiscreteField[_3D, TriangleMesh, EuclideanVector[_3D]] = deformationModel.sample()
         deformationModel.coefficients(sample)
       }
 
@@ -262,7 +264,7 @@ class ModelHelperTests extends FacesTestSuite {
 
     it ("should fail if the passed mesh has different points than the reference mesh") {
       val reducedMesh = Fixture.reducedMesh
-      val distortedMesh = reducedMesh.copy(pointSet = UnstructuredPointsDomain(reducedMesh.pointSet.points.map(pt => pt.copy(x = pt.x+1.0e-6)).toIndexedSeq))
+      val distortedMesh = reducedMesh.copy(pointSet = UnstructuredPoints(reducedMesh.pointSet.points.map(pt => pt.copy(x = pt.x+1.0e-6)).toIndexedSeq))
       assert(ModelHelpers.maskMoMo(Fixture.randomModel,distortedMesh).isFailure)
     }
 
@@ -284,7 +286,7 @@ class ModelHelperTests extends FacesTestSuite {
       val trainingMeshes = (0 until (3 + rnd.scalaRandom.nextInt(50))).map( _ => randomGridMesh(cols,rows) )
 
       val trainingFields = trainingMeshes.map { mesh =>
-        DiscreteField[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](reference.shape.pointSet,mesh.shape.pointSet.points.zip(reference.shape.pointSet.points).map(a => a._2 - a._1).toIndexedSeq)
+        DiscreteField(reference.shape,mesh.shape.pointSet.points.zip(reference.shape.pointSet.points).map(a => a._2 - a._1).toIndexedSeq)
       }
 
       val mask = {
@@ -301,18 +303,19 @@ class ModelHelperTests extends FacesTestSuite {
         VertexColorMesh3D(meshMasker.transformedMesh, meshMasker.applyToSurfaceProperty(mesh.color).asInstanceOf[SurfacePointProperty[RGBA]])
       }
 
-      def maskField(field: DiscreteField[_3D,UnstructuredPointsDomain[_3D],EuclideanVector[_3D]]):DiscreteField[_3D,UnstructuredPointsDomain[_3D],EuclideanVector[_3D]] =  {
-        DiscreteField(UnstructuredPointsDomain(mask.cut(field.domain.pointSequence)),mask.cut(field.data))
+      def maskField(field: DiscreteField[_3D,TriangleMesh,EuclideanVector[_3D]]) : DiscreteField[_3D,TriangleMesh,EuclideanVector[_3D]] =  {
+        val maskedDomain = (field.domain).operations.maskPoints(mask).transformedMesh
+        DiscreteField(maskedDomain,mask.cut(field.data))
       }
 
       val maskedReference = maskMesh(reference)
       val maskedMeshes = trainingMeshes.map(maskMesh)
       val maskedTrainingFields = maskedMeshes.map { mesh =>
-        DiscreteField[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](maskedReference.shape.pointSet,mesh.shape.pointSet.points.zip(maskedReference.shape.pointSet.points).map(a => a._2 - a._1).toIndexedSeq)
+        DiscreteField[_3D, TriangleMesh, EuclideanVector[_3D]](maskedReference.shape,mesh.shape.pointSet.points.zip(maskedReference.shape.pointSet.points).map(a => a._2 - a._1).toIndexedSeq)
       }
 
-      val maskedModel = ModelHelpers.createUsingPCA(maskedReference.shape.pointSet,maskedTrainingFields)
-      val reconstructiveModel = ModelHelpers.createReconstructiveUsingPCA(reference.shape.pointSet,trainingFields,mask)
+      val maskedModel = ModelHelpers.createUsingPCA(maskedReference.shape,maskedTrainingFields)
+      val reconstructiveModel = ModelHelpers.createReconstructiveUsingPCA(reference.shape,trainingFields,mask)
 
     }
 
@@ -332,15 +335,15 @@ class ModelHelperTests extends FacesTestSuite {
 
     it ("should return the same as calculating the reconstruction of eigenvectors") {
       val fixture = new Fixture()
-      val domain = fixture.maskedReference.shape.pointSet
+      val domain = fixture.maskedReference.shape
       val discreteFields = fixture.maskedTrainingFields
       val threshold = 1e-8
 
-      val X = ModelHelpers.buildDataMatrixWithSamplesInCols[_3D,UnstructuredPointsDomain[_3D],EuclideanVector[_3D]](domain, discreteFields)
+      val X = ModelHelpers.buildDataMatrixWithSamplesInCols[_3D,TriangleMesh,EuclideanVector[_3D]](domain, discreteFields)
       val (x0,xmean) = ModelHelpers.removeColMean(X)
       val (basis, variance, mean) = ModelHelpers.calculatePPCABasis(X,0.0,threshold)
 
-      val XC = ModelHelpers.buildDataMatrixWithSamplesInCols[_3D,UnstructuredPointsDomain[_3D],EuclideanVector[_3D]](fixture.reference.shape.pointSet,fixture.trainingFields)
+      val XC = ModelHelpers.buildDataMatrixWithSamplesInCols[_3D,TriangleMesh,EuclideanVector[_3D]](fixture.reference.shape,fixture.trainingFields)
       val (xC0,xcmean) = ModelHelpers.removeColMean(XC.copy)
       val C = DenseMatrix((0 until basis.cols).map{i =>
         val col = basis(::,i).toDenseVector
@@ -348,7 +351,7 @@ class ModelHelperTests extends FacesTestSuite {
       }:_*)
       val basisC = xC0 * C.t
 
-      val M = ModelHelpers.buildColumnIndexingVectorForMask[_3D,UnstructuredPointsDomain[_3D],EuclideanVector[_3D]](domain, fixture.mask)
+      val M = ModelHelpers.buildColumnIndexingVectorForMask[_3D,TriangleMesh,EuclideanVector[_3D]](domain, fixture.mask)
       val (basisR, varianceR, meanR) = ModelHelpers.calculateMaskedPPCABasis(XC,M,0.0,threshold)
 
       val nearEquality =  TolerantNumerics.tolerantDoubleEquality(1.0e-8)

@@ -20,12 +20,12 @@ import java.net.URI
 
 import breeze.linalg.{DenseMatrix, DenseVector, qr}
 import org.scalatest._
-import scalismo.common.{PointId, UnstructuredPointsDomain}
 import scalismo.color.{RGB, RGBA}
+import scalismo.common.PointId
 import scalismo.faces.image.{AccessMode, PixelImage, PixelImageDomain}
 import scalismo.faces.mesh.{ColorNormalMesh3D, TextureMappedProperty}
 import scalismo.faces.momo.{MoMo, PancakeDLRGP}
-import scalismo.geometry.{Landmark, Point, EuclideanVector, EuclideanVector3D, _2D, _3D}
+import scalismo.geometry._
 import scalismo.mesh._
 import scalismo.statisticalmodel.ModelHelpers
 import scalismo.utils.Random
@@ -122,7 +122,7 @@ class FacesTestSuite extends FunSpec with Matchers {
     assert(shapeMean.length == shapePCABases.rows, "rows is not correct")
     assert(shapePCABases.cols == rank, "model is of incorrect rank")
     assert(shapeVariance.length == shapePCABases.cols, "wrong number of variances")
-    val shape = ModelHelpers.buildFrom[_3D, UnstructuredPointsDomain[_3D], Point[_3D]](reference.shape.pointSet, shapeMean, shapeVariance, shapePCABases)
+    val shape = ModelHelpers.buildFrom[_3D, TriangleMesh, Point[_3D]](reference.shape, shapeMean, shapeVariance, shapePCABases)
 
     val colorN = compN
     val colorMean = DenseVector.fill[Double](colorN)(rnd.scalaRandom.nextGaussian)
@@ -131,7 +131,7 @@ class FacesTestSuite extends FunSpec with Matchers {
     assert(colorMean.length == colorPCABases.rows, "rows is not correct")
     assert(colorPCABases.cols == rank, "model is of incorrect rank")
     assert(colorVariance.length == colorPCABases.cols, "wrong number of variances")
-    val color = ModelHelpers.buildFrom[_3D, UnstructuredPointsDomain[_3D], RGB](reference.shape.pointSet, colorMean, colorVariance, colorPCABases)
+    val color = ModelHelpers.buildFrom[_3D, TriangleMesh, RGB](reference.shape, colorMean, colorVariance, colorPCABases)
 
     val expressionN = compN
     val expressionMean = DenseVector.fill[Double](expressionN)(rnd.scalaRandom.nextGaussian)
@@ -144,7 +144,7 @@ class FacesTestSuite extends FunSpec with Matchers {
     assert(expressionMean.length == expressionPCABases.rows, "rows is not correct")
     assert(expressionPCABases.cols == rank, "model is of incorrect rank")
     assert(expressionVariance.length == expressionPCABases.cols, "wrong number of variances")
-    val expression = ModelHelpers.buildFrom[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](reference.shape.pointSet, expressionMean, expressionVariance, expressionPCABases)
+    val expression = ModelHelpers.buildFrom[_3D, TriangleMesh, EuclideanVector[_3D]](reference.shape, expressionMean, expressionVariance, expressionPCABases)
 
     def randomName = randomString(10)
     def randomPointOnRef = reference.shape.pointSet.points.toIndexedSeq(rnd.scalaRandom.nextInt(reference.shape.pointSet.numberOfPoints))
@@ -158,8 +158,7 @@ class FacesTestSuite extends FunSpec with Matchers {
       randomLandmarks.toMap)
   }
 
-  def randomGridModelExpress(rank: Int = 10, sdev: Double = 5.0, noise: Double = 0.05, cols: Int = 5, rows: Int = 5)(implicit rnd: Random): PancakeDLRGP[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]] = {
-
+  def randomGridModelExpress(rank: Int = 10, sdev: Double = 5.0, noise: Double = 0.05, cols: Int = 5, rows: Int = 5)(implicit rnd: Random): PancakeDLRGP[_3D, TriangleMesh, EuclideanVector[_3D]] = {
     val reference = randomGridMesh(cols, rows)
     val expressionN = 3 * cols * rows
     val expressionMean = DenseVector.fill[Double](expressionN)(rnd.scalaRandom.nextGaussian)
@@ -167,7 +166,6 @@ class FacesTestSuite extends FunSpec with Matchers {
     val expressionPCABases = expressionDecomposition.q
     val expressionVariance = DenseVector.fill[Double](expressionN)(rnd.scalaRandom.nextDouble * sdev)
     val expressionNoise = rnd.scalaRandom.nextDouble * noise
-    PancakeDLRGP(ModelHelpers.buildFrom[_3D, UnstructuredPointsDomain[_3D], EuclideanVector[_3D]](reference.shape.pointSet, expressionMean, expressionVariance, expressionPCABases))
-
+    PancakeDLRGP(ModelHelpers.buildFrom[_3D, TriangleMesh, EuclideanVector[_3D]](reference.shape, expressionMean, expressionVariance, expressionPCABases))
   }
 }
