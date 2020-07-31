@@ -457,7 +457,7 @@ object LoopyBPSegmentation {
           messageField(col, y + 1)(Up.toInt) = calculateMessage(messageField, localMessages, binaryDistribution, numLabels, col, y, Down)
         }
       case Up => // do columns in parallel, sequential along column
-        for {col <- ParVector(0, messageField.width)
+        for {col <- ParVector.range(0, messageField.width)
              y <- messageField.height - 1 to 1 by -1} {
           messageField(col, y - 1)(Down.toInt) = calculateMessage(messageField, localMessages, binaryDistribution, numLabels, col, y, Up)
         }
