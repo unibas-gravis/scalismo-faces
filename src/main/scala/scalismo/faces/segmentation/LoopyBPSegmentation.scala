@@ -126,13 +126,11 @@ object LoopyBPSegmentation {
       loopyBeliefPropagationPass(messageField, localMessages, binaryDistribution, numLabels)
       val belief = calculateBelief(unsafeMsgFieldView, localMessages)
 
+      colorDistributions = estimateColorDistributions(image, belief)
+
       if(gui) {
         // gui update
-        if (i%1 == 0) {
-          colorDistributions = estimateColorDistributions(image, belief)
-          println(colorDistributions)
-        }
-
+        println(colorDistributions)
         counterLabel.setText("iteration: " + i)
         stack(
           counterLabel,
