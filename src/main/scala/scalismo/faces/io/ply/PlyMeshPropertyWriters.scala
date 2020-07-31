@@ -38,16 +38,16 @@ object PlyMeshPropertyWriters {
   import PlyMeshHelper._
 
   trait IndexedProperty {
-    def writeHeader(osw:OutputStreamWriter)
-    def write(fIdx: Int, osw: OutputStreamWriter)
-    def write(fIdx: Int, os: OutputStream, bo: ByteOrder)
+    def writeHeader(osw:OutputStreamWriter) : Unit
+    def write(fIdx: Int, osw: OutputStreamWriter) : Unit
+    def write(fIdx: Int, os: OutputStream, bo: ByteOrder) : Unit
   }
 
   abstract class SurfacePointPropertyWriter[A] extends IndexedProperty{
     def property: SurfacePointProperty[A]
 
-    def write(a: A, osw: OutputStreamWriter)
-    def write(a: A, os: OutputStream, bo: ByteOrder)
+    def write(a: A, osw: OutputStreamWriter) : Unit
+    def write(a: A, os: OutputStream, bo: ByteOrder) : Unit
 
     override def write(idx: Int, osw: OutputStreamWriter): Unit = {
       write(property.atPoint(PointId(idx)),osw)
@@ -87,8 +87,8 @@ object PlyMeshPropertyWriters {
 
   abstract class TrianglePropertyWriter[A] extends IndexedProperty{
     def property: TriangleProperty[A]
-    def write(a: A, osw: OutputStreamWriter)
-    def write(a: A, os: OutputStream, bo: ByteOrder)
+    def write(a: A, osw: OutputStreamWriter) : Unit
+    def write(a: A, os: OutputStream, bo: ByteOrder) : Unit
     override def write(idx: Int, osw: OutputStreamWriter): Unit = {
       write(property(TriangleId(idx)),osw)
     }
@@ -99,8 +99,8 @@ object PlyMeshPropertyWriters {
 
   abstract class VertexPerTrianglePropertyWriter[A] extends IndexedProperty {
     def property: VertexPropertyPerTriangle[A]
-    def write(a: Seq[A], osw: OutputStreamWriter)
-    def write(a: Seq[A], os: OutputStream, bo: ByteOrder)
+    def write(a: Seq[A], osw: OutputStreamWriter) : Unit
+    def write(a: Seq[A], os: OutputStream, bo: ByteOrder) : Unit
     override def write( idx: Int, osw: OutputStreamWriter): Unit = {
       val a = property(TriangleId(idx),BarycentricCoordinates.v0)
       val b = property(TriangleId(idx),BarycentricCoordinates.v1)

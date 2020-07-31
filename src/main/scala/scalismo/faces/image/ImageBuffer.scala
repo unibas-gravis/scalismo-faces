@@ -16,6 +16,7 @@
 
 package scalismo.faces.image
 
+import scala.collection.parallel.immutable.ParVector
 import scala.reflect.ClassTag
 
 /** Image buffer for mutable creation of an image, use toImage when finished to convert to a standard immutable image */
@@ -58,7 +59,7 @@ class ImageBuffer[@specialized(Int, Float, Double) Pixel: ClassTag] (val domain:
   /// in-place transformation
   def transformWithIndex(f: (Int, Int, Pixel) => Pixel): Unit = copyOnWrite(rawTransformWithIndex(f))
 
-  private def rawTransformWithIndexParallel(f: (Int, Int, Pixel) => Pixel): Unit = (0 until domain.length).par.foreach(i => data(i) = f(domain.x(i), domain.y(i), data(i)))
+  private def rawTransformWithIndexParallel(f: (Int, Int, Pixel) => Pixel): Unit = ParVector.range(0, domain.length).foreach(i => data(i) = f(domain.x(i), domain.y(i), data(i)))
 
   /// in-place transformation, parallel execution
   def transformWithIndexParallel(f: (Int, Int, Pixel) => Pixel): Unit = copyOnWrite(rawTransformWithIndexParallel(f))

@@ -19,8 +19,9 @@ package scalismo.faces.mesh
 import scalismo.common.PointId
 import scalismo.faces.FacesTestSuite
 import scalismo.color.RGBA
-import scalismo.geometry.{Point, EuclideanVector3D, _3D}
-import scalismo.mesh._
+import scalismo.geometry.{EuclideanVector3D, Point, _3D}
+import scalismo.mesh.{SurfacePointProperty, TriangleCell, TriangleList, TriangleMesh, TriangleMesh3D, VertexColorMesh3D}
+import scalismo.faces.mesh.MeshOperations
 
 import scala.collection.immutable.IndexedSeq
 

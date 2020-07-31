@@ -35,7 +35,7 @@ object ConjugateGradient {
     // prepare
     val initial = initialState(A, b, xInit)
     val solver = cgIterator(A, b, initial).take(maxIter).dropWhile(state => norm(state.r) > tolerance).take(1)
-    val solution = if (solver.hasNext) solver.next else initial
+    val solution = if (solver.hasNext) solver.next() else initial
     solution.x
   }
 

@@ -18,11 +18,13 @@ package scalismo.statisticalmodel
 import breeze.linalg.svd.SVD
 import breeze.linalg.{*, DenseMatrix, DenseVector}
 import scalismo.common._
+import scalismo.common.interpolation.NearestNeighborInterpolator
 import scalismo.faces.mesh.BinaryMask
 import scalismo.faces.momo.{MoMo, PancakeDLRGP}
 import scalismo.geometry._
 import scalismo.mesh.TriangleMesh
 
+import scala.collection.parallel.immutable.ParVector
 import scala.language.higherKinds
 import scala.util.{Failure, Success, Try}
 
@@ -424,7 +426,7 @@ object ModelHelpers {
 
     // create the data matrix
     val X = DenseMatrix.zeros[Double](n, p * dim)
-    for (f <- discreteFields.zipWithIndex.par) {
+    for (f <- new ParVector(discreteFields.zipWithIndex.toVector)) {
       val i = f._2
       val field = f._1
       field.data.zipWithIndex.map { p =>
@@ -455,7 +457,7 @@ object ModelHelpers {
 
     // create the data matrix
     val X = DenseMatrix.zeros[Double](m, n)
-    for (f <- discreteFields.zipWithIndex.par) {
+    for (f <- new ParVector(discreteFields.zipWithIndex.toVector)) {
       val j = f._2
       val field = f._1
       field.data.zipWithIndex.map { p =>

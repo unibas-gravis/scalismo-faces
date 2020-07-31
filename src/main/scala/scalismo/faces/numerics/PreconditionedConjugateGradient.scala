@@ -46,7 +46,7 @@ object PreconditionedConjugateGradient {
     val initial = initialState(A, b, xInit, preconditioner)
     // solving iterator with counter and convergence criteria (maxIter or below tolerance)
     val solver = pcgIterator(A, b, preconditioner, initial).take(maxIter).dropWhile(state => norm(state.r) > tolerance).take(1)
-    val solution = if (solver.hasNext) solver.next else initial
+    val solution = if (solver.hasNext) solver.next() else initial
     solution.x
   }
 

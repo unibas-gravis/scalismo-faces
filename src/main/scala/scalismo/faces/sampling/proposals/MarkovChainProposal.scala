@@ -25,7 +25,7 @@ class MarkovChainProposal[A](val chain: Iterator[A], val numSamples : Int) (impl
   extends ProposalGenerator[A] with SymmetricTransitionRatio[A] {
 
   override def propose(current: A): A = {
-    chain.drop(numSamples-1).next
+    chain.drop(numSamples-1).next()
   }
 
 }

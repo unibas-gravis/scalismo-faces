@@ -75,7 +75,7 @@ object ModelMetrics  {
     require(data.forall(f => f.color.triangulation.pointIds.size == model.referenceMesh.triangulation.pointIds.size), "reference and all meshes have to have same color length")
 
     def minDistanceToRandomSample(): Double = {
-      val sample = model.sample
+      val sample = model.sample()
       data.map { m =>
         colorDistance(sample.color.pointData, m.color.pointData).get
       }.min
@@ -108,7 +108,7 @@ object ModelMetrics  {
     require(data.forall(f => f.shape.position.triangulation.pointIds.size == model.referenceMesh.triangulation.pointIds.size), "reference and all meshes have to have same shape length")
 
     def minDistanceToRandomSample(): Double = {
-      val sample = model.sample
+      val sample = model.sample()
       data.map { m =>
         shapeDistance(sample.shape.pointSet.points.toIndexedSeq, m.shape.pointSet.points.toIndexedSeq).get
       }.min

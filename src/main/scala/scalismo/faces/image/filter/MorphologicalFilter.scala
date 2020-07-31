@@ -49,7 +49,7 @@ case class MorphologicalFilter[A: ClassTag](structuringElement: PixelImage[Boole
         kx += 1
       }
       if (kernelPixels.nonEmpty)
-        windowFilter(kernelPixels)
+        windowFilter(kernelPixels.toSeq)
       else
         image(x, y)
     }
