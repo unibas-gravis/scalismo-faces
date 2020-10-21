@@ -98,7 +98,7 @@ class ModelHelperTests extends FacesTestSuite {
 
       val trainingMeshes = (0 until (3 + rnd.scalaRandom.nextInt(50))).map( _ => randomGridMesh(cols,rows) )
 
-      val DC = DataCollection.fromTriangleMeshSequence(reference.shape,trainingMeshes.map(_.shape))
+      val DC = DataCollection.fromTriangleMesh3DSequence(reference.shape,trainingMeshes.map(_.shape))
       val scalismoModel = DiscreteLowRankGaussianProcess.createUsingPCA[_3D, TriangleMesh, EuclideanVector[_3D]](DC)
 
       val trainingFields = trainingMeshes.map { mesh =>

@@ -72,7 +72,7 @@ case class PancakeDLRGP[D <: Dim: NDSpace, DDomain[A] <: DiscreteDomain[A], Valu
 
   /** interpolate this process with nearest neighbours */
   def interpolateNearestNeighbor: GaussianProcess[D, Value] = {
-    val meanNN: Field[D,Value] = Field(RealSpace[D], (pt: Point[D]) => mean(domain.pointSet.findClosestPoint(pt).id))
+    val meanNN: Field[D,Value] = Field(EuclideanSpace[D], (pt: Point[D]) => mean(domain.pointSet.findClosestPoint(pt).id))
     val covNN = new MatrixValuedPDKernel[D] {
       override protected def k(x: Point[D], y: Point[D]): DenseMatrix[Double] = {
         val xId = gpModel.domain.pointSet.findClosestPoint(x).id
@@ -82,7 +82,7 @@ case class PancakeDLRGP[D <: Dim: NDSpace, DDomain[A] <: DiscreteDomain[A], Valu
 
       override def outputDim: Int = gpModel.outputDim
 
-      override def domain: Domain[D] = RealSpace[D]
+      override def domain: Domain[D] = EuclideanSpace[D]
     }
 
     GaussianProcess(meanNN, covNN)

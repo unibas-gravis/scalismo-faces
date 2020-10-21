@@ -18,6 +18,7 @@ package scalismo.statisticalmodel
 import breeze.linalg.svd.SVD
 import breeze.linalg.{*, DenseMatrix, DenseVector}
 import scalismo.common._
+import scalismo.common.interpolation.NearestNeighborInterpolator
 import scalismo.faces.mesh.BinaryMask
 import scalismo.faces.momo.{MoMo, PancakeDLRGP}
 import scalismo.geometry._
