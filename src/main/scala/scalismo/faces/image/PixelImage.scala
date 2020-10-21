@@ -134,7 +134,7 @@ class PixelImage[@specialized A](val domain: PixelImageDomain, val accessMode: A
   }
 
   /** iterator of all values in image */
-  def values: Iterator[A] = domain.indices.toIterator.map(i => this(domain.x(i), domain.y(i)))
+  def values: Iterator[A] = domain.indices.iterator.map(i => this(domain.x(i), domain.y(i)))
 
   /** view this image with another domain */
   def withDomain(domain: PixelImageDomain): PixelImage[A] = {

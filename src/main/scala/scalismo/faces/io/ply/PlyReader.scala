@@ -15,7 +15,7 @@
  */
 package scalismo.faces.io.ply
 
-import java.io._
+import java.io.{BufferedInputStream, File, FileInputStream, IOException}
 import java.nio.ByteOrder
 import java.nio.file.{Files, Path, Paths}
 import java.util.{Locale, Scanner}
@@ -23,7 +23,6 @@ import java.util.{Locale, Scanner}
 import scalismo.color.RGBA
 import scalismo.faces.image.PixelImage
 import scalismo.faces.io.PixelImageIO
-import spire.std.char
 
 import scala.collection.mutable.ListBuffer
 import scala.util.Try
@@ -210,7 +209,7 @@ object PlyReader {
     }
   }
 
-  private def makeReader(format: Seq[String]): PlyPropertyReader[_] = {
+  private def makeReader(format: Array[String]): PlyPropertyReader[_] = {
     if (format.size == 1) {
       PlyTypes.withName(format(0)) match {
         case PlyTypes.char | PlyTypes.int8 => new PlyPropertyReader(new FixedLengthSequenceReader[Char])

@@ -28,7 +28,6 @@ import scalismo.mesh._
 import scala.collection.mutable.ListBuffer
 import scala.util.control.NonFatal
 
-
 /**
   * Function that try to parse certain mesh properties from the data read of a ply file by the PlyReader.
   */
@@ -66,7 +65,7 @@ object PlyMeshReader {
       throw new IOException("Could not read z coordinates.")
     )._2.map(x => any2Double(x))
 
-    (x, y, z).zipped.toIndexedSeq.map(t => Point(t._1, t._2, t._3))
+    CollectionTools.zip3(x,y,z).map(t => Point(t._1, t._2, t._3)).toIndexedSeq
   }
 
   def getTriangles(values: List[(String, List[_])]): TriangleList = {
@@ -96,9 +95,9 @@ object PlyMeshReader {
 
     alphas match {
       case Some(alphaValues) => // with alpha channel
-        (reds, greens, blues).zipped.toIndexedSeq.zip(alphaValues).map { case ((r, g, b), a) => RGBA(r, g, b, a) }
+        CollectionTools.zip3(reds,greens,blues).zip(alphaValues).map { case ((r, g, b), a) => RGBA(r, g, b, a) }.toIndexedSeq
       case None => // RGB only
-        (reds, greens, blues).zipped.toIndexedSeq.map { case (r, g, b) => RGBA(r, g, b) }
+        CollectionTools.zip3(reds,greens,blues).map { case (r, g, b) => RGBA(r, g, b) }.toIndexedSeq
     }
   }
 
@@ -115,7 +114,7 @@ object PlyMeshReader {
       throw new IOException("Could not read normals z component.")
     )._2.map(e => any2Double(e))
 
-    (nx, ny, nz).zipped.toIndexedSeq.map(t => EuclideanVector(t._1, t._2, t._3))
+    CollectionTools.zip3(nx,ny,nz).map(t => EuclideanVector(t._1, t._2, t._3)).toIndexedSeq
   }
 
 

@@ -28,11 +28,11 @@ import scala.io.Source
 class LandmarksTest extends FacesTestSuite {
 
   def createRandom2DLandmarks(n: Int): IndexedSeq[TLMSLandmark2D] = {
-    for (i <- 0 until n) yield TLMSLandmark2D(randomString(rnd.scalaRandom.nextInt(10) + 1), new Point2D(rnd.scalaRandom.nextDouble, rnd.scalaRandom.nextDouble), rnd.scalaRandom.nextBoolean())
+    for (i <- 0 until n) yield TLMSLandmark2D(randomString(rnd.scalaRandom.nextInt(10) + 1), new Point2D(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble()), rnd.scalaRandom.nextBoolean())
   }
 
   def createRandom3DLandmarks(n: Int): IndexedSeq[TLMSLandmark3D] = {
-    for (i <- 0 until n) yield TLMSLandmark3D(randomString(rnd.scalaRandom.nextInt(10) + 1), new Point3D(rnd.scalaRandom.nextDouble, rnd.scalaRandom.nextDouble, rnd.scalaRandom.nextDouble), rnd.scalaRandom.nextBoolean())
+    for (i <- 0 until n) yield TLMSLandmark3D(randomString(rnd.scalaRandom.nextInt(10) + 1), new Point3D(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble()), rnd.scalaRandom.nextBoolean())
   }
 
   describe("Landmarks 2D") {

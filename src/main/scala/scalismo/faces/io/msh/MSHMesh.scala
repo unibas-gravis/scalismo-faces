@@ -24,7 +24,7 @@ import scalismo.faces.color.ColorBlender
 import scalismo.faces.image.{PixelImage, PixelImageOperations}
 import scalismo.faces.io.PixelImageIO
 import scalismo.faces.mesh._
-import scalismo.geometry.{IntVector, Point, EuclideanVector, _2D, _3D}
+import scalismo.geometry._
 import scalismo.mesh._
 
 /** capture the structure of the Gravis MSH mesh (do not use in production unless you really need to) */
@@ -46,9 +46,9 @@ case class MSHMesh(materials: Array[MSHMaterial],
                    path: File) extends Cloneable {
 
   val triangles: Array[TriangleCell] = tvi.map(i => TriangleCell(PointId(i(0)), PointId(i(1)), PointId(i(2))))
-  val triangulation = TriangleList(triangles)
+  val triangulation = TriangleList(triangles.toIndexedSeq)
 
-  val triangleMesh: TriangleMesh3D = TriangleMesh3D(vertex, triangulation)
+  val triangleMesh: TriangleMesh3D = TriangleMesh3D(vertex.toIndexedSeq, triangulation)
 
   lazy val vertexColorMesh: Option[VertexColorMesh3D] = getVertexColor.map(vc =>
     VertexColorMesh3D(triangleMesh, SurfacePointProperty.averagedPointProperty(vc))
@@ -66,7 +66,7 @@ case class MSHMesh(materials: Array[MSHMaterial],
   def getNormal: Option[VertexPropertyPerTriangle[EuclideanVector[_3D]]] = {
     val normalsValid = tni.forall(i => normal.isDefinedAt(i(0)) && normal.isDefinedAt(i(1)) && normal.isDefinedAt(i(2)))
     if (normal.nonEmpty && tni.nonEmpty && normalsValid)
-      Some(VertexPropertyPerTriangle(triangulation, tni, normal))
+      Some(VertexPropertyPerTriangle(triangulation, tni.toIndexedSeq, normal.toIndexedSeq))
     else
       None
   }
@@ -80,7 +80,7 @@ case class MSHMesh(materials: Array[MSHMaterial],
 
   def getVertexColor: Option[VertexPropertyPerTriangle[RGBA]] = {
     if (color.nonEmpty)
-      Some(VertexPropertyPerTriangle(triangulation, tci, color))
+      Some(VertexPropertyPerTriangle(triangulation, tci.toIndexedSeq, color.toIndexedSeq))
     else
       None
   }
@@ -119,7 +119,7 @@ case class MSHMesh(materials: Array[MSHMaterial],
         masterTextCoords(tti(t)(2)) = remapTextureCoordinates(tmi(t), p2d(t3))
       }
 
-      val textureMapping: VertexPropertyPerTriangle[Point[_2D]] = VertexPropertyPerTriangle(triangulation, tti, masterTextCoords)
+      val textureMapping: VertexPropertyPerTriangle[Point[_2D]] = VertexPropertyPerTriangle(triangulation, tti.toIndexedSeq, masterTextCoords.toIndexedSeq)
       Some(TextureMappedProperty(triangulation, textureMapping, masterTexture.buffer))
     } else
       None
@@ -128,16 +128,16 @@ case class MSHMesh(materials: Array[MSHMaterial],
   def getTextureColor(nonTexturedColor: RGBA = RGBA.WhiteTransparent)(implicit pointBlender: ColorBlender[Point[_2D]], blender: ColorBlender[RGBA]): Option[IndirectProperty[RGBA]] = {
     if (textureCoordinates.nonEmpty) {
       // get all textures
-      val textures: IndexedSeq[Option[MSHTexture]] = materials.map(m => m.texture)
+      val textures: IndexedSeq[Option[MSHTexture]] = materials.iterator.map(m => m.texture).toIndexedSeq
       // build TextureMappedSurfaceProperty for each, using the same texture coordinates (textureMapping)
-      val textureMapping = VertexPropertyPerTriangle(triangulation, tti, textureCoordinates.map(p => Point(p.x, p.y)))
+      val textureMapping = VertexPropertyPerTriangle(triangulation, tti.toIndexedSeq, textureCoordinates.iterator.map(p => Point(p.x, p.y)).toIndexedSeq)
       // create the indirected (with tmi) texture property
       val textureProperties: IndexedSeq[Option[TextureMappedProperty[RGBA]]] = for (t: Option[MSHTexture] <- textures) yield t.map(tex => TextureMappedProperty(triangulation, textureMapping, tex.image))
       // replace all non-textured materials with a constant transparent color
       val notTextured = ConstantProperty(triangulation, nonTexturedColor)
       // setup indirection with tmi
       val surfaceProperties: Array[MeshSurfaceProperty[RGBA]] = textureProperties.map(_.getOrElse(notTextured)).toArray
-      Some(IndirectProperty(triangulation, tmi, surfaceProperties))
+      Some(IndirectProperty(triangulation, tmi.toIndexedSeq, surfaceProperties.toIndexedSeq))
     } else
       None
   }
@@ -146,7 +146,7 @@ case class MSHMesh(materials: Array[MSHMaterial],
     // create an indirect property mapping all materials
     if (materials.nonEmpty) {
       val ambientMaterials = materials.map(m => ConstantProperty(triangulation, m.ambient))
-      Some(IndirectProperty(triangulation, tmi, ambientMaterials))
+      Some(IndirectProperty(triangulation, tmi.toIndexedSeq, ambientMaterials.toIndexedSeq))
     } else
       None
   }
@@ -155,7 +155,7 @@ case class MSHMesh(materials: Array[MSHMaterial],
     // create an indirect property mapping all materials
     if (materials.nonEmpty) {
       val diffuseMaterials = materials.map(m => ConstantProperty(triangulation, m.diffuse))
-      Some(IndirectProperty(triangulation, tmi, diffuseMaterials))
+      Some(IndirectProperty(triangulation, tmi.toIndexedSeq, diffuseMaterials.toIndexedSeq))
     } else
       None
   }
@@ -164,7 +164,7 @@ case class MSHMesh(materials: Array[MSHMaterial],
     // create an indirect property mapping all materials
     if (materials.nonEmpty) {
       val specularMaterials = materials.map(m => ConstantProperty(triangulation, m.specular))
-      Some(IndirectProperty(triangulation, tmi, specularMaterials))
+      Some(IndirectProperty(triangulation, tmi.toIndexedSeq, specularMaterials.toIndexedSeq))
     } else
       None
   }
@@ -173,13 +173,13 @@ case class MSHMesh(materials: Array[MSHMaterial],
     // create an indirect property mapping all materials
     if (materials.nonEmpty) {
       val shininess = materials.map(m => ConstantProperty(triangulation, m.shininess))
-      Some(IndirectProperty(triangulation, tmi, shininess))
+      Some(IndirectProperty(triangulation, tmi.toIndexedSeq, shininess.toIndexedSeq))
     } else
       None
   }
 
   override def equals(other: Any): Boolean = {
-    def sameArray[A](a1: IndexedSeq[A], a2: IndexedSeq[A]): Boolean = a1 == a2
+    def sameArray[A](a1: Array[A], a2: Array[A]): Boolean = ( a1.length == a2.length ) && a1.zip(a2).forall{ case (a,b) => a == b }
     other match {
       case mesh: MSHMesh =>
         sameArray(mesh.materials, materials) &&

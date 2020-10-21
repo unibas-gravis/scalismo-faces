@@ -61,7 +61,7 @@ class GeneralMaxConvolutionTests extends FacesTestSuite {
         val f = fixture
         val result = GeneralMaxConvolution.maxConvolution1D(f.row.toArray, f.eval)
 
-        def evalForPosition(p: Int) {
+        def evalForPosition(p: Int): Unit = {
           val allValues = f.row.toArray.zipWithIndex.map { case(v, index) => v + f.eval.logValue(Point1D(index - p)) }
           result(p) shouldEqual allValues.max
         }
@@ -78,7 +78,7 @@ class GeneralMaxConvolutionTests extends FacesTestSuite {
         val f = fixture
         val result = GeneralMaxConvolution.separable2D(f.image, f.eval)
 
-        def evalForPosition(p: Int, q: Int) {
+        def evalForPosition(p: Int, q: Int): Unit = {
           val allValues = (0 until f.width).flatMap { x =>
             (0 until f.height).map { y =>
               f.image(x, y) + f.eval2d.logValue(Point2D(x - p, y - q))

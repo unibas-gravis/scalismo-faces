@@ -18,10 +18,10 @@ package scalismo.faces.io.ply
 import java.io.{OutputStream, OutputStreamWriter}
 import java.nio.ByteOrder
 
-import scalismo.common.PointId
 import scalismo.color.RGBA
+import scalismo.common.PointId
 import scalismo.faces.mesh.VertexPropertyPerTriangle
-import scalismo.geometry.{_2D, _}
+import scalismo.geometry._
 import scalismo.mesh.{BarycentricCoordinates, SurfacePointProperty, TriangleId, TriangleProperty}
 
 /**
@@ -211,11 +211,11 @@ object PlyMeshPropertyWriters {
     }
 
     override def write(idx: Int, osw: OutputStreamWriter): Unit = {
-      writer.write(faces(idx).toArray,osw)
+      writer.write(faces(idx).toArray.toIndexedSeq,osw)
     }
 
     override def write(idx: Int, os: OutputStream, bo: ByteOrder): Unit = {
-      writer.write(faces(idx).toArray,os,bo)
+      writer.write(faces(idx).toArray.toIndexedSeq,os,bo)
     }
   }
 

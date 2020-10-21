@@ -127,9 +127,9 @@ object MoMoInstance {
   /** create a MoMoInstance from a set of MoMoCoefficients */
   def fromCoefficients(momoCoefficients: MoMoCoefficients, modelURI: URI): MoMoInstance = {
     new MoMoInstance(
-      momoCoefficients.shape.toArray,
-      momoCoefficients.color.toArray,
-      momoCoefficients.expression.toArray,
+      momoCoefficients.shape.toArray.toIndexedSeq,
+      momoCoefficients.color.toArray.toIndexedSeq,
+      momoCoefficients.expression.toArray.toIndexedSeq,
       modelURI)
   }
 

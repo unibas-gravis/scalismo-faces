@@ -72,8 +72,7 @@ class SphericalHarmonicsOptimizer(val renderer: ParametricModel,
         r
     }
     if(points.nonEmpty) { //If the face is outside the face This is cannot be done outside the function, because number of points depends on visibility.
-    val lightField: IndexedSeq[EuclideanVector[_3D]]
-    = SphericalHarmonicsSolver.solveSHSystemDeconvolve(points, SphericalHarmonicsLight.lambertKernel)
+      val lightField: IndexedSeq[EuclideanVector[_3D]] = SphericalHarmonicsSolver.solveSHSystemDeconvolve(points, SphericalHarmonicsLight.lambertKernel.toIndexedSeq)
       SphericalHarmonicsLight(lightField)
     }else {
       rps.environmentMap

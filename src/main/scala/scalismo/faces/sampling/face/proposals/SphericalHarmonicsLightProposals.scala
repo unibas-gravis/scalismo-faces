@@ -349,7 +349,7 @@ object SphericalHarmonicsLightProposals {
       val estimatedLight = shOpt.optimize(rps, points)
       val estimatedRps: RenderParameter = rps.copy(environmentMap = estimatedLight)
 
-      val curSample: PixelImage[RGBA] = modelRenderer.renderImage(estimatedRps).withAccessMode(AccessMode.Strict[RGBA])
+      val curSample: PixelImage[RGBA] = modelRenderer.renderImage(estimatedRps).withAccessMode(AccessMode.Strict[RGBA]())
       var counter = 0
 
       //calculating difference per pixel

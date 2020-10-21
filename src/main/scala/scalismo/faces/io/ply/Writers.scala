@@ -114,7 +114,7 @@ object StringWriter {
 
 
 trait EndianWriter[@specialized(Byte, Char, Short, Int, Long, Float, Double) A] {
-  def write(seq: Iterable[A], os: OutputStream, bo: ByteOrder)
+  def write(seq: Iterable[A], os: OutputStream, bo: ByteOrder) : Unit
 }
 
 object EndianWriter {

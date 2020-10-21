@@ -29,14 +29,14 @@ import scalismo.statisticalmodel.{DiscreteLowRankGaussianProcess, ModelHelpers}
 
 class ModelHelperTests extends FacesTestSuite {
 
-  def vectorsNearlyEqual(A: DenseVector[Double], B: DenseVector[Double], threshold: Double = 1E-6) {
+  def vectorsNearlyEqual(A: DenseVector[Double], B: DenseVector[Double], threshold: Double = 1E-6): Unit = {
     A.length shouldBe B.length
 
     for(i <- 0 until A.length)
       A(i) should be (B(i) +- threshold)
   }
 
-  def matrixColsNearlyEqualUpToSign(A: DenseMatrix[Double], B: DenseMatrix[Double], threshold: Double = 1E-6) {
+  def matrixColsNearlyEqualUpToSign(A: DenseMatrix[Double], B: DenseMatrix[Double], threshold: Double = 1E-6): Unit = {
     A.cols shouldBe B.cols
     A.rows shouldBe B.rows
 
@@ -57,7 +57,7 @@ class ModelHelperTests extends FacesTestSuite {
     }
   }
 
-  def matricesNearlyEqual(A: DenseMatrix[Double], B: DenseMatrix[Double], threshold: Double = 1E-6) {
+  def matricesNearlyEqual(A: DenseMatrix[Double], B: DenseMatrix[Double], threshold: Double = 1E-6) : Unit = {
     A.cols shouldBe B.cols
     A.rows shouldBe B.rows
     for(j <- 0 until A.cols) {
