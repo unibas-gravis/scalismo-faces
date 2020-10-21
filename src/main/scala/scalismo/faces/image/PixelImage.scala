@@ -20,6 +20,7 @@ package scalismo.faces.image
 import scalismo.color.ColorSpaceOperations
 import scalismo.faces.image.filter.ImageFilter
 
+import scala.collection.parallel.immutable.ParVector
 import scala.reflect.ClassTag
 
 /** a basic pixel-based image, access through pixel coordinates (x, y) */
@@ -96,7 +97,7 @@ class PixelImage[@specialized A](val domain: PixelImageDomain, val accessMode: A
   def buffer(implicit tag: ClassTag[A]): PixelImage[A] = {
     val data = new Array[A](domain.length)
     // 1) parallel foreach (faster)
-    domain.indices.par.foreach(i => data(i) = this(domain.x(i), domain.y(i)))
+    new ParVector(domain.indices.toVector).foreach(i => data(i) = this(domain.x(i), domain.y(i)))
     // 2) while
     //    var i = 0
     //    while(i < domain.length) {
@@ -282,7 +283,7 @@ private class ArrayImage[A: ClassTag](override val domain: PixelImageDomain,
   /** apply a function to each pixel */
   override def map[B](f: (A) => B)(implicit tag: ClassTag[B]): PixelImage[B] = {
     // 1) parallel, non-while
-    val newData = data.par.map(f).toArray
+    val newData = new ParVector(data.toVector).map(f).toArray
     // 2) while
     //    val newData = new Array[B](domain.length)
     //    var i = 0
@@ -302,11 +303,11 @@ private class ArrayImage[A: ClassTag](override val domain: PixelImageDomain,
 
   // correct equality with respect to underlying data array
   override def equals(other: Any): Boolean = other match {
-    case ai: ArrayImage[A] => domain == ai.domain && data.deep == ai.data.deep
+    case ai: ArrayImage[A] => domain == ai.domain && data.sameElements(ai.data)
     case pi: PixelImage[A] => super.equals(pi)
     case _ => false
   }
 
   // correct hashCode with respect to underlying data array
-  override def hashCode: Int = domain.hashCode() * 43 + data.deep.hashCode()
+  override def hashCode: Int = domain.hashCode() * 43 + data.hashCode()
 }

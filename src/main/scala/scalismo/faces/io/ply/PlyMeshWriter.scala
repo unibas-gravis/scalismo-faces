@@ -196,7 +196,7 @@ private[io] case class PlyMeshWriter(url: String,
     ).flatten
   }
 
-  private def writeHeader(osw: OutputStreamWriter) {
+  private def writeHeader(osw: OutputStreamWriter) : Unit = {
     osw.write("ply\n")
     osw.write("format %s 1.0\n".format(plyFormat))
     osw.write("comment Created by GraVis-Faces\n")

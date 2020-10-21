@@ -64,7 +64,7 @@ class SequenceWriter[@specialized(Byte, Char, Short, Int, Long, Float, Double) A
 }
 
 trait StringWriter[@specialized(Byte, Char, Short, Int, Long, Float, Double) A] {
-  def write(seq: Iterable[A], osw:OutputStreamWriter)
+  def write(seq: Iterable[A], osw:OutputStreamWriter) : Unit
 }
 
 object StringWriter {
