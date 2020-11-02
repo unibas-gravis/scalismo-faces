@@ -7,7 +7,7 @@ jdk:
   - openjdk8
 
 scala:
-  - 2.13.2
+  - 2.13.3
 
 script:
   - travis_wait sbt ++$TRAVIS_SCALA_VERSION update
