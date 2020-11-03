@@ -33,7 +33,7 @@ case class GaussianParameterProposal(sdev: Double)(implicit rnd: Random)
   override def logTransitionProbability(from: IndexedSeq[Double], to: IndexedSeq[Double]): Double = {
     require(from.nonEmpty, "cannot calculate transition on empty vector")
     require(from.length == to.length, "IndexedSeqs must be of same length")
-    to.toIterator.zip(from.toIterator).map{case (t, f) => GaussianEvaluator.logDensity(t, f, sdev)}.sum
+    to.iterator.zip(from.iterator).map{case (t, f) => GaussianEvaluator.logDensity(t, f, sdev)}.sum
   }
 }
 
@@ -41,8 +41,8 @@ case class GaussianParameterProposal(sdev: Double)(implicit rnd: Random)
 case class LogNormalScalingParameterProposal(logSdev: Double)(implicit rnd: Random)
   extends ProposalGenerator[IndexedSeq[Double]] with TransitionProbability[IndexedSeq[Double]] {
 
-  private def normSq(vec: IndexedSeq[Double]): Double = vec.toIterator.map{v => v * v}.sum
-  private def dot(a: IndexedSeq[Double], b: IndexedSeq[Double]): Double = a.toIterator.zip(b.toIterator).map{case(u, v) => u * v}.sum
+  private def normSq(vec: IndexedSeq[Double]): Double = vec.iterator.map{v => v * v}.sum
+  private def dot(a: IndexedSeq[Double], b: IndexedSeq[Double]): Double = a.iterator.zip(b.iterator).map{case(u, v) => u * v}.sum
 
   override def propose(current: IndexedSeq[Double]): IndexedSeq[Double] = {
     require(current.nonEmpty, "cannot propose change on empty vector")

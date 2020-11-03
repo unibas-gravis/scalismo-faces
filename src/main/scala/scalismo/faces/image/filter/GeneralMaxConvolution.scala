@@ -56,7 +56,9 @@ object GeneralMaxConvolution {
     val maxConv: Array[Double] = data.clone()
 
     // keep this line if the local position is often the best one
-    maxConv.transform(t => t + eval.logValue(Point1D(0f)))
+    for (i <- data.indices) {
+      maxConv(i) += eval.logValue(Point1D(0f))
+    }
 
     // forward pass
     for (i <- data.indices) {

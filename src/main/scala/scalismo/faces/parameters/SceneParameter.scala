@@ -26,7 +26,7 @@ import scalismo.faces.render._
 /**
   * structure to represent a scene tree with pose nodes and render objects
   */
-sealed trait SceneTree extends Traversable[SceneTree] {
+sealed trait SceneTree extends Iterable[SceneTree] {
   /**
     * get all properly transformed meshes in the scene
     *
@@ -67,9 +67,25 @@ sealed trait SceneTree extends Traversable[SceneTree] {
     case so: SceneObject =>
       f(so)
   }
+
+  override def iterator: Iterator[SceneTree] = {
+
+    // recursive scene traversal
+    def treeWalker(node: SceneTree): Iterator[SceneTree] = {
+      node match {
+        case pn: PoseNode =>
+          pn.children.iterator.flatMap{child => treeWalker(child)}
+        case so: SceneObject => Iterator(so)
+      }
+    }
+    treeWalker(this)
+  }
+
+
 }
 
 case class PoseNode(pose: Pose, children: IndexedSeq[SceneTree]) extends SceneTree
+
 
 case class SceneObject(renderObject: RenderObject) extends SceneTree
 
@@ -80,7 +96,7 @@ case class SceneParameter(view: ViewParameter,
                           illuminations: IndexedSeq[Illumination],
                           sceneTree: SceneTree,
                           imageSize: ImageSize,
-                          colorTransform: ColorTransform) {
+                          colorTransform: scalismo.faces.parameters.ColorTransform) {
 
   /**
     * render a scene according to the scene parameter description

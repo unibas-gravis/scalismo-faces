@@ -107,7 +107,7 @@ object RenderParameterIO {
     */
   def readFromASTWithPath[A](json: JsValue, path: String)(implicit format: JsonFormat[A]): Try[A] = Try {
     val version = RenderParameterJSONFormat.versionString(json)
-    val fieldNames: IndexedSeq[String] = path.split("/").filter(_.nonEmpty)
+    val fieldNames: IndexedSeq[String] = path.split("/").filter(_.nonEmpty).toIndexedSeq
     // traverse the json AST along the given path
     val jsonField = fieldNames.foldLeft(json) { (jsValue, fieldName) => jsValue.asJsObject.fields(fieldName) }
     jsonField.convertTo[A]
@@ -121,7 +121,7 @@ object RenderParameterIO {
     */
   def writeToASTWithPath[A](parameter: A, path: String)(implicit format: JsonFormat[A]): JsValue = {
     val parameterAST = parameter.toJson
-    val fieldNames: IndexedSeq[String] = path.split("/").filter(_.nonEmpty)
+    val fieldNames: IndexedSeq[String] = path.split("/").filter(_.nonEmpty).toIndexedSeq
     // create composite, nested tree along path
     val fullAST = fieldNames.reverse.foldLeft(parameterAST) { (compositeTree, fieldName) => JsObject((fieldName, compositeTree)) }
     fullAST

@@ -80,7 +80,7 @@ class MultiChannelImageBufferTests extends FacesTestSuite {
         val (x, y) = (rnd.scalaRandom.nextInt(w), rnd.scalaRandom.nextInt(h))
         val slice = randomBuffer.channelSlice(x, y)
         val data = Array.tabulate(d)(i => randomBuffer(x, y, i))
-        slice.deep shouldBe data.deep
+        slice.sameElements(data) should be(true)
       }
     }
 

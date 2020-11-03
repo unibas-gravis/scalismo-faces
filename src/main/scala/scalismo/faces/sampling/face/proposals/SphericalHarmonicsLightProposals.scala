@@ -349,7 +349,7 @@ object SphericalHarmonicsLightProposals {
       val estimatedLight = shOpt.optimize(rps, points)
       val estimatedRps: RenderParameter = rps.copy(environmentMap = estimatedLight)
 
-      val curSample: PixelImage[RGBA] = modelRenderer.renderImage(estimatedRps).withAccessMode(AccessMode.Strict[RGBA])
+      val curSample: PixelImage[RGBA] = modelRenderer.renderImage(estimatedRps).withAccessMode(AccessMode.Strict[RGBA]())
       var counter = 0
 
       //calculating difference per pixel
@@ -364,7 +364,7 @@ object SphericalHarmonicsLightProposals {
           Math.log(threshold) - normalizer + 1
       }
 
-      val differenceImage = PixelImage(curSample.domain, diff, AccessMode.Strict[Double])
+      val differenceImage = PixelImage(curSample.domain, diff, AccessMode.Strict[Double]())
       val thresholded = differenceImage.map(d => if (Math.exp(d - normalizer) > threshold) 1 else 0)
       val count: Double = thresholded.values.sum.toDouble / counter
       (estimatedRps, count, thresholded)
@@ -372,7 +372,7 @@ object SphericalHarmonicsLightProposals {
 
     // samples according to mask from image
     private def maskedSampler(rps: RenderParameter, label: PixelImage[Int]) = {
-      val maskProp = labelAsSurfaceProperty(rps, label.withAccessMode(AccessMode.Strict[Int]))
+      val maskProp = labelAsSurfaceProperty(rps, label.withAccessMode(AccessMode.Strict[Int]()))
       MeshSurfaceSampling.sampleAccordingToMask(maskProp.map(v => v.getOrElse(0.0)), nSamplesIllumination) _
     }
 

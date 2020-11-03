@@ -61,7 +61,7 @@ class MultiChannelImageBuffer private (val width: Int, val height: Int, val chan
 
   /** content-aware equality */
   override def equals(other: Any): Boolean = other match {
-    case mcb: MultiChannelImageBuffer => width == mcb.width && height == mcb.height && channels == mcb.channels && data.deep == mcb.data.deep
+    case mcb: MultiChannelImageBuffer => width == mcb.width && height == mcb.height && channels == mcb.channels && data.sameElements(mcb.data)
     case _ => false
   }
 }

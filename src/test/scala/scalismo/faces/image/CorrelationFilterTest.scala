@@ -42,7 +42,7 @@ class CorrelationFilterTest extends FacesTestSuite with PrivateMethodTester {
 
     it("yields a symmetric image (I==I.t) for a separable kernel (regression test for access modes in separable filters)") {
       val checkers = PixelImage(15, 15, (x,y) => if((x+y)%2==0) 1.0 else 0.0 )
-      val blurKernel = PixelImage(PixelImageDomain(3, 1), IndexedSeq(0.25, 0.5, 0.25))
+      val blurKernel = PixelImage(PixelImageDomain(3, 1), IndexedSeq(0.25, 0.5, 0.25).toIndexedSeq)
       val blurred = checkers.filter(SeparableCorrelationFilter(blurKernel, blurKernel.transposed))
       val diff = blurred.transposed.zip(blurred).map{case(b,c) => math.pow(b - c, 2)}
       diff.values.sum should be < 1e-10

@@ -75,7 +75,7 @@ object GravisArrayIO {
     ResourceManagement.using(new PrintWriter(new FileOutputStream(file))) { w =>
       data.foreach(d => w.println(io.toString(d)))
     }
-    Success(Unit)
+    Success(())
   }
 
   /** write human readable legacy gravis format: [index]=value (Sandro) */
@@ -84,7 +84,7 @@ object GravisArrayIO {
     ResourceManagement.using(new PrintWriter(new FileOutputStream(file))) { w =>
       lines.foreach(w.println)
     }
-    Success(Unit)
+    Success(())
   }
 
   /** typed gravis reader/writer, String parser and binary - for legacy gravis formats */

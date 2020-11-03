@@ -35,14 +35,14 @@ class ComponentRepresentationTest extends FacesTestSuite {
 
     // toArray and fromArray
     it("toArray and fromArray compose to identity") {
-      vectorizer.toArray(vectorizer.fromArray(data)).deep shouldBe data.deep
+      vectorizer.toArray(vectorizer.fromArray(data)).sameElements(data) shouldBe true
     }
 
     // intoArray and toArray
     it("intoArray and fromArray are consistent") {
       val test = new Array[Double](d)
       vectorizer.intoArray(value, test)
-      test.deep shouldBe data.deep
+      test.sameElements(data) should be(true)
     }
 
     // component and toArray

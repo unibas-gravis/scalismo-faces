@@ -23,7 +23,7 @@ import java.util.zip.{GZIPInputStream, GZIPOutputStream}
 import scalismo.color.RGBA
 import scalismo.faces.io.PixelImageIO
 import scalismo.faces.utils.ResourceManagement
-import scalismo.geometry.{IntVector, Point, EuclideanVector, _2D, _3D}
+import scalismo.geometry._
 
 import scala.reflect.ClassTag
 import scala.util.control.NonFatal
@@ -226,7 +226,7 @@ object GravisMSHFormat {
       ds.writeBoolean(data)
     }
 
-    private def writeIndexedSeq[T](elementWriter: (DataOutputStream, T) => Unit)(ds: DataOutputStream, data: IndexedSeq[T]) = {
+    private def writeArray[T](elementWriter: (DataOutputStream, T) => Unit)(ds: DataOutputStream, data: Array[T]) = {
       val size: Int = data.length
       writeInt(ds, size)
       data.foreach(elementWriter(ds, _))
@@ -297,24 +297,24 @@ object GravisMSHFormat {
       ResourceManagement.using(openDeflated(file)) { stream =>
         writeMagicString(stream, magicStart)
         // =mesh=
-        writeIndexedSeq(writeMSHMaterial(file))(stream, mesh.materials)
-        writeIndexedSeq(writePoint)(stream, mesh.vertex)
-        writeIndexedSeq(writeVector)(stream, mesh.normal)
-        writeIndexedSeq(writePoint)(stream, mesh.textureCoordinates)
-        writeIndexedSeq(writeRGBA)(stream, mesh.color)
+        writeArray(writeMSHMaterial(file))(stream, mesh.materials)
+        writeArray(writePoint)(stream, mesh.vertex)
+        writeArray(writeVector)(stream, mesh.normal)
+        writeArray(writePoint)(stream, mesh.textureCoordinates)
+        writeArray(writeRGBA)(stream, mesh.color)
         // =triangles=
-        writeIndexedSeq(writeIntVector)(stream, mesh.tvi)
-        writeIndexedSeq(writeIntVector)(stream, mesh.tni)
-        writeIndexedSeq(writeIntVector)(stream, mesh.tti)
-        writeIndexedSeq(writeIntVector)(stream, mesh.tci)
-        writeIndexedSeq(writeInt)(stream, mesh.tmi)
+        writeArray(writeIntVector)(stream, mesh.tvi)
+        writeArray(writeIntVector)(stream, mesh.tni)
+        writeArray(writeIntVector)(stream, mesh.tti)
+        writeArray(writeIntVector)(stream, mesh.tci)
+        writeArray(writeInt)(stream, mesh.tmi)
         // =lines=
-        writeIndexedSeq(writeIntVector2D)(stream, mesh.lvi)
-        writeIndexedSeq(writeIntVector2D)(stream, mesh.lti)
-        writeIndexedSeq(writeIntVector2D)(stream, mesh.lci)
+        writeArray(writeIntVector2D)(stream, mesh.lvi)
+        writeArray(writeIntVector2D)(stream, mesh.lti)
+        writeArray(writeIntVector2D)(stream, mesh.lci)
         // =points=
-        writeIndexedSeq(writeInt)(stream, mesh.pvi)
-        writeIndexedSeq(writeInt)(stream, mesh.pci)
+        writeArray(writeInt)(stream, mesh.pvi)
+        writeArray(writeInt)(stream, mesh.pci)
         // end magic
         writeMagicString(stream, magicEnd)
       }

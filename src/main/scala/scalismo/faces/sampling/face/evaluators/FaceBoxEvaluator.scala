@@ -92,7 +92,7 @@ object FaceBox {
           boxPosition = Some(topLeft, size)
         case certaintyMatcher(c, _, _) =>
           certainty = Some(c.toDouble)
-        case li: String => Unit
+        case li: String => ()
       }
     }
     // get results

@@ -27,10 +27,11 @@ class BarycentricCoordinatesTests extends FacesTestSuite{
 
       def testPoint(v1: Point[_3D], v2: Point[_3D], v3: Point[_3D]) = {
         val bcc = BarycentricCoordinates.randomUniform
-        val point = bcc.interpolateProperty(v3, v2, v1)
+        val point = bcc.interpolateProperty(v1, v2, v3)
         val bccNew = BarycentricCoordinates.pointInTriangle3D(point, v1, v2, v3)
         pass(bcc.a, bccNew.a) && pass(bcc.b, bccNew.b) && pass(bcc.c, bccNew.c)
       }
+
       val v1 = Point(2,3,1)
       val v2 = Point(3,2,2)
       val v3 = Point(1,1,3)

@@ -21,7 +21,7 @@ import scalismo.utils.Random
 
 class HSVTests extends FacesTestSuite {
 
-  implicit val rng = Random(1024l)
+  implicit val rng = Random(1024L)
 
   def rndCol = RGB(rng.scalaRandom.nextDouble(),rng.scalaRandom.nextDouble(),rng.scalaRandom.nextDouble())
 

@@ -21,17 +21,19 @@ import scalismo.faces.FacesTestSuite
 class DifferentialImageTest extends FacesTestSuite {
 
   describe("A PixelImage has proper differential operations") {
+
     it("has a proper gradient x, correlation with (-0.5, 0, 0.5)") {
-      val testImg = PixelImage(ColumnMajorImageDomain(6, 1), (0f until 6f by 1f).toArray).withAccessMode(AccessMode.Repeat())
+      val testImg = PixelImage(ColumnMajorImageDomain(6, 1), (0 until 6).map(_.toFloat).toArray).withAccessMode(AccessMode.Repeat())
       val gX = PixelImageDifferential.gradX(testImg)
       gX.values.toIndexedSeq should be(IndexedSeq(0.5f, 1f, 1f, 1f, 1f, 0.5f))
     }
 
     it("has a proper gradient y, correlation with (-0.5, 0, 0.5)") {
-      val testImg = PixelImage(ColumnMajorImageDomain(1, 6), (0f until 6f by 1f).toArray).withAccessMode(AccessMode.Repeat())
+      val testImg = PixelImage(ColumnMajorImageDomain(1, 6), (0 until 6).map(_.toFloat).toArray).withAccessMode(AccessMode.Repeat())
       val gY = PixelImageDifferential.gradY(testImg)
       gY.values.toIndexedSeq should be(IndexedSeq(0.5f, 1f, 1f, 1f, 1f, 0.5f))
     }
 
   }
+
 }

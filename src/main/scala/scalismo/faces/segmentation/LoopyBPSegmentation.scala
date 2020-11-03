@@ -25,6 +25,7 @@ import scalismo.faces.gui.{GUIFrame, ImagePanel}
 import scalismo.utils.Random
 
 import scala.collection.immutable.IndexedSeq
+import scala.collection.parallel.immutable.ParVector
 
 
 /* an implementation of loopy belief propagation with a sum product algorithm for segmentation
@@ -438,23 +439,23 @@ object LoopyBPSegmentation {
   private def messagePass(messageField: MessageFieldBuf, localMessages: PixelImage[LabelDistribution], binaryDistribution: BinaryLabelDistribution, numLabels: Int, direction: Direction): Unit = {
     direction match {
       case Right => // do rows in parallel, sequential along row
-        for {row <- (0 until messageField.height).par
+        for {row <- ParVector.range(0, messageField.height)
              x <- 0 until messageField.width - 1} {
           // store message: is incoming from the left in next node
           messageField(x + 1, row)(Left.toInt) = calculateMessage(messageField, localMessages, binaryDistribution, numLabels, x, row, Right)
         }
       case Left => // do rows in parallel, sequential along row
-        for {row <- (0 until messageField.height).par
+        for {row <- ParVector.range(0, messageField.height)
              x <- messageField.width - 1 to 1 by -1} {
           messageField(x - 1, row)(Right.toInt) = calculateMessage(messageField, localMessages, binaryDistribution, numLabels, x, row, Left)
         }
       case Down => // do columns in parallel, sequential along column
-        for {col <- (0 until messageField.width).par
+        for {col <- ParVector.range(0, messageField.width)
              y <- 0 until messageField.height - 1} {
           messageField(col, y + 1)(Up.toInt) = calculateMessage(messageField, localMessages, binaryDistribution, numLabels, col, y, Down)
         }
       case Up => // do columns in parallel, sequential along column
-        for {col <- (0 until messageField.width).par
+        for {col <- ParVector.range(0, messageField.width)
              y <- messageField.height - 1 to 1 by -1} {
           messageField(col, y - 1)(Down.toInt) = calculateMessage(messageField, localMessages, binaryDistribution, numLabels, col, y, Up)
         }

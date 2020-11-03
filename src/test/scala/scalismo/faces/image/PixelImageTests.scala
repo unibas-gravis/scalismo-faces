@@ -200,7 +200,7 @@ class PixelImageTests extends FacesTestSuite {
     it("supports toArray for buffered and unbuffered versions") {
       val arrayBuffer = image.buffer.toArray
       val arrayView = PixelImage.view(image.domain, (x, y) => image(x, y)).toArray
-      arrayBuffer.deep shouldBe arrayView.deep
+      arrayBuffer.sameElements(arrayView) should be(true)
     }
 
     it("supports map") {
