@@ -5,9 +5,19 @@ val scalismoPlatform = {
 
 lazy val root = (project in file("."))
   .settings(
-    organization  := "ch.unibas.cs.gravis",
     name := """scalismo-faces""",
+    organization  := "ch.unibas.cs.gravis",
+    homepage := Some(url("https://github.com/unibas-gravis/scalismo-faces")),
     licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")),
+    scmInfo := Some(ScmInfo(url("https://github.com/unibas-gravis/scalismo-faces"), "git@github.com:unibas-gravis/scalismo-faces.git")),
+    developers := List(Developer("Andreas-Forster","Andreas Morel-Forster", "forster.andreas@unibas.ch",url("https://github.com/Andreas-Forster"))),
+    publishMavenStyle := true,
+    publishTo := Some(
+      if(isSnapshot.value)
+        Opts.resolver.sonatypeSnapshots
+      else
+        Opts.resolver.sonatypeStaging
+    ),
     scalaVersion  := "2.13.3",
     crossScalaVersions := Seq("2.13.3", "2.12.11"),
     scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature", "-opt:l:method", "-target:jvm-1.8"),
