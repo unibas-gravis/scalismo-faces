@@ -21,8 +21,7 @@ Usage
 Add the dependency to your `build.sbt`:
 
 ```scala
-libraryDependencies += "ch.unibas.cs.gravis" %% "scalismo-faces" % "0.9.0"
-resolvers += Resolver.bintrayRepo("unibas-gravis", "maven")
+libraryDependencies += "ch.unibas.cs.gravis" %% "scalismo-faces" % "0.90.0"
 ```
 
 ### Getting Started
