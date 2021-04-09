@@ -21,10 +21,9 @@ lazy val root = (project in file("."))
     scalaVersion  := "2.13.3",
     crossScalaVersions := Seq("2.13.3", "2.12.11"),
     scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature", "-opt:l:method", "-target:jvm-1.8"),
-    resolvers += Resolver.jcenterRepo,
     libraryDependencies  ++= Seq(
-      "ch.unibas.cs.gravis" %% "scalismo" % "0.90-RC1",
-      "ch.unibas.cs.gravis" % "scalismo-native-all" % "4.0.0",
+      "ch.unibas.cs.gravis" %% "scalismo" % "0.90.0",
+      "ch.unibas.cs.gravis" % "scalismo-native-all" % "4.0.1",
       "org.scalatest" %% "scalatest" % "3.0.8" % "test"
     ),
     unmanagedSourceDirectories in Compile += {
