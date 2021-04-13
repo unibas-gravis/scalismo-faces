@@ -10,7 +10,11 @@ lazy val root = (project in file("."))
     homepage := Some(url("https://github.com/unibas-gravis/scalismo-faces")),
     licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")),
     scmInfo := Some(ScmInfo(url("https://github.com/unibas-gravis/scalismo-faces"), "git@github.com:unibas-gravis/scalismo-faces.git")),
-    developers := List(Developer("Andreas-Forster","Andreas Morel-Forster", "forster.andreas@unibas.ch",url("https://github.com/Andreas-Forster"))),
+    developers := List(Developer(
+    	id = "Scalismo-Faces",
+	name = "Scalismo-Faces Community",
+	email = "scalismo-faces@googlegroups.com",
+	url = url("https://github.com/unibas-gravis/scalismo-faces/"))),
     publishMavenStyle := true,
     publishTo := Some(
       if(isSnapshot.value)
