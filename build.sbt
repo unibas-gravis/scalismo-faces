@@ -5,16 +5,29 @@ val scalismoPlatform = {
 
 lazy val root = (project in file("."))
   .settings(
-    organization  := "ch.unibas.cs.gravis",
     name := """scalismo-faces""",
+    organization  := "ch.unibas.cs.gravis",
+    homepage := Some(url("https://github.com/unibas-gravis/scalismo-faces")),
     licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")),
+    scmInfo := Some(ScmInfo(url("https://github.com/unibas-gravis/scalismo-faces"), "git@github.com:unibas-gravis/scalismo-faces.git")),
+    developers := List(Developer(
+    	id = "Scalismo-Faces",
+	name = "Scalismo-Faces Community",
+	email = "scalismo-faces@googlegroups.com",
+	url = url("https://github.com/unibas-gravis/scalismo-faces/"))),
+    publishMavenStyle := true,
+    publishTo := Some(
+      if(isSnapshot.value)
+        Opts.resolver.sonatypeSnapshots
+      else
+        Opts.resolver.sonatypeStaging
+    ),
     scalaVersion  := "2.13.3",
     crossScalaVersions := Seq("2.13.3", "2.12.11"),
     scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature", "-opt:l:method", "-target:jvm-1.8"),
-    resolvers += Resolver.jcenterRepo,
     libraryDependencies  ++= Seq(
-      "ch.unibas.cs.gravis" %% "scalismo" % "0.90-RC1",
-      "ch.unibas.cs.gravis" % "scalismo-native-all" % "4.0.0",
+      "ch.unibas.cs.gravis" %% "scalismo" % "0.90.0",
+      "ch.unibas.cs.gravis" % "scalismo-native-all" % "4.0.1",
       "org.scalatest" %% "scalatest" % "3.0.8" % "test"
     ),
     unmanagedSourceDirectories in Compile += {
