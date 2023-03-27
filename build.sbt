@@ -15,6 +15,11 @@ lazy val root = (project in file("."))
 	name = "Scalismo-Faces Community",
 	email = "scalismo-faces@googlegroups.com",
 	url = url("https://github.com/unibas-gravis/scalismo-faces/"))),
+    resolvers ++= Seq(
+      Resolver.jcenterRepo,
+      Resolver.sonatypeRepo("releases"),
+      Resolver.sonatypeRepo("snapshots")
+    ),
     publishMavenStyle := true,
     publishTo := Some(
       if(isSnapshot.value)
@@ -22,21 +27,14 @@ lazy val root = (project in file("."))
       else
         Opts.resolver.sonatypeStaging
     ),
-    scalaVersion  := "2.13.3",
-    crossScalaVersions := Seq("2.13.3", "2.12.11"),
-    scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature", "-opt:l:method", "-target:jvm-1.8"),
+    scalaVersion  := "3.2.2",
+    scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature"), // "-opt:l:method",
+    javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
     libraryDependencies  ++= Seq(
-      "ch.unibas.cs.gravis" %% "scalismo" % "0.90.0",
-      "ch.unibas.cs.gravis" % "scalismo-native-all" % "4.0.1",
-      "org.scalatest" %% "scalatest" % "3.0.8" % "test"
+      "ch.unibas.cs.gravis" %% "scalismo" % "0.92-SNAPSHOT",
+      "org.scalatest" %% "scalatest" % "3.2.15" % Test,
+      "io.spray" %%  "spray-json" % "1.3.6"
     ),
-    unmanagedSourceDirectories in Compile += {
-      val sourceDir = (sourceDirectory in Compile).value
-      CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some((2, n)) if n >= 13 => sourceDir / "scala-2.13+"
-        case _                       => sourceDir / "scala-2.13-"
-      }
-    }
   )
   .enablePlugins(BuildInfoPlugin)
   .settings(
