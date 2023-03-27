@@ -208,8 +208,8 @@ object MoMo {
 
     val domain = reference
 
-    val shapeSamples = samplesShape.map { sample: VertexColorMesh3D => DiscreteField[_3D, TriangleMesh, Point[_3D]](domain, sample.shape.pointSet.points.toIndexedSeq) }
-    val colorSamples = samplesColor.map { sample: VertexColorMesh3D => DiscreteField[_3D, TriangleMesh, RGB](domain, sample.color.pointData.map{_.toRGB}) }
+    val shapeSamples = samplesShape.map { (sample: VertexColorMesh3D) => DiscreteField[_3D, TriangleMesh, Point[_3D]](domain, sample.shape.pointSet.points.toIndexedSeq) }
+    val colorSamples = samplesColor.map { (sample: VertexColorMesh3D) => DiscreteField[_3D, TriangleMesh, RGB](domain, sample.color.pointData.map{_.toRGB}) }
 
     val shapeModel = ModelHelpers.createUsingPPCA[_3D, TriangleMesh, Point[_3D]](domain, shapeSamples, shapeNoiseVariance)
     val colorModel = ModelHelpers.createUsingPPCA[_3D, TriangleMesh, RGB](domain, colorSamples, colorNoiseVariance)

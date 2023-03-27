@@ -32,6 +32,7 @@ import scalismo.sampling.{ProposalGenerator, SymmetricTransitionRatio, Transitio
 import scalismo.utils.Random
 
 import scala.math._
+import scala.util.control.NonLocalReturns._
 
 /** illumination proposals */
 object SphericalHarmonicsLightProposals {
@@ -86,9 +87,7 @@ object SphericalHarmonicsLightProposals {
     * @param sdev standard deviation of proposal per component
     * @param fixIntensity if true the intensity is perserved */
   case class SHLightPerturbationProposal(sdev: Double, fixIntensity: Boolean)(implicit rnd: Random)
-    extends ProposalGenerator[SphericalHarmonicsLight] with
-      SymmetricTransitionRatio[SphericalHarmonicsLight] with
-      TransitionProbability[SphericalHarmonicsLight] {
+    extends ProposalGenerator[SphericalHarmonicsLight] with SymmetricTransitionRatio[SphericalHarmonicsLight] with TransitionProbability[SphericalHarmonicsLight] {
 
     override def propose(current: SphericalHarmonicsLight): SphericalHarmonicsLight = {
       val proposal = current.copy(coefficients = current.coefficients.map(v => v + EuclideanVector(
@@ -251,7 +250,7 @@ object SphericalHarmonicsLightProposals {
           if (math.abs(diff.x - diff.y) + math.abs(diff.y - diff.z) < monochromaticityThreshold) { //if monochromatic change, then we could take any channel, we choose the first one.
             totProb += 3.0 * (-0.5 * math.pow(diff.x / sdev, 2) - 0.5 * math.log(2.0 * math.Pi) - math.log(sdev))
           } else {
-            return Double.NegativeInfinity //if non monochromatic change
+            returning(Double.NegativeInfinity) //if non monochromatic change
           }
         }
         totProb

@@ -133,7 +133,7 @@ class PoissonInpainting[A: ClassTag](solver: ImageDomainPoissonSolver[A])(implic
       fullInset(x, y) * fullMask(x, y) + targetImage(x, y) * (1.0 - fullMask(x, y)))
   }
 
-  private implicit val colorSpaceOpsForOptions = new ColorSpaceOperations[Option[A]] {
+  private implicit val colorSpaceOpsForOptions: ColorSpaceOperations[Option[A]] = new ColorSpaceOperations[Option[A]] {
     override def add(pix1: Option[A], pix2: Option[A]): Option[A] = for { p <- pix1; q <- pix2 } yield p + q
 
     override def multiply(pix1: Option[A], pix2: Option[A]): Option[A] = for { p <- pix1; q <- pix2 } yield p multiply q

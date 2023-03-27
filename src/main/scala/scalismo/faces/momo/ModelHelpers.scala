@@ -16,7 +16,7 @@
 package scalismo.statisticalmodel
 
 import breeze.linalg.svd.SVD
-import breeze.linalg.{*, DenseMatrix, DenseVector}
+import breeze.linalg.{DenseMatrix, DenseVector, _}
 import scalismo.common._
 import scalismo.common.interpolation.NearestNeighborInterpolator
 import scalismo.faces.mesh.BinaryMask
@@ -110,7 +110,7 @@ object ModelHelpers {
   ): DiscreteLowRankGaussianProcess[D, DDomain, Value] = {
     val X = buildDataMatrixWithSamplesInCols[D, DDomain, Value](domain, discreteFields)
     val (basis, variance, mean) = calculatePPCABasis(X,0.0,threshold)
-    DiscreteLowRankGaussianProcess(domain,mean,variance,basis)
+    new DiscreteLowRankGaussianProcess(domain,mean,variance,basis)
   }
 
   /**
@@ -134,7 +134,7 @@ object ModelHelpers {
     val M = buildColumnIndexingVectorForMask[D, DDomain, Value](domain, mask)
     val (basis, variance, mean) = calculateMaskedPPCABasis(X,M,0.0,threshold)
 
-    DiscreteLowRankGaussianProcess(domain, mean, variance, basis)
+    new DiscreteLowRankGaussianProcess(domain, mean, variance, basis)
   }
 
 
@@ -155,7 +155,7 @@ object ModelHelpers {
   ): PancakeDLRGP[D, DDomain, Value] = {
     val X = buildDataMatrixWithSamplesInCols[D, DDomain, Value](domain, discreteFields)
     val (basis, variance, mean) = calculatePPCABasis(X,noiseVariance,threshold)
-    PancakeDLRGP(DiscreteLowRankGaussianProcess(domain,mean,variance,basis), noiseVariance)
+    PancakeDLRGP(new DiscreteLowRankGaussianProcess(domain,mean,variance,basis), noiseVariance)
   }
 
   /**

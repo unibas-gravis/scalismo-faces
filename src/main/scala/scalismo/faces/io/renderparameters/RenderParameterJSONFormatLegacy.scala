@@ -166,7 +166,7 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
     }
   }
 
-  private implicit val legacyCameraFormat = jsonFormat11(LegacyCamera.apply)
+  private implicit val legacyCameraFormat: RootJsonFormat[LegacyCamera] = jsonFormat11(LegacyCamera.apply)
 
   implicit val imageFormat: JsonFormat[ImageSize] = new JsonFormat[ImageSize] {
     override def write(img: ImageSize): JsValue = JsArray(JsNumber(img.height), JsNumber(img.width))

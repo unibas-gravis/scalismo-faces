@@ -44,7 +44,21 @@ class GeneralMaxConvolutionTests extends FacesTestSuite {
 
   describe("general max convolution") {
 
-    def fixture = new {
+    def fixture: Object {
+      val noise: Int
+
+      val eval: Evaluator1D
+
+      val image: PixelImage[Double]
+
+      val eval2d: Evaluator2D
+
+      val row: PixelImage[Double]
+
+      val width: Int
+
+      val height: Int
+    } = new {
       val noise = 1
       val eval = new Evaluator1D(noise)
       val eval2d = new Evaluator2D(noise)

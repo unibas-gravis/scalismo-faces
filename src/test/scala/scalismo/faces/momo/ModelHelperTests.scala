@@ -15,7 +15,7 @@
  */
 package scalismo.faces.momo
 
-import breeze.linalg.{*, DenseMatrix, DenseVector, min, norm}
+import breeze.linalg.{DenseMatrix, DenseVector, min, norm, _}
 import breeze.numerics.abs
 import org.scalactic.TolerantNumerics
 import scalismo.color.RGBA

@@ -36,7 +36,7 @@
 package scalismo.faces.numerics
 
 import breeze.linalg.{DenseMatrix, DenseVector}
-import com.github.fommil.netlib.ARPACK
+import dev.ludovic.netlib.arpack.ARPACK
 import org.netlib.util.{doubleW, intW}
 
 object ArnoldiSymmetricEigenSolver {

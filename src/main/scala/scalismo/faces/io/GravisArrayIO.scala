@@ -48,7 +48,7 @@ object GravisArrayIO {
   def readHumanReadableFromSource[A: ClassTag](source: Source, sizeHint: Int = 100)(implicit reader: GravisTypeIO[A]): Try[IndexedSeq[A]] = {
     val buffer = new ArrayBuffer[A](/*source.getLines().size*/ sizeHint)
     val lines = source.getLines().map(_.trim)
-    val indexRE = """^\[([0-9]+)\]=(.*)$""".r("index", "value")
+    val indexRE = """^\[(?<index>[0-9]+)\]=(?<value>.*)$""".r
     var index: Int = 0
     for (l <- lines if l.nonEmpty) {
       val (ind, valString) = l.trim match {

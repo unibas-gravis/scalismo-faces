@@ -79,7 +79,7 @@ class ManipulationRenderer {
     }
 
     // interpolator is required to render warp field as surface property
-    implicit def warpInterpolator(implicit vecBlender: ValueInterpolator[EuclideanVector[_2D]], doubleBlender: ValueInterpolator[Double]) =
+    implicit def warpInterpolator(implicit vecBlender: ValueInterpolator[EuclideanVector[_2D]], doubleBlender: ValueInterpolator[Double]): ValueInterpolator[WarpVector] =
       new ValueInterpolator[WarpVector] {
         override def blend(obj1: WarpVector, obj2: WarpVector, l: Double): WarpVector = {
           WarpVector(

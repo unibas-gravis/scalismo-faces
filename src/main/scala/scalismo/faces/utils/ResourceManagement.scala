@@ -35,7 +35,7 @@ object ResourceManagement {
   }
 
   /** using block: let-like loan structure with possible cleanup function */
-  def usingSource[R](source: Source, after: Source => Unit = { s: Source => s.close() })(block: Source => R): R = {
+  def usingSource[R](source: Source, after: Source => Unit = { (s: Source) => s.close() })(block: Source => R): R = {
     try {
       block(source)
     } finally {
@@ -44,10 +44,9 @@ object ResourceManagement {
   }
 
   /** using block: let-like loan structure with possible cleanup function, defaults to close */
-  def using[T <: Closeable, R](obj: => T, after: T => Unit = { t: T => t.close() })(block: T => R): R = {
+  def using[T <: Closeable, R](obj: => T, after: T => Unit = { (t: T) => t.close() })(block: T => R): R = {
     val o = obj
     try {
-
       block(o)
     } finally {
       after(o)
@@ -55,7 +54,7 @@ object ResourceManagement {
   }
 
   /** using block: let-like structure with possible cleanup function, aware of Try */
-  def usingTry[T <: Closeable, R](obj: => Try[T], after: T => Unit = { t: T => t.close() })(block: T => Try[R]): Try[R] = {
+  def usingTry[T <: Closeable, R](obj: => Try[T], after: T => Unit = { (t: T) => t.close() })(block: T => Try[R]): Try[R] = {
     val o: Try[T] = try {
       obj
     } catch {
@@ -71,7 +70,7 @@ object ResourceManagement {
   }
 
   /** using block: let-like structure with possible cleanup function, aware of Option */
-  def usingOption[T <: Closeable, R](obj: => Option[T], after: T => Unit = { t: T => t.close() })(block: T => Option[R]): Option[R] = {
+  def usingOption[T <: Closeable, R](obj: => Option[T], after: T => Unit = { (t: T) => t.close() })(block: T => Option[R]): Option[R] = {
     val o: Option[T] = try {
       obj
     } catch {

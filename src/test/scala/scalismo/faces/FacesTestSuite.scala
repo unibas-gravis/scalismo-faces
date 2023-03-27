@@ -19,7 +19,8 @@ package scalismo.faces
 import java.net.URI
 
 import breeze.linalg.{DenseMatrix, DenseVector, qr}
-import org.scalatest._
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.funspec.AnyFunSpec
 import scalismo.color.{RGB, RGBA}
 import scalismo.common.PointId
 import scalismo.faces.image.{AccessMode, PixelImage, PixelImageDomain}
@@ -32,10 +33,10 @@ import scalismo.utils.Random
 
 import scala.collection.mutable.ArrayBuffer
 
-class FacesTestSuite extends FunSpec with Matchers {
+class FacesTestSuite extends AnyFunSpec with Matchers {
   scalismo.initialize()
 
-  implicit val rnd = Random(43)
+  implicit val rnd: Random = Random(43)
 
   def randomRGB(implicit rnd: Random) = RGB(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
 

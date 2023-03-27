@@ -53,7 +53,7 @@ class ImageDomainPoissonSolverTests extends FacesTestSuite {
   val maxReconstructionError = 1.0e-10 * w * h
 
   // double vectorizer
-  implicit val doubleVectorizer = new ComponentRepresentation[Double] {
+  implicit val doubleVectorizer: ComponentRepresentation[Double] = new ComponentRepresentation[Double] {
     override def fromArray(arr: Array[Double]): Double = arr(0)
     override def component(color: Double, index: Int): Double = color.toDouble
     override def fromComponents(comp: (Int) => Double): Double = comp(0)

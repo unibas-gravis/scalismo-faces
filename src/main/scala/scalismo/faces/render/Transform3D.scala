@@ -52,19 +52,7 @@ trait InvertibleTransform3D extends Transform3D { self: Transform3D =>
       override def inverted = new InvertibleTransform3D {
         override def apply(x: Point[_3D]): Point[_3D] = u.inverted(t.inverted(x))
         override def apply(v: EuclideanVector[_3D]): EuclideanVector[_3D] = u.inverted(t.inverted(v))
-        override def inverted: InvertibleTransform3D {
-          def inverted: InvertibleTransform3D with Object {
-            def inverted: Any
-
-            def apply(v: EuclideanVector[_3D]): EuclideanVector[_3D]
-
-            def apply(x: Point[_3D]): Point[_3D]
-          }
-
-          def apply(v: EuclideanVector[_3D]): EuclideanVector[_3D]
-
-          def apply(x: Point[_3D]): Point[_3D]
-        } = thisTransform
+        override def inverted = thisTransform
       }
     }
   }

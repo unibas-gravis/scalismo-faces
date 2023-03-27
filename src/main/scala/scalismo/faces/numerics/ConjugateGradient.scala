@@ -59,11 +59,11 @@ object ConjugateGradient {
     // alpha: step length
     val alpha: Double = rsq / (state.p.t * Ap)
     // update solution
-    val x: DenseVector[Double] = state.x + alpha * state.p
-    val r: DenseVector[Double] = state.r - alpha * Ap
+    val x: DenseVector[Double] = state.x + state.p * alpha
+    val r: DenseVector[Double] = state.r - Ap * alpha
     // conjugate direction update
     val beta: Double = (r.t * r) / rsq
-    val p: DenseVector[Double] = r + beta * state.p
+    val p: DenseVector[Double] = r + state.p * beta
     CGState(x, r, p)
   }
 

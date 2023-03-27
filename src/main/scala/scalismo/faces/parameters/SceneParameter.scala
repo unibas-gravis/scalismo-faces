@@ -114,7 +114,6 @@ case class SceneParameter(view: ViewParameter,
       val shaders = illuminations.map {
         case dl: DirectionalLight => dl.shader(mesh, view.eyePosition)
         case shl: SphericalHarmonicsLight => shl.shader(mesh)
-        case ill => throw new Exception(s"Uknown illumination: $ill")
       }
       shaders.reduce {_ + _}.map(colT)
     }

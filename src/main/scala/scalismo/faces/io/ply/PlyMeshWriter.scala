@@ -28,9 +28,6 @@ import scalismo.faces.mesh.{IndirectProperty, TextureMappedProperty, VertexPrope
 import scalismo.geometry._
 import scalismo.mesh._
 
-import scala.reflect.io.Path
-
-
 /**
   * Writes a ply file based on the passed arguments. The arguments are first analyzed and the
   * nescessary writer-chains are built for the vertex and face properties. The writer are in
@@ -221,12 +218,12 @@ private[io] case class PlyMeshWriter(url: String,
   }
 
   private def writeTextures(osw: OutputStreamWriter): Unit = {
-    val textureDir = Path(url).parent
-    val textureBaseName = Path(url).name.toString
+    val textureDir = File(url).getParentFile
+    val textureBaseName = File(url).getName
     val textureNames = color match {
       case Some(c: TextureMappedProperty[RGBA]) =>
         val filename = "%s.png".format(textureBaseName)
-        PixelImageIO.write(c.texture, new File((textureDir / filename).toString))
+        PixelImageIO.write(c.texture, new File(textureDir, filename))
         IndexedSeq(filename)
       case Some(ip: IndirectProperty[RGBA]) =>
         val textures = ip.properties.map {
@@ -237,7 +234,7 @@ private[io] case class PlyMeshWriter(url: String,
           val t = ti._1
           val i = ti._2
           val filename = "%s_%d.png".format(textureBaseName, i)
-          PixelImageIO.write(t, new File((textureDir / filename).toString))
+          PixelImageIO.write(t, new File(textureDir, filename))
           filename
         }
       case _ => IndexedSeq[String]()

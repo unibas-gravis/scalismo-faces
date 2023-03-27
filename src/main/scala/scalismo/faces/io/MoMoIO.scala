@@ -16,23 +16,27 @@
 
 package scalismo.faces.io
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, Closeable, File}
 import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.util.Calendar
 import java.util.Map.Entry
-
 import breeze.linalg.{DenseMatrix, DenseVector}
 import scalismo.common.{DiscreteDomain, PointId, UnstructuredPointsDomain, Vectorizer}
 import scalismo.color.RGB
 import scalismo.faces.momo.{MoMo, MoMoBasic, MoMoExpress, PancakeDLRGP}
 import scalismo.faces.utils.ResourceManagement
 import scalismo.geometry.{EuclideanVector, Landmark, Point, _3D}
-import scalismo.io.{HDF5File, HDF5Utils, LandmarkIO, NDArray}
+import scalismo.io.statisticalmodel.{HDF5Reader, HDF5Writer, NDArray, StatisticalModelIOUtils, StatisticalModelReader}
+import io.jhdf.HdfFile
+import scalismo.hdf5json.HDFPath
+import scalismo.hdf5json.internal.HDFFile
+import scalismo.io.LandmarkIO
 import scalismo.mesh.{TriangleCell, TriangleList, TriangleMesh, TriangleMesh3D}
 import scalismo.statisticalmodel.ModelHelpers
 
 import scala.io.Source
+import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -40,6 +44,10 @@ import scala.util.{Failure, Success, Try}
   *
   */
 object MoMoIO {
+
+  case class WrappedStatisticalModelReader(reader: StatisticalModelReader) extends Closeable {
+    def close() = reader.close()
+  }
 
   /** cache to hold open models, identified by their URI */
   private val cacheSizeHint = 10
@@ -92,8 +100,8 @@ object MoMoIO {
     */
   def read(file: File, modelPath: String = "/"): Try[MoMo] = {
     // open HDF5 at path
-    ResourceManagement.usingTry(HDF5Utils.openFileForReading(file)) { h5file: HDF5File =>
-      readFromHDF5(h5file, modelPath)
+    ResourceManagement.usingTry(StatisticalModelIOUtils.openFileForReading(file).map(t => WrappedStatisticalModelReader(t))) { (wrapper: WrappedStatisticalModelReader) =>
+      readFromHDF5(wrapper.reader, HDFPath(modelPath))
     }
   }
 
@@ -104,7 +112,7 @@ object MoMoIO {
     * @param modelPath path of the model inside file
     * @return
     */
-  def readFromHDF5(h5file: HDF5File, modelPath: String): Try[MoMo] = Try {
+  def readFromHDF5(h5file: StatisticalModelReader, modelPath: HDFPath): Try[MoMo] = Try {
     val path = MoMoPathBuilder(modelPath)
 
     val shapeMesh = readGravisModelRepresenter(h5file, path.shape).get
@@ -138,8 +146,8 @@ object MoMoIO {
     * @param file File object pointing to new file, will be created
     * @param modelPath path inside HDF5 file to put the model */
   def write(model: MoMo, file: File, modelPath: String = "/"): Try[Unit] = Try {
-    ResourceManagement.using(HDF5Utils.createFile(file).get) { h5file: HDF5File =>
-      writeToHDF5(model, h5file, modelPath).get
+    ResourceManagement.using(StatisticalModelIOUtils.createFile(file).get) { (h5file: HDF5Writer) =>
+      writeToHDF5(model, h5file, HDFPath(modelPath)).get
     }
   }
 
@@ -148,7 +156,7 @@ object MoMoIO {
     *
     * @param h5file File object pointing to open HDF5 file
     * @param modelPath path inside HDF5 file to put model (leave empty for default) */
-  def writeToHDF5(momo: MoMo, h5file: HDF5File, modelPath: String): Try[Unit] = Try {
+  def writeToHDF5(momo: MoMo, h5file: HDF5Writer, modelPath: HDFPath): Try[Unit] = Try {
     val path = MoMoPathBuilder(modelPath)
 
     // version information, 0.9 is our C++ standard format
@@ -177,37 +185,37 @@ object MoMoIO {
 
   // -- private detail writers / readers --
 
-  private def writeCatalog(momo: MoMo, h5file: HDF5File, path: MoMoPathBuilder): Try[Unit] = Try {
+  private def writeCatalog(momo: MoMo, h5file: HDF5Writer, path: MoMoPathBuilder): Try[Unit] = Try {
     h5file.createGroup(path.catalog).get
     // Morphable Model entry
-    val catalogMorphableModelPath : String = path.catalog + "/MorphableModel"
+    val catalogMorphableModelPath = path.catalog / "MorphableModel"
     h5file.createGroup(catalogMorphableModelPath).get
-    h5file.writeString(catalogMorphableModelPath + "/modelPath", "/").get
-    h5file.writeString(catalogMorphableModelPath + "/modelType", "CUSTOM_MODEL").get
+    h5file.writeString(catalogMorphableModelPath / "modelType", "CUSTOM_MODEL").get
+    h5file.writeString(catalogMorphableModelPath / "modelPath", "/").get
 
     // Shape model entry
-    val catalogShapePath = catalogMorphableModelPath + ".shape"
+    val catalogShapePath = path.catalog / "MorphableModel.shape"
     h5file.createGroup(catalogShapePath).get
-    h5file.writeString(catalogShapePath + "/modelType", "POLYGON_MESH_MODEL").get
-    h5file.writeString(catalogShapePath + "/modelPath", path.shape).get
+    h5file.writeString(catalogShapePath / "modelType", "POLYGON_MESH_MODEL").get
+    h5file.writeString(catalogShapePath / "modelPath", path.shape.toString).get
 
     // Color model entry
-    val catalogColorPath = catalogMorphableModelPath + ".color"
+    val catalogColorPath = path.catalog / "MorphableModel.color"
     h5file.createGroup(catalogColorPath).get
-    h5file.writeString(catalogColorPath + "/modelType", "POLYGON_MESH_DATA_MODEL").get
-    h5file.writeString(catalogColorPath + "/modelPath", "/color").get
+    h5file.writeString(catalogColorPath / "modelType", "POLYGON_MESH_DATA_MODEL").get
+    h5file.writeString(catalogColorPath / "modelPath", path.color.toString).get
 
     if (momo.hasExpressions) {
       // catalog: expression model entry
-      val catalogExpressionPath = path.catalog + "/MorphableModel.expression"
+      val catalogExpressionPath = path.catalog / "MorphableModel.expression"
       h5file.createGroup(catalogExpressionPath).get
-      h5file.writeString(catalogExpressionPath + "/modelType", "POLYGON_MESH_DATA_MODEL").get
-      h5file.writeString(catalogExpressionPath + "/modelPath", "/expression").get
+      h5file.writeString(catalogExpressionPath / "modelType", "POLYGON_MESH_DATA_MODEL").get
+      h5file.writeString(catalogExpressionPath / "modelPath", path.expression.toString).get
     }
   }
 
   /** write a Morphable Model with expression into an opened HDF5 file */
-  private def writeMoMoExpress(momo: MoMoExpress, h5file: HDF5File, path: MoMoPathBuilder): Try[Unit] = Try {
+  private def writeMoMoExpress(momo: MoMoExpress, h5file: HDF5Writer, path: MoMoPathBuilder): Try[Unit] = Try {
     // write shape model
     val shapePath = path.shape
     h5file.createGroup(shapePath).get
@@ -228,7 +236,7 @@ object MoMoIO {
   }
 
   /** write a Morphable Model with expression into an opened HDF5 file */
-  private def writeMoMoBasic(momo: MoMoBasic, h5file: HDF5File, path: MoMoPathBuilder): Try[Unit] = Try {
+  private def writeMoMoBasic(momo: MoMoBasic, h5file: HDF5Writer, path: MoMoPathBuilder): Try[Unit] = Try {
     // write shape model
     val shapePath = path.shape
     h5file.createGroup(shapePath).get
@@ -242,7 +250,7 @@ object MoMoIO {
     writeColorRepresenter(momo.referenceMesh, h5file, colorPath).get
   }
 
-  private def readGravisModelRepresenter(h5file: HDF5File, modelPath: String): Try[TriangleMesh3D] = Try {
+  private def readGravisModelRepresenter(h5file: StatisticalModelReader, modelPath: HDFPath): Try[TriangleMesh3D] = Try {
     val representerPath = representerPathBuilder(modelPath)
 
     val representerName = h5file.readStringAttribute(representerPath, "name").get
@@ -263,17 +271,17 @@ object MoMoIO {
     mesh.get
   }
 
-  private def readLegacyRepresenterMesh(h5file: HDF5File, modelPath: String): Try[TriangleMesh3D] = Try {
+  private def readLegacyRepresenterMesh(h5file: StatisticalModelReader, modelPath: HDFPath): Try[TriangleMesh3D] = Try {
     val representerPath = representerPathBuilder(modelPath)
 
-    val vertArray = h5file.readNDArray[Float]("%s/reference-mesh/vertex-coordinates".format(representerPath)).get
+    val vertArray = h5file.readNDArrayFloat(representerPath / "reference-mesh" / "vertex-coordinates").get
     if (vertArray.dims(1) != 3)
       throw new Exception("the representer points are not 3D points")
 
     val vertMat = ndFloatArrayToMatrix(vertArray)
     val points = for (i <- 0 until vertMat.rows) yield Point(vertMat(i, 0), vertMat(i, 1), vertMat(i, 2))
 
-    val cellArray = h5file.readNDArray[Int]("%s/reference-mesh/triangle-list".format(representerPath)).get
+    val cellArray = h5file.readNDArrayInt(representerPath / "reference-mesh" / "triangle-list").get
     if (cellArray.dims(1) != 3)
       throw new Exception("the representer cells are not triangles")
 
@@ -283,17 +291,19 @@ object MoMoIO {
     TriangleMesh3D(points, TriangleList(cells))
   }
 
-  private def readPolygonRepresenterMesh(h5file: HDF5File, modelPath: String): Try[TriangleMesh3D] = Try {
+  private def readPolygonRepresenterMesh(h5file: StatisticalModelReader, modelPath: HDFPath): Try[TriangleMesh3D] = Try {
     val representerPath = representerPathBuilder(modelPath)
 
-    val vertArray = h5file.readNDArray[Float]("%s/points".format(representerPath)).get
+    val vertArray = h5file.readNDArrayFloat(representerPath / "points").get
     if (vertArray.dims(0) != 3)
       throw new Exception("the representer points are not 3D points")
 
     val vertMat = ndFloatArrayToMatrix(vertArray)
     val points = for (i <- 0 until vertMat.cols) yield Point(vertMat(0, i), vertMat(1, i), vertMat(2, i))
 
-    val cellArray = h5file.readNDArray[Int]("%s/cells".format(representerPath)).get
+    val cellArray = Try{ h5file.readNDArrayInt(representerPath / "cells").get}.getOrElse({
+      throw IllegalArgumentException("Probably you tried to read a legacy model file. Please convert the datatype of the cells data to the type int.")
+    })
     if (cellArray.dims(0) != 3)
       throw new Exception("the representer cells are not triangles")
 
@@ -304,21 +314,21 @@ object MoMoIO {
   }
 
   /** read a statistical statismo model from a HDF5 file at path modelPath */
-  private def readStatisticalModel3D[A](h5file: HDF5File,
-                                        modelPath: String,
+  private def readStatisticalModel3D[A](h5file: StatisticalModelReader,
+                                        modelPath: HDFPath,
                                         reference: TriangleMesh[_3D])
                                        (implicit vectorizer: Vectorizer[A]): Try[PancakeDLRGP[_3D, TriangleMesh, A]] = {
     val path = StatisticalModelPathBuilder(modelPath)
 
     for {
-      meanArray <- h5file.readNDArray[Float](path.mean)
-      meanVector = DenseVector(meanArray.data.map{_.toDouble})
-      pcaBasisArray <- h5file.readNDArray[Float](path.pcaBasis)
+      meanArray <- h5file.readArrayFloat(path.mean)
+      meanVector = DenseVector(meanArray.map{_.toDouble})
+      pcaBasisArray <- h5file.readNDArrayFloat(path.pcaBasis)
       majorVersion <- h5file.readInt(path.majorVersion).recover { case (e: Exception) => 0 }
       minorVersion <- h5file.readInt(path.minorVersion).recover { case (e: Exception) => 8 }
-      pcaVarianceArray <- h5file.readNDArray[Float](path.pcaVariance)
-      pcaVarianceVector = DenseVector(pcaVarianceArray.data.map{_.toDouble})
-      noiseVarianceArray <- h5file.readArray[Float](path.noiseVariance)
+      pcaVarianceArray <- h5file.readArrayFloat(path.pcaVariance)
+      pcaVarianceVector = DenseVector(pcaVarianceArray.map{_.toDouble})
+      noiseVarianceArray <- h5file.readArrayFloat(path.noiseVariance)
       noiseVariance = noiseVarianceArray(0).toDouble
       pcaBasisMatrix = ndFloatArrayToMatrix(pcaBasisArray).map{_.toDouble}
       pcaBasis <- (majorVersion, minorVersion) match {
@@ -332,22 +342,22 @@ object MoMoIO {
     }
   }
 
-  private def readLandmarks(h5file: HDF5File, path: String): Try[Map[String, Landmark[_3D]]] = Try {
-    if (h5file.exists(s"$path/json")) {
+  private def readLandmarks(h5file: StatisticalModelReader, path: HDFPath): Try[Map[String, Landmark[_3D]]] = Try {
+    if (h5file.exists(path / "json")) {
       // json reader, modern format
-      val jsonString = h5file.readString(s"$path/json").get
+      val jsonString = h5file.readString(path / "json").get
       val lmList = LandmarkIO.readLandmarksJsonFromSource[_3D](Source.fromString(jsonString)).get
       lmList.map(lm => lm.id -> lm).toMap
-    } else if (h5file.exists(s"$path/text")) {
+    } else if (h5file.exists(path / "text")) {
       // legacy tlms text format
-      val tlmsString = h5file.readString(s"$path/text").get
+      val tlmsString = h5file.readString(path / "text").get
       val lmList = TLMSLandmarksIO.read3DFromStream(new ByteArrayInputStream(tlmsString.getBytes(StandardCharsets.UTF_8))).get
       lmList.map(lm => lm.id -> Landmark[_3D](lm.id, lm.point, None, None)).toMap
     } else
       throw new Exception("No landmarks present")
   }
 
-  private def writeShapeRepresenter(mesh: TriangleMesh3D, h5file: HDF5File, modelPath: String): Try[Unit] = Try {
+  private def writeShapeRepresenter(mesh: TriangleMesh3D, h5file: HDF5Writer, modelPath: HDFPath): Try[Unit] = Try {
     val representerPath = representerPathBuilder(modelPath)
     h5file.createGroup(representerPath).get
     h5file.writeStringAttribute(representerPath, "name", "gravis::MeshShapeRepresenter").get
@@ -355,16 +365,16 @@ object MoMoIO {
     writeTriangleMesh3D(mesh, h5file, representerPath).get
   }
 
-  private def writeColorRepresenter(mesh: TriangleMesh3D, h5file: HDF5File, modelPath: String): Try[Unit] = Try {
+  private def writeColorRepresenter(mesh: TriangleMesh3D, h5file: HDF5Writer, modelPath: HDFPath): Try[Unit] = Try {
     val representerPath = representerPathBuilder(modelPath)
     h5file.createGroup(representerPath).get
     h5file.writeStringAttribute(representerPath, "name", "gravis::MeshColorRepresenter").get
     h5file.writeStringAttribute(representerPath, "datasetType", "POLYGON_MESH").get
-    h5file.writeString(representerPath + "/colorspace", "RGB" + '\u0000').get // ugly 0-termination string hack because statismo in C++ stores strings including 0 termination
+    h5file.writeString(representerPath / "colorspace", "RGB" + '\u0000').get // ugly 0-termination string hack because statismo in C++ stores strings including 0 termination
     writeTriangleMesh3D(mesh, h5file, representerPath).get
   }
 
-  private def writeExpressionRepresenter(mesh: TriangleMesh3D, h5file: HDF5File, modelPath: String): Try[Unit] = Try {
+  private def writeExpressionRepresenter(mesh: TriangleMesh3D, h5file: HDF5Writer, modelPath: HDFPath): Try[Unit] = Try {
     val representerPath = representerPathBuilder(modelPath)
     h5file.createGroup(representerPath).get
     h5file.writeStringAttribute(representerPath, "name", "gravis::MeshExpressionRepresenter").get
@@ -372,17 +382,17 @@ object MoMoIO {
     writeTriangleMesh3D(mesh, h5file, representerPath).get
   }
 
-  private def writeTriangleMesh3D(mesh: TriangleMesh3D, h5file: HDF5File, path: String): Try[Unit] = Try {
-    h5file.createGroup(s"$path").get
+  private def writeTriangleMesh3D(mesh: TriangleMesh3D, h5file: HDF5Writer, path: HDFPath): Try[Unit] = Try {
+    h5file.createGroup(path).get
     val points = mesh.pointSet.points.toIndexedSeq
     val cells = mesh.cells
     val pointData: IndexedSeq[Double] = points.map(_.x) ++ points.map(_.y) ++ points.map(_.z)
-    h5file.writeNDArray[Float](s"$path/points", NDArray(IndexedSeq(3, points.size), pointData.toArray.map(_.toFloat))).get
+    h5file.writeNDArray(path / "points", NDArray(IndexedSeq(3, points.size), pointData.toArray.map(_.toFloat))).get
     val cellData: IndexedSeq[PointId] = cells.map(_.ptId1) ++ cells.map(_.ptId2) ++ cells.map(_.ptId3)
-    h5file.writeNDArray[Int](s"$path/cells", NDArray(IndexedSeq(3, cells.size), cellData.toArray.map(_.id))).get
+    h5file.writeNDArray(path / "cells", NDArray(IndexedSeq(3, cells.size), cellData.toArray.map(_.id))).get
   }
 
-  private def writeStatisticalModel[A](model: PancakeDLRGP[_3D, TriangleMesh, A], h5file: HDF5File, modelPath: String): Try[Unit] = Try {
+  private def writeStatisticalModel[A](model: PancakeDLRGP[_3D, TriangleMesh, A], h5file: HDF5Writer, modelPath: HDFPath): Try[Unit] = Try {
     val path = StatisticalModelPathBuilder(modelPath)
     val mean = model.meanVector.map(_.toFloat)
     val variance = model.variance.map(_.toFloat)
@@ -400,62 +410,62 @@ object MoMoIO {
     h5file.writeNDArray[Float](path.scores, NDArray(IndexedSeq(1, 1), Array(0.0f))).get
   }
 
-  private def writeLandmarks(landmarks: Map[String, Landmark[_3D]], h5file: HDF5File, path: String): Try[Unit] = Try {
+  private def writeLandmarks(landmarks: Map[String, Landmark[_3D]], h5file: HDF5Writer, path: HDFPath): Try[Unit] = Try {
     val jsonStream = new ByteArrayOutputStream()
     LandmarkIO.writeLandmarksJsonToStream(landmarks.values.toList, jsonStream)
-    h5file.writeString(s"$path/json", jsonStream.toString("UTF-8"))
+    h5file.writeString(path / "json", jsonStream.toString("UTF-8"))
   }
 
 
   /*
    Path builder to ensure we have the same paths when reading and writing
   */
-  private case class MoMoPathBuilder(modelPath: String) {
-    def catalog = s"$modelPath/catalog"
+  private case class MoMoPathBuilder(modelPath: HDFPath) {
+    def catalog: HDFPath = modelPath/"catalog"
 
-    def version = s"$modelPath/version"
+    def version: HDFPath = modelPath/"version"
 
-    def majorVersion: String = "%s/majorVersion".format(version)
+    def majorVersion: HDFPath = version/"majorVersion"
 
-    def minorVersion: String = "%s/minorVersion".format(version)
+    def minorVersion: HDFPath = version/"minorVersion"
 
-    def shape = s"$modelPath/shape"
+    def shape: HDFPath = modelPath/"shape"
 
-    def color = s"$modelPath/color"
+    def color: HDFPath = modelPath/"color"
 
-    def expression = s"$modelPath/expression"
+    def expression: HDFPath = modelPath/"expression"
 
-    def metadata = s"$modelPath/metadata"
+    def metadata: HDFPath = modelPath/"metadata"
 
-    def landmarks: String = "%s/landmarks".format(metadata)
+    def landmarks: HDFPath = metadata/"landmarks"
   }
 
-  private case class StatisticalModelPathBuilder(modelPath: String) {
+  private case class StatisticalModelPathBuilder(modelPath: HDFPath) {
 
-    def version = s"$modelPath/version"
+    def version: HDFPath = modelPath/"version"
 
-    def majorVersion: String = "%s/majorVersion".format(version)
+    def majorVersion: HDFPath = version/"majorVersion"
 
-    def minorVersion: String = "%s/minorVersion".format(version)
+    def minorVersion: HDFPath = version/"minorVersion"
 
-    def model = s"$modelPath/model"
+    def model: HDFPath = modelPath/"model"
 
-    def mean: String = "%s/mean".format(model)
+    def mean: HDFPath = model/"mean"
 
-    def noiseVariance: String = "%s/noiseVariance".format(model)
+    def noiseVariance: HDFPath = model/"noiseVariance"
 
-    def pcaBasis: String = "%s/pcaBasis".format(model)
+    def pcaBasis: HDFPath = model/"pcaBasis"
 
-    def pcaVariance: String = "%s/pcaVariance".format(model)
+    def pcaVariance: HDFPath = model/"pcaVariance"
 
-    def modelinfo = s"$modelPath/modelinfo"
+    def modelinfo: HDFPath = modelPath/"modelinfo"
 
-    def buildTime: String = "%s/build-time".format(modelinfo)
+    def buildTime: HDFPath = modelinfo/"build-time"
 
-    def scores: String = "%s/scores".format(modelinfo)
+    def scores: HDFPath = modelinfo/"scores"
   }
 
-  private def representerPathBuilder(modelPath: String) = s"$modelPath/representer"
+  private def representerPathBuilder(modelPath: HDFPath) = modelPath/"representer"
 
   /*
    Helpers to handle matrices and arrays.

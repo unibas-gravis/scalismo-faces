@@ -65,12 +65,8 @@ object ParameterProposals {
 
     /** implicit wrapper class for symmtric partial parameter proposals with a transition probability */
     implicit class PartialTransitionSymmetricParameterProposal[A](proposal: ProposalGenerator[A] with SymmetricTransitionRatio[A] with TransitionProbability[A])(implicit converter: PartialToFullParameterConverter[A]) {
-      def toParameterProposal: ProposalGenerator[RenderParameter] with
-        SymmetricTransitionRatio[RenderParameter] with
-        TransitionProbability[RenderParameter] =
-        new ProposalGenerator[RenderParameter] with
-          SymmetricTransitionRatio[RenderParameter] with
-          TransitionProbability[RenderParameter] {
+      def toParameterProposal: ProposalGenerator[RenderParameter] with SymmetricTransitionRatio[RenderParameter] with TransitionProbability[RenderParameter] =
+        new ProposalGenerator[RenderParameter] with SymmetricTransitionRatio[RenderParameter] with TransitionProbability[RenderParameter] {
         override def propose(current: RenderParameter): RenderParameter = {
           val prop = proposal.propose(converter.partialParameter(current))
           converter.fullParameter(prop, current)

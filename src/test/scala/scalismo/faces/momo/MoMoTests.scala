@@ -16,13 +16,16 @@
 
 package scalismo.faces.momo
 
-import java.io._
-
+import java.io.*
 import breeze.linalg.{DenseVector, norm, sum}
+import breeze.stats.distributions.Rand.FixedSeed.randBasis
 import breeze.stats.distributions.Gaussian
 import scalismo.faces.FacesTestSuite
 import scalismo.faces.io.MoMoIO
 import scalismo.mesh.VertexColorMesh3D
+
+import scala.annotation.unused
+import scala.util.Try
 
 class MoMoTests extends FacesTestSuite {
 
@@ -46,8 +49,8 @@ class MoMoTests extends FacesTestSuite {
   describe("A MoMo") {
 
     // Build random PCA model for projection tests and write it to disk
-    lazy val randomMomo = randomGridModel(10, 5, 0.1, 5, 5, orthogonalExpressions = false)
-    val rf = File.createTempFile("momo-gravismomoio-test", ".h5")
+    lazy val randomMomo = randomGridModel(10, 5, 0.1)
+    val rf = File.createTempFile("momo-gravismomoio-test", ".json")
     rf.deleteOnExit()
     MoMoIO.write(randomMomo, rf)
 
@@ -58,6 +61,7 @@ class MoMoTests extends FacesTestSuite {
     lazy val fullExpressCoeffs = for (_ <- 0 until fullMoMo.expression.rank) yield Gaussian(0, 1).draw()
     lazy val fullMoMoCoeffs = MoMoCoefficients(fullShapeCoeffs, fullColorCoeffs, fullExpressCoeffs)
 
+    @unused
     lazy val fullSample = fullMoMo.instance(fullMoMoCoeffs)
 
     // PCA model needed for projection tests
@@ -150,6 +154,7 @@ class MoMoTests extends FacesTestSuite {
 
     it("should yield the same shape coefficients used to draw a sample (PCA model only)") {
       val projCoeffs = momoPCA.coefficients(sample)
+      @unused
       val pC = momo.coefficients(sample)
       norm(projCoeffs.shape - momoCoeffs.shape) should be < 0.01 * momoCoeffs.shape.length
       norm(projCoeffs.color - momoCoeffsNoEx.color) should be < 0.01 * momoCoeffs.color.length
@@ -162,7 +167,7 @@ class MoMoTests extends FacesTestSuite {
       norm(meanCoeffs.shape) + norm(meanCoeffs.color) should be < 0.01 * momoCoeffs.shape.length + 0.01 * momoCoeffs.color.length
     }
 
-    val f = File.createTempFile("momo", ".h5")
+    val f = File.createTempFile("momo", ".json")
     f.deleteOnExit()
     MoMoIO.write(momo, f).get
     val loadedMomo = MoMoIO.read(f).get.expressionModel.get
@@ -189,10 +194,11 @@ class MoMoTests extends FacesTestSuite {
       }
     }
 
-    it("can load model built in c++ from disk") {
-      val loadedCPP = MoMoIO.read(new File(getClass.getResource("/random-l4.h5").getPath)).get.neutralModel
-      loadedCPP.shape.rank shouldBe 19
-      loadedCPP.color.rank shouldBe 19
+    it("does throw an informative message when trying to load a model built in c++") {
+      val result = MoMoIO.read(new File(getClass.getResource("/random-l4.h5").getPath))
+      require(result.isFailure)
+      require(result.failed.get.isInstanceOf[IllegalArgumentException])
+      require(result.failed.get.getMessage.contains("Probably you tried to read a legacy model file. Please convert the datatype of the cells data to the type int."))
     }
 
     lazy val reducedMomo = momo.truncate(5, 5, 5)
@@ -200,8 +206,10 @@ class MoMoTests extends FacesTestSuite {
     lazy val reducedColorCoeffs = for (_ <- 0 until reducedMomo.color.rank) yield Gaussian(0, 1).draw()
     lazy val reducedExpressCoeffs = for (_ <- 0 until reducedMomo.expression.rank) yield Gaussian(0, 1).draw()
     lazy val reducedMomoCoeffs = MoMoCoefficients(reducedShapeCoeffs, reducedColorCoeffs, reducedExpressCoeffs)
+    @unused
     lazy val reducedMomoCoeffsNoEx = MoMoCoefficients(reducedShapeCoeffs, reducedColorCoeffs, IndexedSeq.empty)
     lazy val reducedSample = reducedMomo.instance(reducedMomoCoeffs)
+    @unused
     lazy val reducedSampleNoEx = reducedMomo.neutralModel.instance(reducedMomoCoeffs)
 
 
@@ -236,7 +244,7 @@ class MoMoTests extends FacesTestSuite {
 //    }
 
     it("can be written to disk and be read again (and be equal)") {
-      val f = File.createTempFile("reduced-model", ".h5")
+      val f = File.createTempFile("reduced-model", ".json")
       f.deleteOnExit()
       MoMoIO.write(momo, f).get
       val loadedMomo = MoMoIO.read(f).get

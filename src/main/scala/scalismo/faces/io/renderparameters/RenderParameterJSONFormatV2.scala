@@ -422,7 +422,6 @@ trait RenderParameterJSONFormatV2 extends RenderParameterJSONFormatLegacy {
     override def write(obj: Illumination): JsValue = obj match {
       case dl: DirectionalLight => dl.toJson
       case shl: SphericalHarmonicsLight => shl.toJson
-      case _ => throw new SerializationException("Unknown type of Illumination")
     }
 
     override def read(json: JsValue): Illumination = {
@@ -484,7 +483,7 @@ trait RenderParameterJSONFormatV2 extends RenderParameterJSONFormatLegacy {
     }
   }
 
-  private implicit val camFormatV2 = jsonFormat11(CameraV2.apply)
+  private implicit val camFormatV2: RootJsonFormat[CameraV2] = jsonFormat11(CameraV2.apply)
 
   override implicit val imageFormat: JsonFormat[ImageSize] = new JsonFormat[ImageSize] {
     override def write(img: ImageSize): JsValue = JsObject(

@@ -71,12 +71,12 @@ object PreconditionedConjugateGradient {
     // alpha: step length
     val alpha: Double = rz / (state.p.t * Ap)
     // update solution
-    val x: DenseVector[Double] = state.x + alpha * state.p
-    val r: DenseVector[Double] = state.r - alpha * Ap
+    val x: DenseVector[Double] = state.x + state.p * alpha
+    val r: DenseVector[Double] = state.r - Ap * alpha
     val z: DenseVector[Double] = preconditioner(r)
     // conjugate direction update
     val beta: Double = (r.t * z) / rz
-    val p: DenseVector[Double] = z + beta * state.p
+    val p: DenseVector[Double] = z + state.p * beta
     PCGState(x = x, r = r, p = p, z = z)
   }
 
