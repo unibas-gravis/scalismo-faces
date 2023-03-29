@@ -19,19 +19,19 @@ import java.io.{OutputStream, OutputStreamWriter}
 import java.nio.{ByteBuffer, ByteOrder}
 
 /**
-  * The ListWriter writes a sequence of numbers of elements of type `A` with the number of elements as prefix.
-  *
-  * ASCII/String example for A:Double
-  * write(Seq(0.0,1.0,2.0)) => "3 0.0 1.0 2.0"
-  *
-  * @tparam A ElementType of the sequence to be written.
-  */
+ * The ListWriter writes a sequence of numbers of elements of type `A` with the number of elements as prefix.
+ *
+ * ASCII/String example for A:Double write(Seq(0.0,1.0,2.0)) => "3 0.0 1.0 2.0"
+ *
+ * @tparam A
+ *   ElementType of the sequence to be written.
+ */
 class ListWriter[@specialized(Byte, Char, Short, Int, Long, Float, Double) A: StringWriter: EndianWriter] {
   val seqWriter = new SequenceWriter[A]
 
-  def write(seq: Seq[A], osw: OutputStreamWriter ): Unit = {
+  def write(seq: Seq[A], osw: OutputStreamWriter): Unit = {
     osw.write("%d ".format(seq.length))
-    seqWriter.write(seq,osw)
+    seqWriter.write(seq, osw)
   }
 
   def write(seq: Seq[A], os: OutputStream, bo: ByteOrder): Unit = {
@@ -39,20 +39,19 @@ class ListWriter[@specialized(Byte, Char, Short, Int, Long, Float, Double) A: St
     buffer.order(bo)
     buffer.put(seq.size.toByte)
     os.write(buffer.array())
-    seqWriter.write(seq,os,bo)
+    seqWriter.write(seq, os, bo)
   }
 }
 
 /**
-  * The SequenceWriter writes a sequence of numbers of type `A`.
-  *
-  * ASCII/String example for A:Double
-  * write(Seq(0.0,1.0,2.0)) => "0.0 1.0 2.0"
-  *
-  * @tparam A ElementType of the sequence to be written.
-  */
-class SequenceWriter[@specialized(Byte, Char, Short, Int, Long, Float, Double) A: StringWriter: EndianWriter ] {
-
+ * The SequenceWriter writes a sequence of numbers of type `A`.
+ *
+ * ASCII/String example for A:Double write(Seq(0.0,1.0,2.0)) => "0.0 1.0 2.0"
+ *
+ * @tparam A
+ *   ElementType of the sequence to be written.
+ */
+class SequenceWriter[@specialized(Byte, Char, Short, Int, Long, Float, Double) A: StringWriter: EndianWriter] {
 
   def write(seq: Iterable[A], osw: OutputStreamWriter): Unit = {
     implicitly[StringWriter[A]].write(seq, osw)
@@ -64,13 +63,13 @@ class SequenceWriter[@specialized(Byte, Char, Short, Int, Long, Float, Double) A
 }
 
 trait StringWriter[@specialized(Byte, Char, Short, Int, Long, Float, Double) A] {
-  def write(seq: Iterable[A], osw:OutputStreamWriter) : Unit
+  def write(seq: Iterable[A], osw: OutputStreamWriter): Unit
 }
 
 object StringWriter {
   implicit object ByteStringWriter extends StringWriter[Byte] {
     def write(a: Iterable[Byte], osw: OutputStreamWriter): Unit = {
-      osw.write(a.map(b=>(b+256)%256).mkString(" "))
+      osw.write(a.map(b => (b + 256) % 256).mkString(" "))
     }
   }
 
@@ -112,9 +111,8 @@ object StringWriter {
 
 }
 
-
 trait EndianWriter[@specialized(Byte, Char, Short, Int, Long, Float, Double) A] {
-  def write(seq: Iterable[A], os: OutputStream, bo: ByteOrder) : Unit
+  def write(seq: Iterable[A], os: OutputStream, bo: ByteOrder): Unit
 }
 
 object EndianWriter {

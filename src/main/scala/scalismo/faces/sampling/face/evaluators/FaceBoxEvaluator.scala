@@ -20,31 +20,37 @@ import java.io.{File, InputStream}
 
 import scalismo.faces.parameters.RenderParameter
 import scalismo.faces.sampling.face.ParametricLandmarksRenderer
-import scalismo.geometry.{Point, EuclideanVector, _2D}
+import scalismo.geometry.{_2D, EuclideanVector, Point}
 import scalismo.sampling.DistributionEvaluator
 
 import scala.io.Source
 import scala.util.Try
 
-
 /**
-  * evaluate face position with respect to a given detection face box (has scale and position)
-  * @param renderer parametric landmarks renderer, needs to know Seq("center.nose.tip", "left.eye.corner_outer", "right.eye.corner_outer", "right.lips.corner", "left.lips.corner")
-  * @param faceBox target face box
-  * @param scaleEvaluator evaluates scale mismatch (as relative factor, 1.0 is a perfect match)
-  * @param positionEvaluator evaluates position mismatch (as offset, EuclideanVector(0, 0) is a perfect match) */
+ * evaluate face position with respect to a given detection face box (has scale and position)
+ * @param renderer
+ *   parametric landmarks renderer, needs to know Seq("center.nose.tip", "left.eye.corner_outer",
+ *   "right.eye.corner_outer", "right.lips.corner", "left.lips.corner")
+ * @param faceBox
+ *   target face box
+ * @param scaleEvaluator
+ *   evaluates scale mismatch (as relative factor, 1.0 is a perfect match)
+ * @param positionEvaluator
+ *   evaluates position mismatch (as offset, EuclideanVector(0, 0) is a perfect match)
+ */
 class FaceBoxEvaluator(renderer: ParametricLandmarksRenderer,
                        faceBox: FaceBox,
                        scaleEvaluator: DistributionEvaluator[Double],
-                       positionEvaluator: DistributionEvaluator[EuclideanVector[_2D]])
-  extends DistributionEvaluator[RenderParameter] {
+                       positionEvaluator: DistributionEvaluator[EuclideanVector[_2D]]
+) extends DistributionEvaluator[RenderParameter] {
 
   // lmIds to estimate face scale
-  val lmIds = Seq("center.nose.tip", "left.eye.corner_outer", "right.eye.corner_outer", "right.lips.corner", "left.lips.corner")
+  val lmIds =
+    Seq("center.nose.tip", "left.eye.corner_outer", "right.eye.corner_outer", "right.lips.corner", "left.lips.corner")
 
   // render scale and position of face
   def renderScaleAndCenter(parameter: RenderParameter): (Double, Point[_2D]) = {
-    val renderedLM = lmIds.map{id => id -> renderer.renderLandmark(id, parameter).get}.toMap
+    val renderedLM = lmIds.map { id => id -> renderer.renderLandmark(id, parameter).get }.toMap
 
     val faceCenter = renderedLM("center.nose.tip").point
 
@@ -106,7 +112,10 @@ object FaceBox {
     fromYAML(Source.fromInputStream(stream).mkString).get
   }
 
-  /** read face box from standard map file format: YAML with "faceBox: [topLeft.x, topLeft.y, bottomRight.x, bottomRight.y]" and "pValue: certainty" */
+  /**
+   * read face box from standard map file format: YAML with "faceBox: [topLeft.x, topLeft.y, bottomRight.x,
+   * bottomRight.y]" and "pValue: certainty"
+   */
   def fromYAMLFile(file: File): Try[FaceBox] = Try {
     fromYAML(Source.fromFile(file).mkString).get
   }

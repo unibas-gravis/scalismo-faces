@@ -26,7 +26,9 @@ import scalismo.faces.image.{BufferedImageConverter, PixelImage}
 import scala.annotation.implicitNotFound
 
 /** JPanel to display an image, the image is requested on each update */
-class ImagePanel[A] (var image: PixelImage[A], bgColor: Option[java.awt.Color] = None)(implicit conv: BufferedImageConverter[A]) extends JPanel {
+class ImagePanel[A](var image: PixelImage[A], bgColor: Option[java.awt.Color] = None)(implicit
+  conv: BufferedImageConverter[A]
+) extends JPanel {
   setPreferredSize(new Dimension(image.width, image.height))
 
   override def paintComponent(g: Graphics): Unit = {
@@ -36,7 +38,7 @@ class ImagePanel[A] (var image: PixelImage[A], bgColor: Option[java.awt.Color] =
     val dy = (getHeight - bufferedImage.getHeight) / 2
     bgColor match {
       case Some(color) => g.drawImage(bufferedImage, dx, dy, color, null)
-      case None => g.drawImage(bufferedImage, dx, dy, null)
+      case None        => g.drawImage(bufferedImage, dx, dy, null)
     }
   }
 
@@ -47,23 +49,35 @@ class ImagePanel[A] (var image: PixelImage[A], bgColor: Option[java.awt.Color] =
   }
 
   /** register an action to take on click */
-  def onImageClick(actionLeftClick: (java.awt.Point) => Unit, actionRightClick: (Point) => Unit): Unit = addMouseListener(new MouseAdapter {
-    override def mouseClicked(e: MouseEvent): Unit = {
-      if(SwingUtilities.isLeftMouseButton(e)) actionLeftClick(e.getPoint)
-      else if(SwingUtilities.isRightMouseButton(e)) actionRightClick(e.getPoint)
-    }
-  })
+  def onImageClick(actionLeftClick: (java.awt.Point) => Unit, actionRightClick: (Point) => Unit): Unit =
+    addMouseListener(new MouseAdapter {
+      override def mouseClicked(e: MouseEvent): Unit = {
+        if (SwingUtilities.isLeftMouseButton(e)) actionLeftClick(e.getPoint)
+        else if (SwingUtilities.isRightMouseButton(e)) actionRightClick(e.getPoint)
+      }
+    })
 }
 
 object ImagePanel {
-  @implicitNotFound("Can only display images with known conversion to BufferedImage, currently this is RGB, RGBA, Double, Float")
-  @deprecated("width and height are ignored: use image of proper width and height, for a fixed size container use sizedContainer", "0.7")
-  def apply[A](width: Int, height: Int, image: PixelImage[A])(implicit conv: BufferedImageConverter[A]) = new ImagePanel(image)
+  @implicitNotFound(
+    "Can only display images with known conversion to BufferedImage, currently this is RGB, RGBA, Double, Float"
+  )
+  @deprecated(
+    "width and height are ignored: use image of proper width and height, for a fixed size container use sizedContainer",
+    "0.7"
+  )
+  def apply[A](width: Int, height: Int, image: PixelImage[A])(implicit conv: BufferedImageConverter[A]) =
+    new ImagePanel(image)
 
-  @implicitNotFound("Can only display images with known conversion to BufferedImage, currently this is RGB, RGBA, Double, Float")
+  @implicitNotFound(
+    "Can only display images with known conversion to BufferedImage, currently this is RGB, RGBA, Double, Float"
+  )
   def apply[A](image: PixelImage[A])(implicit conv: BufferedImageConverter[A]) = new ImagePanel(image)
 
   /** creates a panel to display an image with a defined background color */
-  @implicitNotFound("Can only display images with known conversion to BufferedImage, currently this is RGB, RGBA, Double, Float")
-  def apply[A](image: PixelImage[A], bgColor: java.awt.Color)(implicit conv: BufferedImageConverter[A]) = new ImagePanel(image, Some(bgColor))
+  @implicitNotFound(
+    "Can only display images with known conversion to BufferedImage, currently this is RGB, RGBA, Double, Float"
+  )
+  def apply[A](image: PixelImage[A], bgColor: java.awt.Color)(implicit conv: BufferedImageConverter[A]) =
+    new ImagePanel(image, Some(bgColor))
 }

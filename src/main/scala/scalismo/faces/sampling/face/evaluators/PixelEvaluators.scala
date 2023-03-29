@@ -38,16 +38,18 @@ object PixelEvaluators {
 
   /** Gaussian color model, isotropic, 3D (HSV) */
   case class IsotropicGaussianPixelEvaluatorHSV(sdev: Double) extends PairEvaluator[RGB] {
-    val normalizer: Double = -3/2*log(2*Pi) - 3*log(sdev)
+    val normalizer: Double = -3 / 2 * log(2 * Pi) - 3 * log(sdev)
 
     def apply(first: HSV, second: HSV): Double = {
-      val d2 = min(min(pow((first.hue - second.hue)/2/Pi,2), pow((first.hue-2*Pi-second.hue)/2/Pi,2)), pow((first.hue+2*Pi-second.hue)/2/Pi,2)) + pow(first.saturation - second.saturation, 2) + pow(first.value - second.value, 2)
-      normalizer - 0.5f * d2/sdev/sdev
+      val d2 = min(min(pow((first.hue - second.hue) / 2 / Pi, 2), pow((first.hue - 2 * Pi - second.hue) / 2 / Pi, 2)),
+                   pow((first.hue + 2 * Pi - second.hue) / 2 / Pi, 2)
+      ) + pow(first.saturation - second.saturation, 2) + pow(first.value - second.value, 2)
+      normalizer - 0.5f * d2 / sdev / sdev
     }
     override def logValue(f: RGB, s: RGB): Double = {
       val first = HSV(f)
       val second = HSV(s)
-      apply(first,second)
+      apply(first, second)
     }
   }
 

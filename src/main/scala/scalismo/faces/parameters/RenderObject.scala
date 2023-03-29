@@ -32,9 +32,9 @@ import scala.util.Try
 /** parametric description of a renderable object */
 sealed trait RenderObject
 
-
 object RenderObject {
   object MeshCache {
+
     /** cache to hold open models, identified by their URL */
     private val cacheSizeHint = 10
     private val openMeshes = new java.util.LinkedHashMap[URI, Object](cacheSizeHint, 0.75f, false) {
@@ -42,31 +42,34 @@ object RenderObject {
     }
 
     /**
-      * clears all cached meshes
-      * */
-    def clearURICache(): Unit = openMeshes.synchronized( openMeshes.clear() )
+     * clears all cached meshes
+     */
+    def clearURICache(): Unit = openMeshes.synchronized(openMeshes.clear())
 
     /**
-      * load a mesh from an URI (cached)
-      *
-      * @param uri URI of model to open, must be a file currently
-      * @return
-      */
+     * load a mesh from an URI (cached)
+     *
+     * @param uri
+     *   URI of model to open, must be a file currently
+     * @return
+     */
     def loadMesh(uri: URI): Try[ColorNormalMesh3D] = Try {
       // look in cache
       val meshLookUp: Option[(ColorNormalMesh3D, Long)] =
-        openMeshes.synchronized {
-          val meshObj: Option[Object] = Option(openMeshes.get(uri))
-          meshObj.map{obj => obj.asInstanceOf[(ColorNormalMesh3D, Long)]}
-        }.flatMap{ (stampedMesh: (ColorNormalMesh3D, Long)) =>
-          if (timestamp(uri) <= stampedMesh._2)
-            Some(stampedMesh)
-          else
-            None
-        }
+        openMeshes
+          .synchronized {
+            val meshObj: Option[Object] = Option(openMeshes.get(uri))
+            meshObj.map { obj => obj.asInstanceOf[(ColorNormalMesh3D, Long)] }
+          }
+          .flatMap { (stampedMesh: (ColorNormalMesh3D, Long)) =>
+            if (timestamp(uri) <= stampedMesh._2)
+              Some(stampedMesh)
+            else
+              None
+          }
 
       // open if necessary
-      meshLookUp.map{_._1}.getOrElse {
+      meshLookUp.map { _._1 }.getOrElse {
         val mesh = forceLoad(uri).get
         openMeshes.synchronized {
           openMeshes.put(uri, mesh)
@@ -93,7 +96,7 @@ object RenderObject {
         val m = model.instance(momo.coefficients)
         ColorNormalMesh3D(m.shape, m.color, m.shape.vertexNormals)
       case MeshColorNormals(mesh) => mesh
-      case MeshVertexColor(mesh) => ColorNormalMesh3D(mesh)
+      case MeshVertexColor(mesh)  => ColorNormalMesh3D(mesh)
     }
   }
 }
@@ -102,7 +105,8 @@ object RenderObject {
 case class MoMoInstance(shape: IndexedSeq[Double],
                         color: IndexedSeq[Double],
                         expression: IndexedSeq[Double],
-                        modelURI: URI) extends RenderObject {
+                        modelURI: URI
+) extends RenderObject {
 
   /** coefficients as MoMoCoefficients, compatible with MoMo class */
   def coefficients = MoMoCoefficients(shape, color, expression)
@@ -126,26 +130,24 @@ object MoMoInstance {
 
   /** create a MoMoInstance from a set of MoMoCoefficients */
   def fromCoefficients(momoCoefficients: MoMoCoefficients, modelURI: URI): MoMoInstance = {
-    new MoMoInstance(
-      momoCoefficients.shape.toArray.toIndexedSeq,
-      momoCoefficients.color.toArray.toIndexedSeq,
-      momoCoefficients.expression.toArray.toIndexedSeq,
-      modelURI)
+    new MoMoInstance(momoCoefficients.shape.toArray.toIndexedSeq,
+                     momoCoefficients.color.toArray.toIndexedSeq,
+                     momoCoefficients.expression.toArray.toIndexedSeq,
+                     modelURI
+    )
   }
 
   /** create a zero MoMoInstance (usually corresponds to mean) matching a model's rank */
   def zero(model: MoMo, modelURI: URI): MoMoInstance = fromCoefficients(model.zeroCoefficients, modelURI)
 
   /** create a zero MoMoInstance (usually corresponds to mean) of specified size */
-  def zero(shapeComponents: Int,
-           colorComponents: Int,
-           expressionComponents: Int,
-           modelURI: URI): MoMoInstance = {
+  def zero(shapeComponents: Int, colorComponents: Int, expressionComponents: Int, modelURI: URI): MoMoInstance = {
     fromCoefficients(MoMoCoefficients.zeros(shapeComponents, colorComponents, expressionComponents), modelURI)
   }
 
   /** create a random coefficient vector with its elements N(0,1) distributed. */
-  def sample(model: MoMo, modelURI: URI)(implicit rnd: Random): MoMoInstance = fromCoefficients(model.sampleCoefficients(), modelURI)
+  def sample(model: MoMo, modelURI: URI)(implicit rnd: Random): MoMoInstance =
+    fromCoefficients(model.sampleCoefficients(), modelURI)
 }
 
 /** mesh file reference to render */

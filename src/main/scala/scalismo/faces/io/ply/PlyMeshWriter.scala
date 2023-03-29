@@ -29,25 +29,26 @@ import scalismo.geometry._
 import scalismo.mesh._
 
 /**
-  * Writes a ply file based on the passed arguments. The arguments are first analyzed and the
-  * nescessary writer-chains are built for the vertex and face properties. The writer are in
-  * PlyMeshPropertyWriters. The writers make use of the mesh-independant List- and SequenceWriters.
-  *
-  * @param url
-  * @param vertices
-  * @param faces
-  * @param color
-  * @param normals
-  * @param plyFormat
-  * @param headerFormat
-  */
+ * Writes a ply file based on the passed arguments. The arguments are first analyzed and the nescessary writer-chains
+ * are built for the vertex and face properties. The writer are in PlyMeshPropertyWriters. The writers make use of the
+ * mesh-independant List- and SequenceWriters.
+ *
+ * @param url
+ * @param vertices
+ * @param faces
+ * @param color
+ * @param normals
+ * @param plyFormat
+ * @param headerFormat
+ */
 private[io] case class PlyMeshWriter(url: String,
                                      vertices: Option[IndexedSeq[Point[_3D]]] = None,
                                      faces: Option[IndexedSeq[IntVector[_3D]]] = None,
                                      color: Option[MeshSurfaceProperty[RGBA]] = None,
                                      normals: Option[MeshSurfaceProperty[EuclideanVector[_3D]]] = None,
                                      plyFormat: PlyFormat = PlyFormat.ASCII,
-                                     headerFormat: PlyHeader = PlyHeader.meshlab) {
+                                     headerFormat: PlyHeader = PlyHeader.meshlab
+) {
 
   val nVertices: Int = vertices.map(_.length).getOrElse(-1)
   val nFaces: Int = faces.map(_.length).getOrElse(-1)
@@ -55,7 +56,6 @@ private[io] case class PlyMeshWriter(url: String,
 
   val vertexProperties: IndexedSeq[IndexedProperty] = getVertexProperties
   val faceProperties: IndexedSeq[IndexedProperty] = getFaceProperties
-
 
   def writeToStream(os: OutputStream): Unit = {
     val osw = new OutputStreamWriter(os)
@@ -80,14 +80,14 @@ private[io] case class PlyMeshWriter(url: String,
 
     val _vColors = color.flatMap {
       case c: SurfacePointProperty[RGBA] => Some(new VertexColor(c))
-      case _ => None
+      case _                             => None
     }
 
     val _vNormals = normals.flatMap {
       case n: SurfacePointProperty[EuclideanVector[_3D]] => Some(new VertexNormal(n))
-      case n: MappedSurfaceProperty[_,_] => {
+      case n: MappedSurfaceProperty[_, _] => {
         // fully evaluate the lazy mapped surface property
-        val surfaceProp =  SurfacePointProperty.averagedPointProperty(n)
+        val surfaceProp = SurfacePointProperty.averagedPointProperty(n)
         Some(new VertexNormal(surfaceProp))
       }
       case _ => None
@@ -106,72 +106,75 @@ private[io] case class PlyMeshWriter(url: String,
 
   private def checkTextures: (Boolean, Boolean) = {
     color match {
-      case Some(_) => color.get match {
-        case _: TextureMappedProperty[RGBA] => (true, false)
-        case ip: IndirectProperty[RGBA] =>
-          val hmt = ip.properties.forall {
-            case _: TextureMappedProperty[RGBA] => true
-            case _ => false
-          }
-          (hmt, hmt)
-        case _ => (false, false)
-      }
+      case Some(_) =>
+        color.get match {
+          case _: TextureMappedProperty[RGBA] => (true, false)
+          case ip: IndirectProperty[RGBA] =>
+            val hmt = ip.properties.forall {
+              case _: TextureMappedProperty[RGBA] => true
+              case _                              => false
+            }
+            (hmt, hmt)
+          case _ => (false, false)
+        }
       case None => (false, false)
     }
   }
 
   private def getTextureCoordinates: (Option[VertexTextureCoordinates], None.type) = {
     color match {
-      case Some(_) => color.get match {
-        case tmp: TextureMappedProperty[RGBA] => tmp.textureMapping match {
-          case tc: SurfacePointProperty[Point[_2D]] => (Some(new VertexTextureCoordinates(tc, headerFormat)), None)
+      case Some(_) =>
+        color.get match {
+          case tmp: TextureMappedProperty[RGBA] =>
+            tmp.textureMapping match {
+              case tc: SurfacePointProperty[Point[_2D]] => (Some(new VertexTextureCoordinates(tc, headerFormat)), None)
+              case _                                    => (None, None)
+            }
+          //        // TODO: FIX THIS CASE
+          //        case ip: IndirectProperty[RGBA] => {
+          //          val test = ip.properties.forall {
+          //            case tmp: TextureMappedProperty[RGBA] => tmp.textureMapping match {
+          //              case _: SurfacePointProperty[Point[_2D]] => true
+          //              case _ => false
+          //              case _ => false
+          //            }
+          //          }
+          //        }
           case _ => (None, None)
         }
-        //        // TODO: FIX THIS CASE
-        //        case ip: IndirectProperty[RGBA] => {
-        //          val test = ip.properties.forall {
-        //            case tmp: TextureMappedProperty[RGBA] => tmp.textureMapping match {
-        //              case _: SurfacePointProperty[Point[_2D]] => true
-        //              case _ => false
-        //              case _ => false
-        //            }
-        //          }
-        //        }
-        case _ => (None, None)
-      }
       case None => (None, None)
     }
   }
-
 
   private def getFaceProperties: IndexedSeq[IndexedProperty] = {
     val _faces = faces.map(new Faces(_))
 
     val _faceColor = color.flatMap {
       case color: TriangleProperty[RGBA] => Some(new FaceColor(color))
-      case _ => None
+      case _                             => None
     }
 
     val _vertexColorPerFace = color.flatMap {
       case color: VertexPropertyPerTriangle[RGBA] => Some(new FaceVertexColors(color))
-      case _ => None
+      case _                                      => None
     }
 
     val _faceNormals = normals.flatMap {
       case tn: TriangleProperty[EuclideanVector[_3D]] => Some(new FaceNormal(tn))
-      case _ => None
+      case _                                          => None
     }
 
     val _vertexNormalsPerFace = normals.flatMap {
       case vn: VertexPropertyPerTriangle[EuclideanVector[_3D]] => Some(new FaceVertexNormals(vn))
-      case _ => None
+      case _                                                   => None
     }
 
     val _vertexTextureCoordinatesPerFace = color.flatMap {
-      case tmp: TextureMappedProperty[RGBA] => tmp.textureMapping match {
-        case vppt: VertexPropertyPerTriangle[Point[_2D]] => Some(new FaceVertexTextureCoordinates(vppt))
-        case _ => None
-      }
+      case tmp: TextureMappedProperty[RGBA] =>
+        tmp.textureMapping match {
+          case vppt: VertexPropertyPerTriangle[Point[_2D]] => Some(new FaceVertexTextureCoordinates(vppt))
+          case _                                           => None
+        }
       //        // TODO: FIX THIS CASE
       //        case ip: IndirectProperty[RGBA] => ip.properties.forall {
       //          case tmp: TextureMappedProperty[RGBA] => tmp.textureMapping match {
@@ -193,7 +196,7 @@ private[io] case class PlyMeshWriter(url: String,
     ).flatten
   }
 
-  private def writeHeader(osw: OutputStreamWriter) : Unit = {
+  private def writeHeader(osw: OutputStreamWriter): Unit = {
     osw.write("ply\n")
     osw.write("format %s 1.0\n".format(plyFormat))
     osw.write("comment Created by GraVis-Faces\n")
@@ -228,7 +231,10 @@ private[io] case class PlyMeshWriter(url: String,
       case Some(ip: IndirectProperty[RGBA]) =>
         val textures = ip.properties.map {
           case t: TextureMappedProperty[RGBA] => t.texture
-          case _ => throw new RuntimeException("Writing multiple SurfacePointProperties is only supported for TextureMappedProperties!")
+          case _ =>
+            throw new RuntimeException(
+              "Writing multiple SurfacePointProperties is only supported for TextureMappedProperties!"
+            )
         }
         textures.zipWithIndex.map { ti =>
           val t = ti._1
@@ -260,7 +266,6 @@ private[io] case class PlyMeshWriter(url: String,
     }
     osw.flush()
   }
-
 
   private def writeData(os: OutputStream): Unit = {
     if (nVertices > 0) {

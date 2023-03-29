@@ -20,18 +20,21 @@ import scalismo.faces.image.PixelImage
 
 /** Erosion: Morphological filter */
 object Erosion {
+
   /**
-    * erosion filter with box element
-    * @param size side length of box
-    */
+   * erosion filter with box element
+   * @param size
+   *   side length of box
+   */
   def box(size: Int): SeparableMorphologicalFilter[Double] = {
     SeparableMorphologicalFilter(SeparableMorphologicalFilter.lineElement(size), list => list.min)
   }
 
   /**
-    * general erosion filter with structuring element
-    * @param structuringElement structuring element, see morphological filter
-    */
+   * general erosion filter with structuring element
+   * @param structuringElement
+   *   structuring element, see morphological filter
+   */
   def apply(structuringElement: PixelImage[Boolean]): MorphologicalFilter[Double] = {
     MorphologicalFilter[Double](structuringElement, values => values.min)
   }

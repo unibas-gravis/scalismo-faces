@@ -16,15 +16,14 @@
 package scalismo.faces.io.ply
 
 /**
-  * The PLYHelpers object encapsulates all well defined tokens, format specifier or types
-  * used to describe the specific ply format in the header of the file.
-  */
+ * The PLYHelpers object encapsulates all well defined tokens, format specifier or types used to describe the specific
+ * ply format in the header of the file.
+ */
 object PlyHelpers {
 
-
   /**
-    * File formats supported so far.
-    */
+   * File formats supported so far.
+   */
   object PlyFormat extends Enumeration {
     type PlyFormat = Value
     val ASCII = Value("ascii")
@@ -33,8 +32,8 @@ object PlyHelpers {
   }
 
   /**
-    * Different header types expected by common programs.
-    */
+   * Different header types expected by common programs.
+   */
   object PlyHeader extends Enumeration {
     type PlyHeader = Value
     val meshlab = Value("meshlab")
@@ -42,8 +41,8 @@ object PlyHelpers {
   }
 
   /**
-    * Used parameter type names. (newer version not yet supported)
-    */
+   * Used parameter type names. (newer version not yet supported)
+   */
   private[ply] object PlyTypes extends Enumeration {
     type PlyTypes = Value
     val none = Value("none")
@@ -66,8 +65,8 @@ object PlyHelpers {
   }
 
   /**
-    * String tokens occuring in ply header descriptions
-    */
+   * String tokens occuring in ply header descriptions
+   */
   private[ply] object PLY {
     val startHeader = "ply"
     val endHeader = "end_header"
@@ -100,9 +99,3 @@ object PlyHelpers {
   }
 
 }
-
-
-
-
-
-

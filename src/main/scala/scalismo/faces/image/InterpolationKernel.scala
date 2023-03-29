@@ -63,14 +63,13 @@ object InterpolationKernel {
   }
 
   /**
-   * cubic interpolation kernel, Mitchell-Netravali,
-   * Catmull-Rom: b=0, c=0.5 (GIMP)
-   * Cubic b-spline: b=1, c=0
-   * Cardinal splines: b=0
-   * Good values: b=1/3, c=1/3
+   * cubic interpolation kernel, Mitchell-Netravali, Catmull-Rom: b=0, c=0.5 (GIMP) Cubic b-spline: b=1, c=0 Cardinal
+   * splines: b=0 Good values: b=1/3, c=1/3
    *
-   * @param b Parameter, e.g. 1/3
-   * @param c Parameter, e.g. 1/3
+   * @param b
+   *   Parameter, e.g. 1/3
+   * @param c
+   *   Parameter, e.g. 1/3
    */
   case class CubicKernel(b: Double, c: Double) extends InterpolationKernel {
     override def apply(x: Double): Double = {

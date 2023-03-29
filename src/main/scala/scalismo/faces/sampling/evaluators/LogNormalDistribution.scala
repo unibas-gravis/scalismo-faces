@@ -19,13 +19,13 @@ package scalismo.faces.sampling.evaluators
 import scalismo.sampling.DistributionEvaluator
 import scalismo.sampling.evaluators.GaussianEvaluator
 
-
 /** log normal distribution */
 case class LogNormalDistribution(logMean: Double, logSdev: Double) extends DistributionEvaluator[Double] {
   override def logValue(sample: Double): Double = LogNormalDistribution.logDensity(sample, logMean, logSdev)
 }
 
 object LogNormalDistribution {
+
   /** log density value for LogNormal distribution */
   def logDensity(x: Double, logMean: Double, logSdev: Double): Double = {
     if (x > 0.0)

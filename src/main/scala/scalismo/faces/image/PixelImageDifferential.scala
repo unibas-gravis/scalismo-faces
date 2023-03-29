@@ -77,9 +77,12 @@ object PixelImageDifferential {
     PixelImage(f.domain, (x, y) => dXdx(x, y) + dYdy(x, y))
   }
 
-  def laplace4NN[A: ClassTag](image: PixelImage[A], dx: Double = 1.0)(implicit ops: ColorSpaceOperations[A]): PixelImage[A] = {
-    PixelImage(image.domain, (x, y) =>
-      (image(x - 1, y) + image(x + 1, y) + image(x, y - 1) + image(x, y + 1) - 4 *: image(x, y)) / (dx * dx)
+  def laplace4NN[A: ClassTag](image: PixelImage[A], dx: Double = 1.0)(implicit
+    ops: ColorSpaceOperations[A]
+  ): PixelImage[A] = {
+    PixelImage(
+      image.domain,
+      (x, y) => (image(x - 1, y) + image(x + 1, y) + image(x, y - 1) + image(x, y + 1) - 4 *: image(x, y)) / (dx * dx)
     )
   }
 }

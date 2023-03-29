@@ -17,7 +17,7 @@
 package scalismo.faces.render
 
 import breeze.linalg.DenseMatrix
-import scalismo.geometry.{Point, SquareMatrix, EuclideanVector, _3D}
+import scalismo.geometry.{_3D, EuclideanVector, Point, SquareMatrix}
 
 /** 3D translation */
 case class Translation3D(t: EuclideanVector[_3D]) extends InvertibleTransform3D with Transform4x4 {

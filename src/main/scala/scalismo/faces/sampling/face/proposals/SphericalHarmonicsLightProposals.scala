@@ -25,7 +25,7 @@ import scalismo.faces.render.TextureExtraction
 import scalismo.faces.sampling.evaluators.LogNormalDistribution
 import scalismo.faces.sampling.face.evaluators.PixelEvaluators.IsotropicGaussianPixelEvaluatorHSV
 import scalismo.faces.sampling.face.{ParametricImageRenderer, ParametricModel}
-import scalismo.geometry.{EuclideanVector, _3D}
+import scalismo.geometry.{_3D, EuclideanVector}
 import scalismo.mesh._
 import scalismo.sampling.evaluators.{GaussianEvaluator, PairEvaluator}
 import scalismo.sampling.{ProposalGenerator, SymmetricTransitionRatio, TransitionProbability}
@@ -37,11 +37,14 @@ import scala.util.control.NonLocalReturns._
 /** illumination proposals */
 object SphericalHarmonicsLightProposals {
 
-  /** vary the light intensity
-    * @param logSdev log of expected variation factor
-    */
+  /**
+   * vary the light intensity
+   * @param logSdev
+   *   log of expected variation factor
+   */
   case class SHLightIntensityProposal(logSdev: Double)(implicit rnd: Random)
-    extends ProposalGenerator[SphericalHarmonicsLight] with TransitionProbability[SphericalHarmonicsLight] {
+      extends ProposalGenerator[SphericalHarmonicsLight]
+      with TransitionProbability[SphericalHarmonicsLight] {
 
     override def propose(current: SphericalHarmonicsLight): SphericalHarmonicsLight = {
       val factor = exp(rnd.scalaRandom.nextGaussian() * logSdev * 0.5)
@@ -49,13 +52,15 @@ object SphericalHarmonicsLightProposals {
     }
 
     override def logTransitionProbability(from: SphericalHarmonicsLight, to: SphericalHarmonicsLight): Double = {
-      LogNormalDistribution.logDensity(math.sqrt(to.energy/from.energy), 0.0, logSdev)
+      LogNormalDistribution.logDensity(math.sqrt(to.energy / from.energy), 0.0, logSdev)
     }
   }
 
   /** vary the color distribution of the illumination while keeping the intensity constant */
   case class SHLightColorProposal(sdev: Double)(implicit rnd: Random)
-    extends ProposalGenerator[SphericalHarmonicsLight] with SymmetricTransitionRatio[SphericalHarmonicsLight] with TransitionProbability[SphericalHarmonicsLight] {
+      extends ProposalGenerator[SphericalHarmonicsLight]
+      with SymmetricTransitionRatio[SphericalHarmonicsLight]
+      with TransitionProbability[SphericalHarmonicsLight] {
 
     override def propose(current: SphericalHarmonicsLight): SphericalHarmonicsLight = {
       val shift = EuclideanVector(
@@ -70,31 +75,40 @@ object SphericalHarmonicsLightProposals {
 
     override def logTransitionProbability(from: SphericalHarmonicsLight, to: SphericalHarmonicsLight): Double = {
       require(from.coefficients.length == to.coefficients.length, "the same number of SH components")
-      val shifts =to.coefficients.zip(from.coefficients).map{case(t, f) => t - f}
+      val shifts = to.coefficients.zip(from.coefficients).map { case (t, f) => t - f }
       val allShiftsEqual = shifts.forall(shift => (shift - shifts.head).norm2 < 1e-5)
       if (math.abs(from.energy - to.energy) < 1e-5 && allShiftsEqual) {
         val (t, f) = (to.coefficients.head, from.coefficients.head)
         GaussianEvaluator.logDensity(t.x, f.x, sdev) +
           GaussianEvaluator.logDensity(t.y, f.y, sdev) +
           GaussianEvaluator.logDensity(t.z, f.z, sdev)
-      }
-      else
+      } else
         Double.NegativeInfinity
     }
   }
 
-  /** independent Gaussian perturbation of the SH illumination parameter
-    * @param sdev standard deviation of proposal per component
-    * @param fixIntensity if true the intensity is perserved */
+  /**
+   * independent Gaussian perturbation of the SH illumination parameter
+   * @param sdev
+   *   standard deviation of proposal per component
+   * @param fixIntensity
+   *   if true the intensity is perserved
+   */
   case class SHLightPerturbationProposal(sdev: Double, fixIntensity: Boolean)(implicit rnd: Random)
-    extends ProposalGenerator[SphericalHarmonicsLight] with SymmetricTransitionRatio[SphericalHarmonicsLight] with TransitionProbability[SphericalHarmonicsLight] {
+      extends ProposalGenerator[SphericalHarmonicsLight]
+      with SymmetricTransitionRatio[SphericalHarmonicsLight]
+      with TransitionProbability[SphericalHarmonicsLight] {
 
     override def propose(current: SphericalHarmonicsLight): SphericalHarmonicsLight = {
-      val proposal = current.copy(coefficients = current.coefficients.map(v => v + EuclideanVector(
-        rnd.scalaRandom.nextGaussian(),
-        rnd.scalaRandom.nextGaussian(),
-        rnd.scalaRandom.nextGaussian()
-      ) * sdev ))
+      val proposal = current.copy(coefficients =
+        current.coefficients.map(v =>
+          v + EuclideanVector(
+            rnd.scalaRandom.nextGaussian(),
+            rnd.scalaRandom.nextGaussian(),
+            rnd.scalaRandom.nextGaussian()
+          ) * sdev
+        )
+      )
       val intensityChange = sqrt(proposal.energy / current.energy)
       if (fixIntensity)
         proposal.copy(coefficients = proposal.coefficients.map(v => v / intensityChange: EuclideanVector[_3D]))
@@ -103,13 +117,16 @@ object SphericalHarmonicsLightProposals {
     }
 
     override def logTransitionProbability(from: SphericalHarmonicsLight, to: SphericalHarmonicsLight): Double = {
-      val intChange = math.sqrt(to.energy/from.energy)
+      val intChange = math.sqrt(to.energy / from.energy)
       if (!fixIntensity || intChange < 1e-5)
-        to.coefficients.zip(from.coefficients).map{case(t, f) =>
-          GaussianEvaluator.logDensity(t.x, f.x, sdev) +
-            GaussianEvaluator.logDensity(t.y, f.y, sdev) +
-            GaussianEvaluator.logDensity(t.z, f.z, sdev)
-        }.sum
+        to.coefficients
+          .zip(from.coefficients)
+          .map { case (t, f) =>
+            GaussianEvaluator.logDensity(t.x, f.x, sdev) +
+              GaussianEvaluator.logDensity(t.y, f.y, sdev) +
+              GaussianEvaluator.logDensity(t.z, f.z, sdev)
+          }
+          .sum
       else
         Double.NegativeInfinity
 
@@ -117,12 +134,14 @@ object SphericalHarmonicsLightProposals {
   }
 
   /**
-    * Randomly changes the light intensity of the shl bands according to std of a normal distribution.
-    *
-    * @param logSdev log of expected factor of variation for each component
-    */
+   * Randomly changes the light intensity of the shl bands according to std of a normal distribution.
+   *
+   * @param logSdev
+   *   log of expected factor of variation for each component
+   */
   case class SHLightBandEnergyMixer(logSdev: Double)(implicit rnd: Random)
-    extends ProposalGenerator[SphericalHarmonicsLight] with TransitionProbability[SphericalHarmonicsLight] {
+      extends ProposalGenerator[SphericalHarmonicsLight]
+      with TransitionProbability[SphericalHarmonicsLight] {
 
     override def propose(current: SphericalHarmonicsLight): SphericalHarmonicsLight = {
       if (current.nonEmpty) {
@@ -161,7 +180,8 @@ object SphericalHarmonicsLightProposals {
           }
           if (intTo > 1e-4 && intFrom > 1e-4) {
             val logFactor = math.log(intTo / intFrom)
-            totProb = totProb + -0.5 * math.pow(logFactor / logSdev, 2) - 0.5 * math.log(2.0 * math.Pi) - math.log(logSdev)
+            totProb =
+              totProb + -0.5 * math.pow(logFactor / logSdev, 2) - 0.5 * math.log(2.0 * math.Pi) - math.log(logSdev)
           }
         }
         totProb
@@ -170,19 +190,22 @@ object SphericalHarmonicsLightProposals {
   }
 
   /**
-    * Draw from a proposalGenerator in a way such that it has the same illumination intensity as a given sample.
-    * We adjust the intensity of a sample drawn from proposalGenerator, so that it has the same intensity as the given proposal.
-    *
-    * @param proposalGenerator underlying proposal generator to use, proposal of it will get a rescaled light
-    */
-  case class SHLightIntensityPreservingProposal(proposalGenerator: ProposalGenerator[SphericalHarmonicsLight] with TransitionProbability[SphericalHarmonicsLight])(implicit rnd: Random)
-    extends ProposalGenerator[SphericalHarmonicsLight] with TransitionProbability[SphericalHarmonicsLight] {
+   * Draw from a proposalGenerator in a way such that it has the same illumination intensity as a given sample. We
+   * adjust the intensity of a sample drawn from proposalGenerator, so that it has the same intensity as the given
+   * proposal.
+   *
+   * @param proposalGenerator
+   *   underlying proposal generator to use, proposal of it will get a rescaled light
+   */
+  case class SHLightIntensityPreservingProposal(
+    proposalGenerator: ProposalGenerator[SphericalHarmonicsLight] with TransitionProbability[SphericalHarmonicsLight]
+  )(implicit rnd: Random)
+      extends ProposalGenerator[SphericalHarmonicsLight]
+      with TransitionProbability[SphericalHarmonicsLight] {
 
     /**
-      * Scale "to" according fromIntensity/toIntensity
-      * Calculate intensity of to.
-      * Calculate intensity of from.
-      */
+     * Scale "to" according fromIntensity/toIntensity Calculate intensity of to. Calculate intensity of from.
+     */
     def scaleSample(from: SphericalHarmonicsLight, to: SphericalHarmonicsLight): SphericalHarmonicsLight = {
       val toVec = to.coefficients
       val fromVec = from.coefficients
@@ -194,8 +217,8 @@ object SphericalHarmonicsLightProposals {
     }
 
     /**
-      * Scale the new sample by the factor currentIntensity/newSampleIntensity.
-      */
+     * Scale the new sample by the factor currentIntensity/newSampleIntensity.
+     */
     override def propose(current: SphericalHarmonicsLight): SphericalHarmonicsLight = {
       val newSample = proposalGenerator.propose(current)
       scaleSample(current, newSample)
@@ -215,27 +238,28 @@ object SphericalHarmonicsLightProposals {
   }
 
   /**
-    * Perturbs the shl coefficients, without changing the color.
-    */
+   * Perturbs the shl coefficients, without changing the color.
+   */
   case class SHLightSpatialPerturbation(sdev: Double)(implicit rnd: Random)
-    extends ProposalGenerator[SphericalHarmonicsLight] with TransitionProbability[SphericalHarmonicsLight] {
+      extends ProposalGenerator[SphericalHarmonicsLight]
+      with TransitionProbability[SphericalHarmonicsLight] {
     val monochromaticityThreshold = 1e-3
+
     /**
-      * Add random normal monochromatic values to current.
-      */
+     * Add random normal monochromatic values to current.
+     */
     override def propose(current: SphericalHarmonicsLight): SphericalHarmonicsLight = {
       SphericalHarmonicsLight(current.coefficients.map(v => {
         val value = rnd.scalaRandom.nextGaussian() * sdev
-        v + EuclideanVector(value, value, value) //monochrome: add the same to every channel
+        v + EuclideanVector(value, value, value) // monochrome: add the same to every channel
       }))
     }
 
     /**
-      * Checks if the change between from and to was due to this proposal generator.
-      * In the case of non-monochromatic changes we yield -inf.
-      * In the case of monochromatic change we return the probability.
-      * The probability depends only on the amount of the chromatic change.
-      */
+     * Checks if the change between from and to was due to this proposal generator. In the case of non-monochromatic
+     * changes we yield -inf. In the case of monochromatic change we return the probability. The probability depends
+     * only on the amount of the chromatic change.
+     */
     override def logTransitionProbability(from: SphericalHarmonicsLight, to: SphericalHarmonicsLight): Double = {
       if (to.coefficients.size != from.coefficients.size)
         Double.NegativeInfinity
@@ -247,10 +271,10 @@ object SphericalHarmonicsLightProposals {
         var totProb = 0.0
         for (i <- toVec.indices) {
           val diff = toVec(i) - fromVec(i)
-          if (math.abs(diff.x - diff.y) + math.abs(diff.y - diff.z) < monochromaticityThreshold) { //if monochromatic change, then we could take any channel, we choose the first one.
+          if (math.abs(diff.x - diff.y) + math.abs(diff.y - diff.z) < monochromaticityThreshold) { // if monochromatic change, then we could take any channel, we choose the first one.
             totProb += 3.0 * (-0.5 * math.pow(diff.x / sdev, 2) - 0.5 * math.log(2.0 * math.Pi) - math.log(sdev))
           } else {
-            returning(Double.NegativeInfinity) //if non monochromatic change
+            returning(Double.NegativeInfinity) // if non monochromatic change
           }
         }
         totProb
@@ -260,8 +284,10 @@ object SphericalHarmonicsLightProposals {
 
   /** use the linear solver to find the best illumination parameters */
   case class SHLightSolverProposal(sphericalHarmonicsOptimizer: SphericalHarmonicsOptimizer,
-                                   samplingFunction: TriangleMesh3D => IndexedSeq[(TriangleId, BarycentricCoordinates)])(implicit rnd: Random)
-    extends ProposalGenerator[RenderParameter] with TransitionProbability[RenderParameter] {
+                                   samplingFunction: TriangleMesh3D => IndexedSeq[(TriangleId, BarycentricCoordinates)]
+  )(implicit rnd: Random)
+      extends ProposalGenerator[RenderParameter]
+      with TransitionProbability[RenderParameter] {
     override def propose(current: RenderParameter): RenderParameter = current.copy(
       environmentMap = sphericalHarmonicsOptimizer.optimize(current, samplingFunction)
     )
@@ -271,41 +297,44 @@ object SphericalHarmonicsLightProposals {
     override def toString = s"SHLightSolverProposal($sphericalHarmonicsOptimizer)"
   }
 
-  /** This proposal performs RANSAC to try to estimate illumination excluding outliers/occlusions
-    * The face model is used as appearance prior
-    *
-    * The procedure is explained in:
-    * Occlusion-aware 3D Morphable Face Models,
-    * Bernhard Egger, Andreas Schneider, Clemens Blumer, Andreas Morel-Forster, Sandro Schönborn, Thomas Vetter
-    * IN: British Machine Vision Conference (BMVC), September 2016
-    * https://dx.doi.org/10.5244/C.30.64
-    * */
-  case class  RobustSHLightSolverProposal(modelRenderer: ParametricImageRenderer[RGBA] with ParametricModel,
-                                          shOpt: SphericalHarmonicsOptimizer,
-                                          target: PixelImage[RGBA],
-                                          pixelEvaluator: PairEvaluator[RGB] = IsotropicGaussianPixelEvaluatorHSV(0.043f),
-                                          nSamples: Int = 30,
-                                          sigmaThreshold: Double = 2,
-                                          percentage: Double = 0.4,
-                                          iterations: Int = 500,
-                                          nSamplesIllumination: Int = 1000)(implicit rnd: Random)
-    extends ProposalGenerator[RenderParameter] with TransitionProbability[RenderParameter] {
+  /**
+   * This proposal performs RANSAC to try to estimate illumination excluding outliers/occlusions The face model is used
+   * as appearance prior
+   *
+   * The procedure is explained in: Occlusion-aware 3D Morphable Face Models, Bernhard Egger, Andreas Schneider, Clemens
+   * Blumer, Andreas Morel-Forster, Sandro Schönborn, Thomas Vetter IN: British Machine Vision Conference (BMVC),
+   * September 2016 https://dx.doi.org/10.5244/C.30.64
+   */
+  case class RobustSHLightSolverProposal(
+    modelRenderer: ParametricImageRenderer[RGBA] with ParametricModel,
+    shOpt: SphericalHarmonicsOptimizer,
+    target: PixelImage[RGBA],
+    pixelEvaluator: PairEvaluator[RGB] = IsotropicGaussianPixelEvaluatorHSV(0.043f),
+    nSamples: Int = 30,
+    sigmaThreshold: Double = 2,
+    percentage: Double = 0.4,
+    iterations: Int = 500,
+    nSamplesIllumination: Int = 1000
+  )(implicit rnd: Random)
+      extends ProposalGenerator[RenderParameter]
+      with TransitionProbability[RenderParameter] {
 
     val proposal = RobustSHLightSolverProposalWithLabel(modelRenderer,
-      shOpt,
-      target,
-      pixelEvaluator,
-      nSamples,
-      sigmaThreshold,
-      percentage,
-      iterations,
-      nSamplesIllumination)
+                                                        shOpt,
+                                                        target,
+                                                        pixelEvaluator,
+                                                        nSamples,
+                                                        sigmaThreshold,
+                                                        percentage,
+                                                        iterations,
+                                                        nSamplesIllumination
+    )
 
     val dummyImg = target.map(_ => 0)
 
     // wrapping proposal with label
     override def propose(current: RenderParameter): RenderParameter = {
-      proposal.propose(current,dummyImg)._1
+      proposal.propose(current, dummyImg)._1
     }
 
     override def logTransitionProbability(from: RenderParameter, to: RenderParameter): Double = 0.0
@@ -313,53 +342,60 @@ object SphericalHarmonicsLightProposals {
     override def toString = s"" // keep empty since it is only wrapping RobustSHLightSolverProposalWithLabel
   }
 
-  /** This proposal performs RANSAC to try to estimate illumination excluding outliers/occlusions
-    * The face model is used as appearance prior
-    *
-    * The procedure is explained in:
-    * Occlusion-aware 3D Morphable Face Models,
-    * Bernhard Egger, Andreas Schneider, Clemens Blumer, Andreas Morel-Forster, Sandro Schönborn, Thomas Vetter
-    * IN: British Machine Vision Conference (BMVC), September 2016
-    * https://dx.doi.org/10.5244/C.30.64
-    * */
-  case class  RobustSHLightSolverProposalWithLabel(modelRenderer: ParametricImageRenderer[RGBA] with ParametricModel,
-                                                   shOpt: SphericalHarmonicsOptimizer,
-                                                   target: PixelImage[RGBA],
-                                                   pixelEvaluator: PairEvaluator[RGB] = IsotropicGaussianPixelEvaluatorHSV(0.043f),
-                                                   nSamples: Int = 30,
-                                                   sigmaThreshold: Double = 2,
-                                                   percentage: Double = 0.4,
-                                                   iterations: Int = 500,
-                                                   nSamplesIllumination: Int = 1000)(implicit rnd: Random)
-    extends ProposalGenerator[(RenderParameter, PixelImage[Int])] with TransitionProbability[(RenderParameter, PixelImage[Int])] {
+  /**
+   * This proposal performs RANSAC to try to estimate illumination excluding outliers/occlusions The face model is used
+   * as appearance prior
+   *
+   * The procedure is explained in: Occlusion-aware 3D Morphable Face Models, Bernhard Egger, Andreas Schneider, Clemens
+   * Blumer, Andreas Morel-Forster, Sandro Schönborn, Thomas Vetter IN: British Machine Vision Conference (BMVC),
+   * September 2016 https://dx.doi.org/10.5244/C.30.64
+   */
+  case class RobustSHLightSolverProposalWithLabel(modelRenderer: ParametricImageRenderer[RGBA] with ParametricModel,
+                                                  shOpt: SphericalHarmonicsOptimizer,
+                                                  target: PixelImage[RGBA],
+                                                  pixelEvaluator: PairEvaluator[RGB] =
+                                                    IsotropicGaussianPixelEvaluatorHSV(0.043f),
+                                                  nSamples: Int = 30,
+                                                  sigmaThreshold: Double = 2,
+                                                  percentage: Double = 0.4,
+                                                  iterations: Int = 500,
+                                                  nSamplesIllumination: Int = 1000
+  )(implicit rnd: Random)
+      extends ProposalGenerator[(RenderParameter, PixelImage[Int])]
+      with TransitionProbability[(RenderParameter, PixelImage[Int])] {
 
     val normalizer = pixelEvaluator.logValue(RGB.White, RGB.White)
     val threshold: Double = Math.exp(-0.5 * Math.pow(sigmaThreshold, 2) - normalizer)
 
-    /** this function optimizes the illumination parameters for a given set of points
-      * and measures the quality of those parameters.
-      * @param points a set of points the illumination should be optimized to
-      * @param rps the current renderparameters (illumination part is ignored)
-      * @return a copy of the input render parameters with the new estimated illumination
-      *         the quality of this estimation
-      *         an image indicating which parts of the image are consistent to this estimated illumination
-      * */
-    private def estimateAndEvaluate(points: IndexedSeq[(TriangleId, BarycentricCoordinates)], rps: RenderParameter): (RenderParameter, Double, PixelImage[Int]) = {
+    /**
+     * this function optimizes the illumination parameters for a given set of points and measures the quality of those
+     * parameters.
+     * @param points
+     *   a set of points the illumination should be optimized to
+     * @param rps
+     *   the current renderparameters (illumination part is ignored)
+     * @return
+     *   a copy of the input render parameters with the new estimated illumination the quality of this estimation an
+     *   image indicating which parts of the image are consistent to this estimated illumination
+     */
+    private def estimateAndEvaluate(points: IndexedSeq[(TriangleId, BarycentricCoordinates)],
+                                    rps: RenderParameter
+    ): (RenderParameter, Double, PixelImage[Int]) = {
       val estimatedLight = shOpt.optimize(rps, points)
       val estimatedRps: RenderParameter = rps.copy(environmentMap = estimatedLight)
 
-      val curSample: PixelImage[RGBA] = modelRenderer.renderImage(estimatedRps).withAccessMode(AccessMode.Strict[RGBA]())
+      val curSample: PixelImage[RGBA] =
+        modelRenderer.renderImage(estimatedRps).withAccessMode(AccessMode.Strict[RGBA]())
       var counter = 0
 
-      //calculating difference per pixel
+      // calculating difference per pixel
       val diff = (x: Int, y: Int) => {
-        val c = curSample(x,y)
-        if (c.a > 0  ) {
+        val c = curSample(x, y)
+        if (c.a > 0) {
           counter = counter + 1
           pixelEvaluator.logValue(c.toRGB, target(x, y).toRGB)
-        }
-        else
-        // handling of pixels to in the face region to be above threshold
+        } else
+          // handling of pixels to in the face region to be above threshold
           Math.log(threshold) - normalizer + 1
       }
 
@@ -376,10 +412,14 @@ object SphericalHarmonicsLightProposals {
     }
 
     // puts the label from the image to the mesh as surface property
-    private def labelAsSurfaceProperty(rps: RenderParameter, label: PixelImage[Int]): MeshSurfaceProperty[Option[Double]] = {
-      TextureExtraction.imageAsSurfaceProperty(modelRenderer.instance(rps).shape, rps.pointShader, label.map(i => i.toDouble))
+    private def labelAsSurfaceProperty(rps: RenderParameter,
+                                       label: PixelImage[Int]
+    ): MeshSurfaceProperty[Option[Double]] = {
+      TextureExtraction.imageAsSurfaceProperty(modelRenderer.instance(rps).shape,
+                                               rps.pointShader,
+                                               label.map(i => i.toDouble)
+      )
     }
-
 
     override def propose(current: (RenderParameter, PixelImage[Int])): (RenderParameter, PixelImage[Int]) = {
 
@@ -388,11 +428,13 @@ object SphericalHarmonicsLightProposals {
 
       val mesh: VertexColorMesh3D = modelRenderer.instance(rps)
       val faceMask = modelRenderer.renderImage(rps)
-      val faceMaskLabel: PixelImage[Int] = faceMask.map(p => if (p.a > 0.01) {
-        1
-      } else {
-        0
-      })
+      val faceMaskLabel: PixelImage[Int] = faceMask.map(p =>
+        if (p.a > 0.01) {
+          1
+        } else {
+          0
+        }
+      )
 
       // RANSAC is an iterative method, those variables are keeping track of the current best estimate
       // the naming of the parameters is motivated by https://en.wikipedia.org/wiki/Random_sample_consensus
@@ -412,7 +454,7 @@ object SphericalHarmonicsLightProposals {
         if (count > percentage) {
           // the full model estimation takes 1000 instead of 30 samples (with standard parameters) but is restricted to estimated mask
           val allPoints = maskedSampler(rps, thresholded)(mesh.shape)
-          val (betterLight, betterCount, betterThresholded) = estimateAndEvaluate(allPoints,rps)
+          val (betterLight, betterCount, betterThresholded) = estimateAndEvaluate(allPoints, rps)
 
           // check if new estimate is better than so far best one
           if (betterCount > soFarBestModelQuality) {
@@ -427,14 +469,13 @@ object SphericalHarmonicsLightProposals {
       val parameters = rps.copy(environmentMap = {
         val points = maskedSampler(rps, label)(mesh.shape)
         shOpt.optimize(rps, points)
-      }
-
-      )
+      })
       (parameters, label)
     }
 
-
-    override def logTransitionProbability(from: (RenderParameter, PixelImage[Int]), to: (RenderParameter, PixelImage[Int])): Double = 0.0
+    override def logTransitionProbability(from: (RenderParameter, PixelImage[Int]),
+                                          to: (RenderParameter, PixelImage[Int])
+    ): Double = 0.0
 
     override def toString = s"RobustSHLightSolverProposalWithLabel($shOpt)"
   }

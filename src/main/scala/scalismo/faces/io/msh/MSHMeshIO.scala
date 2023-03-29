@@ -25,7 +25,9 @@ import scalismo.mesh._
 
 import scala.util.Try
 
-/** provides methods to write and read mesh files in Gravis MSH mesh format (rather use PLY as exchangeable mesh format) */
+/**
+ * provides methods to write and read mesh files in Gravis MSH mesh format (rather use PLY as exchangeable mesh format)
+ */
 object MSHMeshIO {
 
   def read(file: File): Try[MSHMesh] = Try {
@@ -38,7 +40,11 @@ object MSHMeshIO {
     GravisMSHFormat.Writer.writeMSHMesh(mesh, file)
   }
 
-  def write(mesh: TriangleMesh3D, color: Option[MeshSurfaceProperty[RGBA]], normals: Option[MeshSurfaceProperty[EuclideanVector[_3D]]], file: File): Try[Unit] = {
+  def write(mesh: TriangleMesh3D,
+            color: Option[MeshSurfaceProperty[RGBA]],
+            normals: Option[MeshSurfaceProperty[EuclideanVector[_3D]]],
+            file: File
+  ): Try[Unit] = {
     // create a MSH mesh from provided data
     val mshMesh = MSHMesh.fromTriangleMesh3D(mesh, color, normals)
     write(mshMesh, file)

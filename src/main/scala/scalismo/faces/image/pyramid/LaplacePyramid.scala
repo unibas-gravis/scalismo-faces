@@ -23,14 +23,18 @@ import scalismo.faces.image.{InterpolationKernel, PixelImage}
 import scala.reflect.ClassTag
 
 /**
-  * Laplace pyramid implementation.
-  *
-  * @param imagePyramid used to construct the difference images.
-  * @param expand A function that upscales the images.
-  * @tparam A Pixel type of underlying images in the Pyramid.
-  */
-class LaplacePyramid[A: ClassTag](val imagePyramid: ImagePyramid[A], val expand: LaplacePyramid.ExpandFilter[A])(implicit ops: ColorSpaceOperations[A])
-  extends ImagePyramid[A] {
+ * Laplace pyramid implementation.
+ *
+ * @param imagePyramid
+ *   used to construct the difference images.
+ * @param expand
+ *   A function that upscales the images.
+ * @tparam A
+ *   Pixel type of underlying images in the Pyramid.
+ */
+class LaplacePyramid[A: ClassTag](val imagePyramid: ImagePyramid[A], val expand: LaplacePyramid.ExpandFilter[A])(
+  implicit ops: ColorSpaceOperations[A]
+) extends ImagePyramid[A] {
   import PixelImage.implicits._
 
   override val levels: Int = imagePyramid.levels
@@ -41,39 +45,50 @@ class LaplacePyramid[A: ClassTag](val imagePyramid: ImagePyramid[A], val expand:
   }
 
   /**
-    * Reconstructs the original image using the expand function and the addition of images based on the passed ColorSpaceOperations ops.
-    */
-  def reconstruct: PixelImage[A] = level.init.foldRight(level.last)((diff, combined) => expand.filter(combined, diff.width, diff.height) + diff)
+   * Reconstructs the original image using the expand function and the addition of images based on the passed
+   * ColorSpaceOperations ops.
+   */
+  def reconstruct: PixelImage[A] =
+    level.init.foldRight(level.last)((diff, combined) => expand.filter(combined, diff.width, diff.height) + diff)
 }
 
 object LaplacePyramid {
+
   /** Filters an image and considers size of next larger image in an image pyramid. */
-  trait ExpandFilter[A]{
+  trait ExpandFilter[A] {
     def filter(image: PixelImage[A], upperWidth: Int, upperHeight: Int): PixelImage[A]
   }
-  
+
   /**
-    * Standard filter to be used to upscale the image.
-    */
+   * Standard filter to be used to upscale the image.
+   */
   def interpolationKernel = InterpolationKernel.BilinearKernel
 
   /**
-    * Standard method to upscale an image.
-    */
+   * Standard method to upscale an image.
+   */
   def expand[A: ClassTag](implicit ops: ColorSpaceOperations[A]) = new ExpandFilter[A] {
     override def filter(image: PixelImage[A], upperWidth: Int, upperHeight: Int): PixelImage[A] = {
       import ColorSpaceOperations.implicits._
-      ResampleFilter.resampleImage(image.withAccessMode(MirroredPositionFunctional((a:A, b:A)=>2*:a-b)), upperWidth, upperHeight, interpolationKernel)
+      ResampleFilter.resampleImage(image.withAccessMode(MirroredPositionFunctional((a: A, b: A) => 2 *: a - b)),
+                                   upperWidth,
+                                   upperHeight,
+                                   interpolationKernel
+      )
     }
   }
 
   /**
-    * Standard way to construct a LaplacePyramid.
-    *
-    * @param image image to build the laplace pyramid from
-    * @param reductions number of desired levels (-1 gives the maximum allowed levels).
-    */
-  def apply[A: ClassTag](image: PixelImage[A], reductions: Int = -1)(implicit ops: ColorSpaceOperations[A]): LaplacePyramid[A] = {
+   * Standard way to construct a LaplacePyramid.
+   *
+   * @param image
+   *   image to build the laplace pyramid from
+   * @param reductions
+   *   number of desired levels (-1 gives the maximum allowed levels).
+   */
+  def apply[A: ClassTag](image: PixelImage[A], reductions: Int = -1)(implicit
+    ops: ColorSpaceOperations[A]
+  ): LaplacePyramid[A] = {
     val imagePyramid = GaussPyramid(image, reductions)
     new LaplacePyramid[A](imagePyramid, expand)
   }

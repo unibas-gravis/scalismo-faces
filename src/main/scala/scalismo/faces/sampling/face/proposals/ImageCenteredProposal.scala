@@ -19,28 +19,34 @@ package scalismo.faces.sampling.face.proposals
 import scalismo.faces.landmarks.TLMSLandmark2D
 import scalismo.faces.parameters.RenderParameter
 import scalismo.faces.sampling.face.ParametricLandmarksRenderer
-import scalismo.geometry.{Point, EuclideanVector}
+import scalismo.geometry.{EuclideanVector, Point}
 import scalismo.sampling.{ProposalGenerator, TransitionProbability}
 
 /**
-  * proposal which keeps the image location of a selected landmark at a constant position, uses shifts of the principle point to keep the position fixed.
-  * Compensates translation of the wrapped proposal
-  *
-  * @param proposal wrapped proposal, translation introduced by it will be compensated
-  * @param lmId id of landmark to keep fixed (must be known by renderer)
-  * @param lmRenderer parametric landmarks renderer to find image position of landmark
-  */
-class ImageCenteredProposal(val proposal: ProposalGenerator[RenderParameter] with TransitionProbability[RenderParameter],
-                            val lmId: String,
-                            val lmRenderer: ParametricLandmarksRenderer)
-  extends ProposalGenerator[RenderParameter] with TransitionProbability[RenderParameter] {
+ * proposal which keeps the image location of a selected landmark at a constant position, uses shifts of the principle
+ * point to keep the position fixed. Compensates translation of the wrapped proposal
+ *
+ * @param proposal
+ *   wrapped proposal, translation introduced by it will be compensated
+ * @param lmId
+ *   id of landmark to keep fixed (must be known by renderer)
+ * @param lmRenderer
+ *   parametric landmarks renderer to find image position of landmark
+ */
+class ImageCenteredProposal(
+  val proposal: ProposalGenerator[RenderParameter] with TransitionProbability[RenderParameter],
+  val lmId: String,
+  val lmRenderer: ParametricLandmarksRenderer
+) extends ProposalGenerator[RenderParameter]
+    with TransitionProbability[RenderParameter] {
 
   require(lmRenderer.hasLandmarkId(lmId), "landmark needs to be known for an ImageCenteredProposal")
 
   override def propose(current: RenderParameter): RenderParameter = {
     // render the landmark's image location before application of the proposal
     // keep track of the landmark position
-    val lmCurrent: TLMSLandmark2D = lmRenderer.renderLandmark(lmId, current).get // get is safe, checked during construction
+    val lmCurrent: TLMSLandmark2D =
+      lmRenderer.renderLandmark(lmId, current).get // get is safe, checked during construction
 
     // apply proposal
     val propSample = proposal.propose(current)
@@ -89,10 +95,12 @@ class ImageCenteredProposal(val proposal: ProposalGenerator[RenderParameter] wit
 }
 
 object ImageCenteredProposal {
+
   /** construct an ImageCenteredProposal, fails for unknown landmarks */
   def apply(proposal: ProposalGenerator[RenderParameter] with TransitionProbability[RenderParameter],
             lmId: String,
-            lmRenderer: ParametricLandmarksRenderer): Option[ImageCenteredProposal] = {
+            lmRenderer: ParametricLandmarksRenderer
+  ): Option[ImageCenteredProposal] = {
     if (lmRenderer.hasLandmarkId(lmId))
       Some(new ImageCenteredProposal(proposal, lmId, lmRenderer))
     else
@@ -101,7 +109,10 @@ object ImageCenteredProposal {
 
   /** implicit builder for ImageCenteredProposal, attached to other proposal with .centeredAt(lm) */
   object implicits {
-    implicit class RichProposal(proposal: ProposalGenerator[RenderParameter] with TransitionProbability[RenderParameter]) {
+    implicit class RichProposal(
+      proposal: ProposalGenerator[RenderParameter] with TransitionProbability[RenderParameter]
+    ) {
+
       /** create an ImageCenteredProposal wrapped around this proposal, centered at lmId */
       def centeredAt(lmId: String, lmRenderer: ParametricLandmarksRenderer): Option[ImageCenteredProposal] = {
         ImageCenteredProposal(proposal, lmId, lmRenderer)

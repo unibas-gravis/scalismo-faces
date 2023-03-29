@@ -16,20 +16,31 @@
 
 package scalismo.faces.numerics
 
-import breeze.linalg.{DenseMatrix, DenseVector, sum}
-import scalismo.numerics.PivotedCholesky.{AbsoluteTolerance, NumberOfEigenfunctions, RelativeTolerance, StoppingCriterion}
+import breeze.linalg.{sum, DenseMatrix, DenseVector}
+import scalismo.numerics.PivotedCholesky.{
+  AbsoluteTolerance,
+  NumberOfEigenfunctions,
+  RelativeTolerance,
+  StoppingCriterion
+}
 
 import scala.collection.mutable.ArrayBuffer
 
 /** performs a Pivoted Cholesky decomposition */
 object PivotedCholesky {
-  /** get a pivoted Cholesky decomposition of matrix A (calculates strongest components, best for low-rank approximation) */
+
+  /**
+   * get a pivoted Cholesky decomposition of matrix A (calculates strongest components, best for low-rank approximation)
+   */
   def pivotedCholesky(A: DenseMatrix[Double], stoppingCriterion: StoppingCriterion): DenseMatrix[Double] = {
     require(A.rows == A.cols, "works only for square matrices")
     pivotedCholesky((i, j) => A(i, j), A.rows, stoppingCriterion)
   }
 
-  /** get a pivoted Cholesky decomposition of function K(i,j) (calculates strongest components, best for low-rank approximation) */
+  /**
+   * get a pivoted Cholesky decomposition of function K(i,j) (calculates strongest components, best for low-rank
+   * approximation)
+   */
   def pivotedCholesky(K: (Int, Int) => Double, dim: Int, stoppingCriterion: StoppingCriterion): DenseMatrix[Double] = {
     // assume A is positive definite and symmetric
     if (dim == 0) {
@@ -41,12 +52,12 @@ object PivotedCholesky {
 
     // extract diagonal
     val D = DenseVector.zeros[Double](n)
-    for(i <- 0 until n) D(i) = K(i,i)
+    for (i <- 0 until n) D(i) = K(i, i)
     def error(col: Int) = sum(D(col until D.length).map(math.abs))
 
     val (maxCols, errorThreshold) = stoppingCriterion match {
       case RelativeTolerance(relTol) => (dim, error(0) * relTol)
-      case AbsoluteTolerance(eps) => (dim, eps)
+      case AbsoluteTolerance(eps)    => (dim, eps)
       case NumberOfEigenfunctions(i) => (math.min(dim, i), zeroTolerance)
     }
 
@@ -62,14 +73,14 @@ object PivotedCholesky {
 
     // column j
     var col: Int = 0
-    while(col < maxCols && error(col) > errorThreshold) {
+    while (col < maxCols && error(col) > errorThreshold) {
       // find best pivot
       //      val piv = (col until n).map(i => (i, D(P(i)))).maxBy(_._2)._1
       // optimized pivot finder
       var piv = col
       var max = D(P(col))
       var i = col + 1
-      while(i < n) {
+      while (i < n) {
         val v = D(P(i))
         if (v > max) {
           max = v
@@ -85,7 +96,10 @@ object PivotedCholesky {
       // calculate Schur complement, appropriately permuted
       // pivot element: diagonal with -L*L.t correction so far
       val pivEl = D(pCol)
-      require(pivEl > zeroTolerance, s"Pivoted Cholesky factorization only works for positive semi-definite matrices, value too close to zero d=$pivEl")
+      require(
+        pivEl > zeroTolerance,
+        s"Pivoted Cholesky factorization only works for positive semi-definite matrices, value too close to zero d=$pivEl"
+      )
 
       // explicit multiplication: find Schur complement, current column "col"
       val Lcol = new Array[Double](n)
@@ -93,19 +107,19 @@ object PivotedCholesky {
       val diagEl = math.sqrt(math.max(0.0, pivEl))
       Lcol(pCol) = diagEl
       // initialize factor column with elements from A
-      for(row <- col + 1 until n) {
+      for (row <- col + 1 until n) {
         val pRow = P(row)
         Lcol(pRow) += K(pRow, pCol)
       }
       // for each existing factor (column)
       var component = 0
-      while(component < col) {
+      while (component < col) {
         // fast access to current factor
         val Lf = L.col(component)
         val Lfcol = Lf(pCol)
         // fill current column for rows from current column + 1 to end
         var row = col + 1
-        while(row < n) {
+        while (row < n) {
           // find permuted row index
           val pRow = P(row)
           // find Schur complement (A - L*L.t)/diagEl
@@ -120,11 +134,11 @@ object PivotedCholesky {
       // update diagonal elements, remove contribution from this vector of the Cholesky factorization
       // also finalize current L column: division by diagEl is still missing
       var row = col + 1
-      while(row < n) {
+      while (row < n) {
         val pRow = P(row)
-        val l = Lcol(pRow)/diagEl
+        val l = Lcol(pRow) / diagEl
         Lcol(pRow) = l
-        D(pRow) -= l*l
+        D(pRow) -= l * l
         row += 1
       }
       // completed column: append to L
@@ -160,8 +174,8 @@ private class PivotedCholeskyFactor(d: Int, sizeHint: Int = 100) {
   /** convert to DenseMatrix */
   def toDenseMatrix: DenseMatrix[Double] = {
     val m = DenseMatrix.zeros[Double](d, cols.size)
-    for(i <- cols.indices) {
-      m(::,i) := DenseVector(cols(i))
+    for (i <- cols.indices) {
+      m(::, i) := DenseVector(cols(i))
     }
     m
   }

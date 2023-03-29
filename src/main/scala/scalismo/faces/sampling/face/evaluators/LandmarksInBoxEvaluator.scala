@@ -17,24 +17,25 @@
 package scalismo.faces.sampling.face.evaluators
 
 import scalismo.faces.landmarks.TLMSLandmark2D
-import scalismo.geometry.{Point, _2D}
+import scalismo.geometry.{_2D, Point}
 import scalismo.sampling.DistributionEvaluator
 
 /** simple box structure to capture landmark region */
 case class Box(topLeft: Point[_2D], bottomRight: Point[_2D])
 
-/** evaluate position of landmarks with respect to given box
-  * returns 0 if all landmarks are in box, else -infinity */
-class LandmarksInBoxEvaluator(val box: Box) extends DistributionEvaluator[Seq[TLMSLandmark2D]]{
+/**
+ * evaluate position of landmarks with respect to given box returns 0 if all landmarks are in box, else -infinity
+ */
+class LandmarksInBoxEvaluator(val box: Box) extends DistributionEvaluator[Seq[TLMSLandmark2D]] {
 
-  private def isLandmarkInBox(lm:TLMSLandmark2D):Boolean = {
+  private def isLandmarkInBox(lm: TLMSLandmark2D): Boolean = {
     lm.point.x >= box.topLeft.x &&
-      lm.point.x <= box.bottomRight.x &&
-      lm.point.y >= box.topLeft.y &&
-      lm.point.y <= box.bottomRight.y
+    lm.point.x <= box.bottomRight.x &&
+    lm.point.y >= box.topLeft.y &&
+    lm.point.y <= box.bottomRight.y
   }
 
-  override def logValue(landmarks: Seq[TLMSLandmark2D]):Double = {
+  override def logValue(landmarks: Seq[TLMSLandmark2D]): Double = {
     if (landmarks.forall(isLandmarkInBox))
       0
     else

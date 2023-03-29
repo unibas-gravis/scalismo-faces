@@ -28,12 +28,12 @@ trait RenderParameterJSONFormatV4 extends RenderParameterJSONFormatV3 {
   override val version = "V4.0"
 
   // momo instance writer and reader: direct format now
-  override implicit val momoInstanceFormat: RootJsonFormat[MoMoInstance] = new RootJsonFormat[MoMoInstance] {
-    def write(momo: MoMoInstance): JsValue = JsObject(
-      ("shape", momo.shape.toJson),
-      ("color", momo.color.toJson),
-      ("expression", momo.expression.toJson),
-      ("modelURI", momo.modelURI.toJson))
+  implicit override val momoInstanceFormat: RootJsonFormat[MoMoInstance] = new RootJsonFormat[MoMoInstance] {
+    def write(momo: MoMoInstance): JsValue = JsObject(("shape", momo.shape.toJson),
+                                                      ("color", momo.color.toJson),
+                                                      ("expression", momo.expression.toJson),
+                                                      ("modelURI", momo.modelURI.toJson)
+    )
 
     def read(json: JsValue): MoMoInstance = {
       val fields = json.asJsObject(s"expected MoMoInstance object, got: $json").fields
@@ -41,12 +41,13 @@ trait RenderParameterJSONFormatV4 extends RenderParameterJSONFormatV3 {
         shape = fields("shape").convertTo[IndexedSeq[Double]],
         color = fields("color").convertTo[IndexedSeq[Double]],
         expression = fields("expression").convertTo[IndexedSeq[Double]],
-        modelURI = fields("modelURI").convertTo[URI])
+        modelURI = fields("modelURI").convertTo[URI]
+      )
     }
   }
 
   // render parameter reader / writer
-  override implicit val renderParameterFormat: RootJsonFormat[RenderParameter] = new RootJsonFormat[RenderParameter] {
+  implicit override val renderParameterFormat: RootJsonFormat[RenderParameter] = new RootJsonFormat[RenderParameter] {
     override def write(param: RenderParameter): JsValue = JsObject(
       "pose" -> param.pose.toJson,
       "view" -> param.view.toJson,
@@ -62,16 +63,17 @@ trait RenderParameterJSONFormatV4 extends RenderParameterJSONFormatV3 {
     override def read(json: JsValue): RenderParameter = {
       val fields = json.asJsObject(s"expected BetterRenderParameter object, got: $json").fields
       fields("version") match {
-        case JsString(`version`) => RenderParameter(
-          pose = fields("pose").convertTo[Pose],
-          view = fields("view").convertTo[ViewParameter],
-          camera = fields("camera").convertTo[Camera],
-          environmentMap = fields("environmentMap").convertTo[SphericalHarmonicsLight],
-          directionalLight = fields("directionalLight").convertTo[DirectionalLight],
-          momo = fields("momo").convertTo[MoMoInstance],
-          imageSize = fields("imageSize").convertTo[ImageSize],
-          colorTransform = fields("colorTransform").convertTo[ColorTransform]
-        )
+        case JsString(`version`) =>
+          RenderParameter(
+            pose = fields("pose").convertTo[Pose],
+            view = fields("view").convertTo[ViewParameter],
+            camera = fields("camera").convertTo[Camera],
+            environmentMap = fields("environmentMap").convertTo[SphericalHarmonicsLight],
+            directionalLight = fields("directionalLight").convertTo[DirectionalLight],
+            momo = fields("momo").convertTo[MoMoInstance],
+            imageSize = fields("imageSize").convertTo[ImageSize],
+            colorTransform = fields("colorTransform").convertTo[ColorTransform]
+          )
         case v => throw new DeserializationException(s"wrong version number, expected $version, got $v")
       }
     }

@@ -21,7 +21,7 @@ import scalismo.geometry._
 
 /** quaternion to handle rotation */
 case class Quaternion(r: Double, v: EuclideanVector[_3D]) {
-  def norm: Double = math.sqrt(r*r + v.norm2)
+  def norm: Double = math.sqrt(r * r + v.norm2)
 
   def normalize: Quaternion = this / norm
 
@@ -55,7 +55,10 @@ case class Rotation3D(phi: Double, axis: EuclideanVector[_3D]) extends Invertibl
     val c = math.cos(phi)
     val s = math.sin(phi)
     val uu = normalizedAxis.outer(normalizedAxis)
-    val ux = SquareMatrix((0.0, -normalizedAxis.z, normalizedAxis.y), (normalizedAxis.z, 0.0, -normalizedAxis.x), (-normalizedAxis.y, normalizedAxis.x, 0.0))
+    val ux = SquareMatrix((0.0, -normalizedAxis.z, normalizedAxis.y),
+                          (normalizedAxis.z, 0.0, -normalizedAxis.x),
+                          (-normalizedAxis.y, normalizedAxis.x, 0.0)
+    )
     SquareMatrix.eye[_3D] * c + ux * s + uu * (1.0 - c)
   }
 
@@ -79,9 +82,7 @@ case class Rotation3D(phi: Double, axis: EuclideanVector[_3D]) extends Invertibl
   /** rotation matrix expressed in homogenuous coordinates */
   override def matrix4: DenseMatrix[Double] =
     DenseMatrix.vertcat(
-      DenseMatrix.horzcat(
-        rotationMatrix.toBreezeMatrix,
-        DenseMatrix(0.0, 0.0, 0.0)),
+      DenseMatrix.horzcat(rotationMatrix.toBreezeMatrix, DenseMatrix(0.0, 0.0, 0.0)),
       DenseMatrix((0.0, 0.0, 0.0, 1.0))
     )
 
@@ -89,6 +90,7 @@ case class Rotation3D(phi: Double, axis: EuclideanVector[_3D]) extends Invertibl
 }
 
 object Rotation3D {
+
   /** build rotation from quaternion */
   def fromQuaternion(q: Quaternion): Rotation3D = {
     val Quaternion(r: Double, v: EuclideanVector[_3D]) = q

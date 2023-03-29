@@ -25,42 +25,53 @@ import scala.reflect.ClassTag
 object PushPullInterpolation {
 
   /**
-    * Performs push-pull interpolation: reconstruct missing values (mask==0) with average values from upper pyramid levels
-    * mask indicates the validity of values, 1.0 fully valid, 0.0 invalid - values in [0, 1] are ok
-    * @param image image to interpolate / fill
-    * @param mask mask indicating validity of color values in image, mask==1: value is valid - will not be altered, mask==0: invalid - will be replaced by averages of valid values
-    * @param minSize minimal image size of pyramid (defines levels of pyramid)
-    */
-  def fill[A: ClassTag](image: PixelImage[A], mask: PixelImage[Double], minSize: Int = 1)(implicit ops: ColorSpaceOperations[A]): PixelImage[A] = {
+   * Performs push-pull interpolation: reconstruct missing values (mask==0) with average values from upper pyramid
+   * levels mask indicates the validity of values, 1.0 fully valid, 0.0 invalid - values in [0, 1] are ok
+   * @param image
+   *   image to interpolate / fill
+   * @param mask
+   *   mask indicating validity of color values in image, mask==1: value is valid - will not be altered, mask==0:
+   *   invalid - will be replaced by averages of valid values
+   * @param minSize
+   *   minimal image size of pyramid (defines levels of pyramid)
+   */
+  def fill[A: ClassTag](image: PixelImage[A], mask: PixelImage[Double], minSize: Int = 1)(implicit
+    ops: ColorSpaceOperations[A]
+  ): PixelImage[A] = {
     if (image.width > minSize && image.height > minSize) {
       // fill next lower level and expand to this size
       val lowerLevel = fill(shrink2WithMask(image, mask), shrink2(mask), minSize)
       val lowerLevelGrown = lowerLevel.interpolate.sample(image.width, image.height)
       // mix between lowerLevel and this one according to mask
-      PixelImage(image.domain, (x, y) => ops.blend(image(x, y), lowerLevelGrown(x, y), mask(x, y))).withAccessMode(image.accessMode)
+      PixelImage(image.domain, (x, y) => ops.blend(image(x, y), lowerLevelGrown(x, y), mask(x, y)))
+        .withAccessMode(image.accessMode)
     } else { // smallest unit reached
       image
     }
   }
 
-  private def shrink2WithMask[A: ClassTag](image: PixelImage[A], mask: PixelImage[Double])(implicit ops: ColorSpaceOperations[A]): PixelImage[A] = {
+  private def shrink2WithMask[A: ClassTag](image: PixelImage[A], mask: PixelImage[Double])(implicit
+    ops: ColorSpaceOperations[A]
+  ): PixelImage[A] = {
     import ColorSpaceOperations.implicits._
-    val (w, h) = (image.width/2, image.height/2)
+    val (w, h) = (image.width / 2, image.height / 2)
     val imageWithMask = image.zip(mask)
-    val maskedImage = imageWithMask.map{case (color, weight) => color * weight}
+    val maskedImage = imageWithMask.map { case (color, weight) => color * weight }
     val shrink2 = maskedImage.resample(w, h).withAccessMode(Repeat())
     val shrink2Mask = mask.resample(w, h).withAccessMode(Repeat())
     // scale where not every pixel counted
-    shrink2.zip(shrink2Mask)
-      .map{ case (weightedColor, avgWeight) =>
+    shrink2
+      .zip(shrink2Mask)
+      .map { case (weightedColor, avgWeight) =>
         if (avgWeight > 1e-8)
           weightedColor / avgWeight
         else
-          weightedColor}
+          weightedColor
+      }
       .withAccessMode(Repeat())
   }
 
   private def shrink2[A: ClassTag](image: PixelImage[A])(implicit ops: ColorSpaceOperations[A]): PixelImage[A] = {
-    image.resample(image.width/2, image.height/2).withAccessMode(Repeat())
+    image.resample(image.width / 2, image.height / 2).withAccessMode(Repeat())
   }
 }

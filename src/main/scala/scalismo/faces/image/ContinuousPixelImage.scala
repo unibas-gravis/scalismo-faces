@@ -24,37 +24,46 @@ trait ContinuousPixelImage[Pixel] extends ((Double, Double) => Pixel) {
   val height: Double
 
   /**
-    * Image value at specified position (x, y) - this is not the pixel position but the coordinates of a point!
-    * The center of pixel (0, 0) lies at (0.5, 0.5) in the coordinate system (cell-centered)
-    * @param x x coordinate (0.5 <-> 0 in discrete case)
-    * @param y y coordinate (0.5 <-> 0 in discrete case)
-    */
+   * Image value at specified position (x, y) - this is not the pixel position but the coordinates of a point! The
+   * center of pixel (0, 0) lies at (0.5, 0.5) in the coordinate system (cell-centered)
+   * @param x
+   *   x coordinate (0.5 <-> 0 in discrete case)
+   * @param y
+   *   y coordinate (0.5 <-> 0 in discrete case)
+   */
   override def apply(x: Double, y: Double): Pixel
 
   /**
-    * Access the image value at the "continuous" pixel position, (0.0, 0.0) corresponds to pixel at (0, 0)
-    * @param x continuous pixel coordinate (0.0 <-> 0 in discrete case)
-    * @param y continuous pixel coordinate (0.0 <-> 0 in discrete case)
-    */
+   * Access the image value at the "continuous" pixel position, (0.0, 0.0) corresponds to pixel at (0, 0)
+   * @param x
+   *   continuous pixel coordinate (0.0 <-> 0 in discrete case)
+   * @param y
+   *   continuous pixel coordinate (0.0 <-> 0 in discrete case)
+   */
   def atContinuousPixel(x: Double, y: Double): Pixel = this(x + 0.5, y + 0.5)
 
   /**
    * sample the continuous image to produce a discrete PixelImage
    *
-   * @param w Number of samples along x axis (width of image)
-   * @param h Number of samples along y axis (height of image)
+   * @param w
+   *   Number of samples along x axis (width of image)
+   * @param h
+   *   Number of samples along y axis (height of image)
    */
   def sample(w: Int, h: Int)(implicit tag: ClassTag[Pixel]): PixelImage[Pixel] = {
     require(w > 0.0 && h > 0.0)
     // scale factor
     val scaleW = width / w
     val scaleH = height / h
-    PixelImage(w, h, (i, j) => {
-      // center point for access
-      val x = i + 0.5
-      val y = j + 0.5
-      this(x * scaleW, y * scaleH)
-    })
+    PixelImage(w,
+               h,
+               (i, j) => {
+                 // center point for access
+                 val x = i + 0.5
+                 val y = j + 0.5
+                 this(x * scaleW, y * scaleH)
+               }
+    )
   }
 
   /** apply function to each pixel */
@@ -65,9 +74,7 @@ trait ContinuousPixelImage[Pixel] extends ((Double, Double) => Pixel) {
 }
 
 /** function image with continuous access */
-case class Function2DImage[A](override val width: Double,
-  override val height: Double,
-  f: (Double, Double) => A)
+case class Function2DImage[A](override val width: Double, override val height: Double, f: (Double, Double) => A)
     extends ContinuousPixelImage[A] {
 
   override def apply(x: Double, y: Double): A = f(x, y)

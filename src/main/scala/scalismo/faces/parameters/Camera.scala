@@ -25,7 +25,8 @@ case class Camera(focalLength: Double,
                   sensorSize: EuclideanVector[_2D],
                   near: Double,
                   far: Double,
-                  orthographic: Boolean) {
+                  orthographic: Boolean
+) {
 
   require(focalLength > 0.0, "focal length must be positive")
   require(sensorSize.x > 0.0 && sensorSize.y > 0.0, "sensor size must be positive")
@@ -34,9 +35,13 @@ case class Camera(focalLength: Double,
   /** projection of this camera, ignores principalPoint, no offset (wrong units, PP is in pixels!) */
   def projection: FrustumProjection with Transform4x4 = {
     if (orthographic)
-      FrustumOrthographicProjection(Frustum.fromFocalWithSensor(focalLength, sensorSize, near, far).withCenter(principalPoint))
+      FrustumOrthographicProjection(
+        Frustum.fromFocalWithSensor(focalLength, sensorSize, near, far).withCenter(principalPoint)
+      )
     else
-      FrustumPinholeProjection(Frustum.fromFocalWithSensor(focalLength, sensorSize, near, far).withCenter(principalPoint))
+      FrustumPinholeProjection(
+        Frustum.fromFocalWithSensor(focalLength, sensorSize, near, far).withCenter(principalPoint)
+      )
   }
 
   /** viewing frustum of this scene */
@@ -46,5 +51,6 @@ case class Camera(focalLength: Double,
 object Camera {
   val sensor35mm = EuclideanVector(36, 24)
 
-  def for35mmFilm(focalLength: Double) = Camera(focalLength, Point2D.origin, sensor35mm, orthographic = false, near = 10, far = 1000e3)
+  def for35mmFilm(focalLength: Double) =
+    Camera(focalLength, Point2D.origin, sensor35mm, orthographic = false, near = 10, far = 1000e3)
 }

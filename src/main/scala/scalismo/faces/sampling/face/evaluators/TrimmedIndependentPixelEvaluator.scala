@@ -24,21 +24,29 @@ import scalismo.sampling.evaluators.PairEvaluator
 import scala.collection.mutable.ArrayBuffer
 
 /**
-  * Ignore 1-alpha pixels with small likelihood.
-  * Evaluate only on alpha-fraction with the largest likelihood.
-  *
-  * visualizationCallback: gives you the log likelihood values per pixel. Could be used to visualze the values per pixel.
-  */
-class TrimmedIndependentPixelEvaluator(val pixelEvaluator: PairEvaluator[RGB], val bgEvaluator: DistributionEvaluator[RGB], val alpha: Double, visualizationCallback: Option[PixelImage[Option[Double]] => Unit])
-  extends PairEvaluator[PixelImage[RGBA]] {
+ * Ignore 1-alpha pixels with small likelihood. Evaluate only on alpha-fraction with the largest likelihood.
+ *
+ * visualizationCallback: gives you the log likelihood values per pixel. Could be used to visualze the values per pixel.
+ */
+class TrimmedIndependentPixelEvaluator(val pixelEvaluator: PairEvaluator[RGB],
+                                       val bgEvaluator: DistributionEvaluator[RGB],
+                                       val alpha: Double,
+                                       visualizationCallback: Option[PixelImage[Option[Double]] => Unit]
+) extends PairEvaluator[PixelImage[RGBA]] {
 
   private val alphaClamped = math.min(math.max(0, alpha), 1)
 
   /** probability/density value for a pair (log value). */
   def logValue(reference: PixelImage[RGBA], sample: PixelImage[RGBA]): Double = {
-    require(sample.domain == reference.domain, "TrimmedIndependentPixelEvaluator: images must be comparable! (different sizes)")
+    require(sample.domain == reference.domain,
+            "TrimmedIndependentPixelEvaluator: images must be comparable! (different sizes)"
+    )
+
     /** Visualisation. */
-    def visualize(values: IndexedSeq[(Double, Int, Int)], domain: PixelImageDomain, callBack: PixelImage[Option[Double]] => Unit): Unit = {
+    def visualize(values: IndexedSeq[(Double, Int, Int)],
+                  domain: PixelImageDomain,
+                  callBack: PixelImage[Option[Double]] => Unit
+    ): Unit = {
       val buffer = ImageBuffer.makeConstantBuffer[Option[Double]](domain.width, domain.height, None)
       values.foreach { case (lh: Double, x: Int, y: Int) => buffer(x, y) = Some(lh) }
       callBack(buffer.toImage)
@@ -64,7 +72,7 @@ class TrimmedIndependentPixelEvaluator(val pixelEvaluator: PairEvaluator[RGB], v
     }
     val nCount = math.floor(values.length.toFloat * alphaClamped).toInt
     if (transparencySum > 0 && nCount > 0) {
-      //was something rendered on the image?
+      // was something rendered on the image?
       val data = values.toIndexedSeq.sortBy { case (d: Double, x: Int, y: Int) => d }
       var sumTrimmed: Double = 0.0
       for (i <- 0 until nCount) {
@@ -92,8 +100,13 @@ class TrimmedIndependentPixelEvaluator(val pixelEvaluator: PairEvaluator[RGB], v
 }
 
 object TrimmedIndependentPixelEvaluator {
-  def apply(pixelEvaluator: PairEvaluator[RGB], bgEvaluator: DistributionEvaluator[RGB], alpha: Double) = new TrimmedIndependentPixelEvaluator(pixelEvaluator, bgEvaluator, alpha, None)
+  def apply(pixelEvaluator: PairEvaluator[RGB], bgEvaluator: DistributionEvaluator[RGB], alpha: Double) =
+    new TrimmedIndependentPixelEvaluator(pixelEvaluator, bgEvaluator, alpha, None)
 
-  def apply(pixelEvaluator: PairEvaluator[RGB], bgEvaluator: DistributionEvaluator[RGB], alpha: Double, visualisationCallback: PixelImage[Option[Double]] => Unit) = new TrimmedIndependentPixelEvaluator(pixelEvaluator, bgEvaluator, alpha, Some(visualisationCallback))
+  def apply(pixelEvaluator: PairEvaluator[RGB],
+            bgEvaluator: DistributionEvaluator[RGB],
+            alpha: Double,
+            visualisationCallback: PixelImage[Option[Double]] => Unit
+  ) = new TrimmedIndependentPixelEvaluator(pixelEvaluator, bgEvaluator, alpha, Some(visualisationCallback))
 
 }

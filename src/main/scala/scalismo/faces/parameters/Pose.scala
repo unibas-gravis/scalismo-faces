@@ -17,14 +17,10 @@
 package scalismo.faces.parameters
 
 import scalismo.faces.render._
-import scalismo.geometry.{EuclideanVector, _3D}
+import scalismo.geometry.{_3D, EuclideanVector}
 
 /** face pose parameters */
-case class Pose(scaling: Double,
-                translation: EuclideanVector[_3D],
-                roll: Double,
-                yaw: Double,
-                pitch: Double) {
+case class Pose(scaling: Double, translation: EuclideanVector[_3D], roll: Double, yaw: Double, pitch: Double) {
 
   /** change scaling */
   def withScaling(scaling: Double): Pose = copy(scaling = scaling)
@@ -44,7 +40,10 @@ case class Pose(scaling: Double,
   /** reset scaling */
   def noScaling: Pose = copy(scaling = 1.0)
 
-  /** transform: usually the model transform known from computer graphics which transforms the object to world coordinates */
+  /**
+   * transform: usually the model transform known from computer graphics which transforms the object to world
+   * coordinates
+   */
   def transform: Affine3D = RenderTransforms.modelTransform(translation, scaling, pitch, yaw, roll)
 
   def rotation: Rotation3D = Rotation3D.fromEulerXYZ(pitch, yaw, roll)
@@ -53,8 +52,8 @@ case class Pose(scaling: Double,
     val scComp = scaling * inner.scaling
 
     val rot: Rotation3D = Rotation3D.fromEulerXYZ(pitch, yaw, roll)
-    val (scPitch, scYaw, scRoll) = Rotation3D.decomposeRotationXYZ(
-      rot compose Rotation3D.fromEulerXYZ(inner.pitch, inner.yaw, inner.roll))
+    val (scPitch, scYaw, scRoll) =
+      Rotation3D.decomposeRotationXYZ(rot compose Rotation3D.fromEulerXYZ(inner.pitch, inner.yaw, inner.roll))
 
     val tComp = translation + rot(scaling *: inner.translation)
 

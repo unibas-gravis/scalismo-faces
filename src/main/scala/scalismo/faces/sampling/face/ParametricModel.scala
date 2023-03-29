@@ -22,7 +22,8 @@ import scalismo.faces.parameters.{MoMoInstance, RenderParameter}
 import scalismo.mesh.VertexColorMesh3D
 
 /** generates a model instance in original model coordinates */
-class ParametricModel(model: MoMo ) {
+class ParametricModel(model: MoMo) {
+
   /** pad a coefficient vector if it is too short, basis with single vector */
   private def padCoefficients(coefficients: DenseVector[Double], rank: Int): DenseVector[Double] = {
     require(coefficients.length <= rank, "too many coefficients for model")

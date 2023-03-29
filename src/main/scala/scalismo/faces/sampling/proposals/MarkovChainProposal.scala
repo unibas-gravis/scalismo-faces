@@ -19,17 +19,16 @@ import scalismo.sampling.{ProposalGenerator, SymmetricTransitionRatio}
 import scalismo.utils.Random
 import scalismo.utils.Random.implicits._
 
-
-
-class MarkovChainProposal[A](val chain: Iterator[A], val numSamples : Int) (implicit rnd: Random)
-  extends ProposalGenerator[A] with SymmetricTransitionRatio[A] {
+class MarkovChainProposal[A](val chain: Iterator[A], val numSamples: Int)(implicit rnd: Random)
+    extends ProposalGenerator[A]
+    with SymmetricTransitionRatio[A] {
 
   override def propose(current: A): A = {
-    chain.drop(numSamples-1).next()
+    chain.drop(numSamples - 1).next()
   }
 
 }
 
 object MarkovChainProposal {
-  def apply[A](chain: Iterator[A], numSamples: Int) = new MarkovChainProposal[A](chain,numSamples)
+  def apply[A](chain: Iterator[A], numSamples: Int) = new MarkovChainProposal[A](chain, numSamples)
 }

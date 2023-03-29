@@ -29,7 +29,7 @@ import scalismo.utils.Memoize
 
 /** parametric renderer for a Morphable Model, implements all useful Parameteric*Renderer interfaces */
 class MoMoRenderer(val model: MoMo, val clearColor: RGBA)
-  extends ParametricModel(model)
+    extends ParametricModel(model)
     with ParametricLandmarksRenderer
     with ParametricMaskRenderer
     with ParametricMeshRenderer
@@ -38,13 +38,13 @@ class MoMoRenderer(val model: MoMo, val clearColor: RGBA)
   /** render the image described by the parameters */
   override def renderImage(parameters: RenderParameter): PixelImage[RGBA] = {
     val inst = instance(parameters)
-    ParametricRenderer.renderParameterVertexColorMesh(
-      parameters,
-      inst,
-      clearColor)
+    ParametricRenderer.renderParameterVertexColorMesh(parameters, inst, clearColor)
   }
 
-  /** render the mesh described by the parameters, draws instance from model and places properly in the world (world coordinates) */
+  /**
+   * render the mesh described by the parameters, draws instance from model and places properly in the world (world
+   * coordinates)
+   */
   override def renderMesh(parameters: RenderParameter): VertexColorMesh3D = {
     val t = parameters.pose.transform
     val mesh = instance(parameters)
@@ -67,10 +67,8 @@ class MoMoRenderer(val model: MoMo, val clearColor: RGBA)
   /** checks the availability of a named landmark */
   override def hasLandmarkId(lmId: String): Boolean = model.landmarkPointId(lmId).isDefined
 
-
   /** get all available landmarks */
   override def allLandmarkIds: IndexedSeq[String] = model.landmarks.keySet.toIndexedSeq
-
 
   /** render a mask defined on the model to image space */
   override def renderMask(parameters: RenderParameter, mask: MeshSurfaceProperty[Int]): PixelImage[Int] = {
@@ -88,10 +86,13 @@ class MoMoRenderer(val model: MoMo, val clearColor: RGBA)
     private val instancer = Memoize(super.instanceFromCoefficients _, cacheSize)
 
     override def renderImage(parameters: RenderParameter): PixelImage[RGBA] = imageRenderer(parameters)
-    override def renderLandmark(lmId: String, parameter: RenderParameter): Option[TLMSLandmark2D] = lmRenderer((lmId, parameter))
+    override def renderLandmark(lmId: String, parameter: RenderParameter): Option[TLMSLandmark2D] = lmRenderer(
+      (lmId, parameter)
+    )
     override def renderMesh(parameters: RenderParameter): VertexColorMesh3D = meshRenderer(parameters)
     override def instance(parameters: RenderParameter): VertexColorMesh3D = instancer(parameters.momo)
-    override def renderMask(parameters: RenderParameter, mask: MeshSurfaceProperty[Int]): PixelImage[Int] = maskRenderer((parameters, mask))
+    override def renderMask(parameters: RenderParameter, mask: MeshSurfaceProperty[Int]): PixelImage[Int] =
+      maskRenderer((parameters, mask))
   }
 }
 

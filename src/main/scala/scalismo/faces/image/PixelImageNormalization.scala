@@ -18,17 +18,16 @@ package scalismo.faces.image
 
 import scalismo.color.RGB
 
-
 object PixelImageNormalization {
 
   /** Normalizes the image such that its values are on the interval [lower, upper]. */
   def normalizeDoubleImageToRange(image: PixelImage[Double], lower: Double, upper: Double): PixelImage[Double] = {
     val min = image.values.min
     val max = image.values.max
-    if(min == max){ //if we would divide with 0
-      val avg = (upper+lower)/2
-      image.map(_ => avg) //return mean of [lower,upper]
-    }else {
+    if (min == max) { // if we would divide with 0
+      val avg = (upper + lower) / 2
+      image.map(_ => avg) // return mean of [lower,upper]
+    } else {
       val Z = 1.0 / (max - min) * (upper - lower)
       def normalizer(x: Double) = lower + (x - min) * Z
       image.map(normalizer)
@@ -48,8 +47,10 @@ object PixelImageNormalization {
     PixelImage(img.width, img.height, (x, y) => RGB(r(x, y), g(x, y), b(x, y)))
   }
 
-  /** Expand value range without saturating a channel.
-    * Normalizes the image such that the smallest value over all channels is 0 and the largest over all channels is 1. */
+  /**
+   * Expand value range without saturating a channel. Normalizes the image such that the smallest value over all
+   * channels is 0 and the largest over all channels is 1.
+   */
   def normalizedRGB(img: PixelImage[RGB]): PixelImage[RGB] = {
     def minmax(img: PixelImage[Double]): (Double, Double) = {
       val arr = img.toArray
@@ -73,13 +74,15 @@ object PixelImageNormalization {
     PixelImage(img.width, img.height, (x, y) => RGB(r(x, y), g(x, y), b(x, y)))
   }
 
-  /** Z-Score: Standardizes image to zero mean and unit variance.
-    * @return mean, standard deviation, standarizedimage
-    */
+  /**
+   * Z-Score: Standardizes image to zero mean and unit variance.
+   * @return
+   *   mean, standard deviation, standarizedimage
+   */
   def standardizeImage(img: PixelImage[Double]): (Double, Double, PixelImage[Double]) = {
     val mean = PixelImageOperations.mean(img)
-    val meanSq = PixelImageOperations.mean(img.map(px=>px*px))
-    val std = math.sqrt(meanSq - mean*mean)
-    (mean, std, img.map(px => (px - mean)/std))
+    val meanSq = PixelImageOperations.mean(img.map(px => px * px))
+    val std = math.sqrt(meanSq - mean * mean)
+    (mean, std, img.map(px => (px - mean) / std))
   }
 }

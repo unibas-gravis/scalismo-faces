@@ -54,12 +54,15 @@ object ResourceManagement {
   }
 
   /** using block: let-like structure with possible cleanup function, aware of Try */
-  def usingTry[T <: Closeable, R](obj: => Try[T], after: T => Unit = { (t: T) => t.close() })(block: T => Try[R]): Try[R] = {
-    val o: Try[T] = try {
-      obj
-    } catch {
-      case NonFatal(e) => Failure(e)
-    }
+  def usingTry[T <: Closeable, R](obj: => Try[T], after: T => Unit = { (t: T) => t.close() })(
+    block: T => Try[R]
+  ): Try[R] = {
+    val o: Try[T] =
+      try {
+        obj
+      } catch {
+        case NonFatal(e) => Failure(e)
+      }
     o.flatMap { res =>
       try {
         block(res)
@@ -70,12 +73,15 @@ object ResourceManagement {
   }
 
   /** using block: let-like structure with possible cleanup function, aware of Option */
-  def usingOption[T <: Closeable, R](obj: => Option[T], after: T => Unit = { (t: T) => t.close() })(block: T => Option[R]): Option[R] = {
-    val o: Option[T] = try {
-      obj
-    } catch {
-      case NonFatal(e) => None
-    }
+  def usingOption[T <: Closeable, R](obj: => Option[T], after: T => Unit = { (t: T) => t.close() })(
+    block: T => Option[R]
+  ): Option[R] = {
+    val o: Option[T] =
+      try {
+        obj
+      } catch {
+        case NonFatal(e) => None
+      }
     o.flatMap { res =>
       try {
         block(res)

@@ -21,7 +21,8 @@ import scalismo.faces.image.PixelImage
 import scala.reflect.ClassTag
 
 /** isotropic Gaussian blur filter, uses fast separable convolution */
-class IsotropicGaussianFilter[A: ClassTag](sigma: Double, windowSize: Int)(implicit ops: ColorSpaceOperations[A]) extends ImageFilter[A, A] {
+class IsotropicGaussianFilter[A: ClassTag](sigma: Double, windowSize: Int)(implicit ops: ColorSpaceOperations[A])
+    extends ImageFilter[A, A] {
 
   val s22: Double = 2.0 * sigma * sigma
   val N: Double = 1.0 / (math.Pi * s22)
@@ -30,12 +31,12 @@ class IsotropicGaussianFilter[A: ClassTag](sigma: Double, windowSize: Int)(impli
   val m: Int = windowSize / 2
   def d2: (Double) => Double = (x: Double) => math.pow(x - m, 2.0)
 
-  val Z: Double = (0 until windowSize).map{ x => gauss(d2(x))}.sum
+  val Z: Double = (0 until windowSize).map { x => gauss(d2(x)) }.sum
 
   val kernel: PixelImage[Double] = PixelImage[Double](
     windowSize,
     1,
-    (x: Int, _: Int) => {gauss(d2(x)) / Z}
+    (x: Int, _: Int) => { gauss(d2(x)) / Z }
   )
 
   val gaussFilter: SeparableCorrelationFilter[A] = SeparableCorrelationFilter[A](kernel, kernel.transposed)
@@ -50,7 +51,9 @@ object IsotropicGaussianFilter {
     new IsotropicGaussianFilter[A](sigma, windowSize)
   }
 
-  def apply[A: ClassTag](sigma: Double, windowSize: Int)(implicit ops: ColorSpaceOperations[A]): IsotropicGaussianFilter[A] = {
+  def apply[A: ClassTag](sigma: Double, windowSize: Int)(implicit
+    ops: ColorSpaceOperations[A]
+  ): IsotropicGaussianFilter[A] = {
     new IsotropicGaussianFilter[A](sigma, windowSize)
   }
 }

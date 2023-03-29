@@ -20,17 +20,23 @@ import scalismo.faces.image.{PixelImage, PixelImageOperations}
 
 /** Solve Poisson's equation in an image domain with (arbitrary) Dirichlet boundary conditions */
 trait ImageDomainPoissonSolver[A] {
+
   /**
    * solve Poisson's equation
    *
-   * @param image initial and boundary values, fixed values of f
-   * @param mask  marks domain where solution is required, (true: fill-in trough equation (with f), false: keep fixed (boundary value))
-   * @param rhs   right-hand side of Poisson equation
+   * @param image
+   *   initial and boundary values, fixed values of f
+   * @param mask
+   *   marks domain where solution is required, (true: fill-in trough equation (with f), false: keep fixed (boundary
+   *   value))
+   * @param rhs
+   *   right-hand side of Poisson equation
    */
   def solvePoisson(image: PixelImage[A], mask: PixelImage[Boolean], rhs: PixelImage[A]): PixelImage[A]
 
   /** solve Poisson's equation in bounding box of mask */
-  def apply(image: PixelImage[A], mask: PixelImage[Boolean], rhs: PixelImage[A]): PixelImage[A] = solvePoissonInBoundingBox(image, mask, rhs)
+  def apply(image: PixelImage[A], mask: PixelImage[Boolean], rhs: PixelImage[A]): PixelImage[A] =
+    solvePoissonInBoundingBox(image, mask, rhs)
 
   /** solve Poisson's equation in bounding box of mask */
   def solvePoissonInBoundingBox(image: PixelImage[A], mask: PixelImage[Boolean], rhs: PixelImage[A]): PixelImage[A] = {

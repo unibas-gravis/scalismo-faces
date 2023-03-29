@@ -37,4 +37,3 @@ case class ImageSize(width: Int, height: Int) {
     height = (height * scale).toInt
   )
 }
-

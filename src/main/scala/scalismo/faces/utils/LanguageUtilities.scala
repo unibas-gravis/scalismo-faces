@@ -19,6 +19,7 @@ package scalismo.faces.utils
 import scala.annotation.tailrec
 
 object LanguageUtilities {
+
   /** time an operation, print result with message */
   def time[@specialized A](msg: String)(f: => A): A = {
     val (v, time) = timed(f)

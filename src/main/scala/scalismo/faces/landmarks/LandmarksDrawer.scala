@@ -23,8 +23,13 @@ import scalismo.color.RGBA
 import scalismo.faces.image.{BufferedImageConverter, PixelImage}
 
 object LandmarksDrawer {
+
   /** draw landmarks into image */
-  def drawLandmarks(image: PixelImage[RGBA], landmarks: Iterable[TLMSLandmark2D], color: RGBA, size: Int): PixelImage[RGBA] = {
+  def drawLandmarks(image: PixelImage[RGBA],
+                    landmarks: Iterable[TLMSLandmark2D],
+                    color: RGBA,
+                    size: Int
+  ): PixelImage[RGBA] = {
     val converter = implicitly[BufferedImageConverter[RGBA]]
     val bufImg: BufferedImage = converter.toBufferedImage(image)
     val g2d = bufImg.createGraphics()

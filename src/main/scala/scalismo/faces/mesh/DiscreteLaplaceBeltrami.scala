@@ -25,12 +25,13 @@ object DiscreteLaplaceBeltrami {
   type WeightFunction = (PointId, PointId) => Double
 
   /**
-    * Constructs a Laplace-Beltrami matrix from a given weight function where its rows and columns correspond to the PointIds of the given triangulation.
-    *
-    * @param triangulation
-    * @param weightFun
-    * @return
-    */
+   * Constructs a Laplace-Beltrami matrix from a given weight function where its rows and columns correspond to the
+   * PointIds of the given triangulation.
+   *
+   * @param triangulation
+   * @param weightFun
+   * @return
+   */
   def laplaceBeltramiMatrix(triangulation: TriangleList, weightFun: WeightFunction): CSCMatrix[Double] = {
     val n = triangulation.pointIds.length
     val builderW = new CSCMatrix.Builder[Double](n, n)
@@ -49,31 +50,34 @@ object DiscreteLaplaceBeltrami {
   }
 
   /**
-    * Constructs a cotangent weight function. w_ij = 0.5 * ( cot(alpha_ij) + cot(beta_ij) )
-    *
-    * Cotangent weight between two vertices x_i and x_j in a triangulated mesh is the sum of the cotangent of opposing angles alpha_1 and alpha_2.
-    * Consider the two triangles:
-    * .-------------------. x_i
-    * - alpha_ij        -  -
-    * -             -     -
-    * -          -        -
-    * -       -           -
-    * -    -              -
-    * - -          beta_ij -
-    * x_j .-------------------.
-    *
-    * @param ref : Mesh used to calculate cotangent weights.
-    * @return DenseMatrix[Double]
-    */
+   * Constructs a cotangent weight function. w_ij = 0.5 * ( cot(alpha_ij) + cot(beta_ij) )
+   *
+   * Cotangent weight between two vertices x_i and x_j in a triangulated mesh is the sum of the cotangent of opposing
+   * angles alpha_1 and alpha_2. Consider the two triangles: .-------------------. x_i
+   *   - alpha_ij - -
+   *   - \- -
+   *   - \- -
+   *   - \- -
+   *   - \- -
+   *   - \- beta_ij - x_j .-------------------.
+   *
+   * @param ref
+   *   : Mesh used to calculate cotangent weights.
+   * @return
+   *   DenseMatrix[Double]
+   */
   def cotangentWeight(ref: TriangleMesh3D): WeightFunction = {
 
-    /** All three cotangent values of a triangle are stored and added to possibly already existing values.
-      * This way both cotan values are added.
-      *
-      * @return Rows and columns correspond to PointIds of the mesh. */
+    /**
+     * All three cotangent values of a triangle are stored and added to possibly already existing values. This way both
+     * cotan values are added.
+     *
+     * @return
+     *   Rows and columns correspond to PointIds of the mesh.
+     */
     def cotangentWeightMatrix(ref: TriangleMesh3D): CSCMatrix[Double] = {
       val n: Int = ref.pointSet.numberOfPoints
-      //calculate all the cotangent weights
+      // calculate all the cotangent weights
       val builderCOT = new CSCMatrix.Builder[Double](n, n)
       ref.triangulation.triangleIds.foreach(tid => {
         val tr = ref.triangulation.triangle(tid)
@@ -89,7 +93,10 @@ object DiscreteLaplaceBeltrami {
         val cotA = 1.0 / math.tan(alpha)
         val cotB = 1.0 / math.tan(beta)
         val cotC = 1.0 / math.tan(gamma)
-        builderCOT.add(tr.ptId1.id, tr.ptId2.id, cotC) //values are incremented if we add to same position in the matrix where we already have a value
+        builderCOT.add(tr.ptId1.id,
+                       tr.ptId2.id,
+                       cotC
+        ) // values are incremented if we add to same position in the matrix where we already have a value
         builderCOT.add(tr.ptId2.id, tr.ptId3.id, cotA)
         builderCOT.add(tr.ptId3.id, tr.ptId1.id, cotB)
       })
@@ -102,9 +109,11 @@ object DiscreteLaplaceBeltrami {
 
   def unitWeight(i: PointId, j: PointId): Double = 1.0
 
-  /** Constructs a weight function which is the heat kernel value k(x1,x2) = exp(- ||x1-x2||^2 / diffusionDistance^2 ) */
-  def heatKernelWeights(ref: TriangleMesh3D, diffusionDistance: Double): WeightFunction = {
-    (i: PointId, j: PointId) => {
+  /**
+   * Constructs a weight function which is the heat kernel value k(x1,x2) = exp(- ||x1-x2||^2 / diffusionDistance^2 )
+   */
+  def heatKernelWeights(ref: TriangleMesh3D, diffusionDistance: Double): WeightFunction = { (i: PointId, j: PointId) =>
+    {
       val dist = (ref.position.atPoint(i) - ref.position.atPoint(j)).norm2
       math.exp(-dist / (diffusionDistance * diffusionDistance))
     }

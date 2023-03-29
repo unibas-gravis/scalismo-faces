@@ -20,7 +20,9 @@ import scala.collection.parallel.immutable.ParVector
 import scala.reflect.ClassTag
 
 /** Image buffer for mutable creation of an image, use toImage when finished to convert to a standard immutable image */
-class ImageBuffer[@specialized(Int, Float, Double) Pixel: ClassTag] (val domain: PixelImageDomain, private var data: Array[Pixel]) {
+class ImageBuffer[@specialized(Int, Float, Double) Pixel: ClassTag](val domain: PixelImageDomain,
+                                                                    private var data: Array[Pixel]
+) {
   def width: Int = domain.width
   def height: Int = domain.height
 
@@ -42,24 +44,26 @@ class ImageBuffer[@specialized(Int, Float, Double) Pixel: ClassTag] (val domain:
   /// read value at Index
   def apply(x: Int, y: Int): Pixel = data(domain.index(x, y))
 
-  private def rawUpdate(x: Int, y: Int, value: Pixel): Unit  = {
+  private def rawUpdate(x: Int, y: Int, value: Pixel): Unit = {
     data(domain.index(x, y)) = value
   }
 
   /// Set pixel value for index
-  def update(x: Int, y: Int, value: Pixel): Unit = copyOnWrite(rawUpdate(x,y,value))
+  def update(x: Int, y: Int, value: Pixel): Unit = copyOnWrite(rawUpdate(x, y, value))
 
-  private def rawTransform(f: Pixel => Pixel): Unit =(0 until domain.length).foreach(i => data(i) = f(data(i)))
+  private def rawTransform(f: Pixel => Pixel): Unit = (0 until domain.length).foreach(i => data(i) = f(data(i)))
 
   /// in-place transformation
   def transform(f: Pixel => Pixel): Unit = copyOnWrite(rawTransform(f))
 
-  private def rawTransformWithIndex(f: (Int, Int, Pixel) => Pixel): Unit = (0 until domain.length).foreach(i => data(i) = f(domain.x(i), domain.y(i), data(i)))
+  private def rawTransformWithIndex(f: (Int, Int, Pixel) => Pixel): Unit =
+    (0 until domain.length).foreach(i => data(i) = f(domain.x(i), domain.y(i), data(i)))
 
   /// in-place transformation
   def transformWithIndex(f: (Int, Int, Pixel) => Pixel): Unit = copyOnWrite(rawTransformWithIndex(f))
 
-  private def rawTransformWithIndexParallel(f: (Int, Int, Pixel) => Pixel): Unit = ParVector.range(0, domain.length).foreach(i => data(i) = f(domain.x(i), domain.y(i), data(i)))
+  private def rawTransformWithIndexParallel(f: (Int, Int, Pixel) => Pixel): Unit =
+    ParVector.range(0, domain.length).foreach(i => data(i) = f(domain.x(i), domain.y(i), data(i)))
 
   /// in-place transformation, parallel execution
   def transformWithIndexParallel(f: (Int, Int, Pixel) => Pixel): Unit = copyOnWrite(rawTransformWithIndexParallel(f))
@@ -77,7 +81,9 @@ class ImageBuffer[@specialized(Int, Float, Double) Pixel: ClassTag] (val domain:
     PixelImage(domain, data)
   }
 
-  /** *unsafe* make a read-only copy which is an unsafe view of this buffer, changes with every mutable operation! */
+  /**
+   * *unsafe* make a read-only copy which is an unsafe view of this buffer, changes with every mutable operation!
+   */
   def toUnsafeImage: PixelImage[Pixel] = {
     PixelImage(domain, data)
   }
@@ -85,11 +91,16 @@ class ImageBuffer[@specialized(Int, Float, Double) Pixel: ClassTag] (val domain:
 
 object ImageBuffer {
 
-  def apply[@specialized(Int, Float, Double) Pixel: ClassTag](width: Int, height: Int, data: Array[Pixel]): ImageBuffer[Pixel] = {
+  def apply[@specialized(Int, Float, Double) Pixel: ClassTag](width: Int,
+                                                              height: Int,
+                                                              data: Array[Pixel]
+  ): ImageBuffer[Pixel] = {
     new ImageBuffer[Pixel](PixelImageDomain(width, height), data)
   }
 
-  def apply[@specialized(Int, Float, Double) Pixel: ClassTag](domain: PixelImageDomain, data: Array[Pixel]): ImageBuffer[Pixel] = {
+  def apply[@specialized(Int, Float, Double) Pixel: ClassTag](domain: PixelImageDomain,
+                                                              data: Array[Pixel]
+  ): ImageBuffer[Pixel] = {
     new ImageBuffer[Pixel](domain, data)
   }
 
@@ -131,4 +142,3 @@ object ImageBuffer {
   }
 
 }
-

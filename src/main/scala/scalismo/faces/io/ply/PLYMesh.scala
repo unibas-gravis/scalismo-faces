@@ -24,29 +24,22 @@ import scalismo.mesh.{SurfacePointProperty, TriangleMesh3D, VertexColorMesh3D}
 
 import scala.util.Try
 
-
-
-
 /**
-  * Function to write different type of meshes to a ply file.
-  * The supported formats are ASCII, BinaryBigEndian and BinaryLittleEndian with headers
-  * that are understood by either meshlab or blender.
-  */
+ * Function to write different type of meshes to a ply file. The supported formats are ASCII, BinaryBigEndian and
+ * BinaryLittleEndian with headers that are understood by either meshlab or blender.
+ */
 object PLYMesh {
 
-  def writePLY(mesh: TriangleMesh3D, fileURL: String) : Unit =
-    writePLY(mesh,fileURL,PlyFormat.ASCII,PlyHeader.meshlab)
+  def writePLY(mesh: TriangleMesh3D, fileURL: String): Unit =
+    writePLY(mesh, fileURL, PlyFormat.ASCII, PlyHeader.meshlab)
 
-  def writePLY(mesh: VertexColorMesh3D, fileURL: String) : Unit =
-    writePLY(mesh,fileURL,PlyFormat.ASCII,PlyHeader.meshlab)
+  def writePLY(mesh: VertexColorMesh3D, fileURL: String): Unit =
+    writePLY(mesh, fileURL, PlyFormat.ASCII, PlyHeader.meshlab)
 
-  def writePLY(mesh: ColorNormalMesh3D, fileURL: String) : Unit =
-    writePLY(mesh,fileURL,PlyFormat.ASCII,PlyHeader.meshlab)
+  def writePLY(mesh: ColorNormalMesh3D, fileURL: String): Unit =
+    writePLY(mesh, fileURL, PlyFormat.ASCII, PlyHeader.meshlab)
 
-  def writePLY(mesh: TriangleMesh3D,
-               fileURL: String,
-               plyFormat: PlyFormat,
-               headerFormat: PlyHeader) : Unit = {
+  def writePLY(mesh: TriangleMesh3D, fileURL: String, plyFormat: PlyFormat, headerFormat: PlyHeader): Unit = {
     val points = mesh.pointSet.points.toIndexedSeq
     val triangles = mesh.triangulation.triangles.map(_.toIntVector3D)
     val writer = new PlyMeshWriter(
@@ -59,10 +52,7 @@ object PLYMesh {
     writer.write(fileURL)
   }
 
-  def writePLY(mesh: VertexColorMesh3D,
-               fileURL: String,
-               plyFormat: PlyFormat,
-               headerFormat: PlyHeader): Unit = {
+  def writePLY(mesh: VertexColorMesh3D, fileURL: String, plyFormat: PlyFormat, headerFormat: PlyHeader): Unit = {
     val points = mesh.shape.pointSet.points.toIndexedSeq
     val triangles = mesh.shape.triangulation.triangles.map(_.toIntVector3D)
     val colors = mesh.color
@@ -77,10 +67,7 @@ object PLYMesh {
     writer.write(fileURL)
   }
 
-  def writePLY(mesh: ColorNormalMesh3D,
-               fileURL: String,
-               plyFormat: PlyFormat,
-               headerFormat: PlyHeader): Unit = {
+  def writePLY(mesh: ColorNormalMesh3D, fileURL: String, plyFormat: PlyFormat, headerFormat: PlyHeader): Unit = {
     val points = mesh.shape.pointSet.points.toIndexedSeq
     val triangles = mesh.shape.triangulation.triangles.map(_.toIntVector3D)
     val colors = mesh.color
@@ -103,7 +90,7 @@ object PLYMesh {
 
     // interpret the data
     val (vertexProperties, faceProperties) = getProperties(values)
-    
+
     val points = getVertices(vertexProperties)
     val triangles = getTriangles(faceProperties)
 
@@ -149,6 +136,5 @@ object PLYMesh {
     ColorNormalMesh3D(triangleMesh3D, colors, normals)
 
   }
-
 
 }

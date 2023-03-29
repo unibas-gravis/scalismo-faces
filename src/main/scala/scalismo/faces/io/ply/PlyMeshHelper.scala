@@ -16,12 +16,11 @@
 package scalismo.faces.io.ply
 
 import scalismo.common.PointId
-import scalismo.geometry.{Point,EuclideanVector, _2D, _3D}
-
+import scalismo.geometry.{_2D, _3D, EuclideanVector, Point}
 
 /**
-  * Some helper function to transform data.
-  */
+ * Some helper function to transform data.
+ */
 object PlyMeshHelper {
 
   private[ply] def zeroOne2Int(d: Double): Int = {
@@ -33,30 +32,28 @@ object PlyMeshHelper {
   }
 
   private[ply] def byte2ZeroOne(b: Byte): Double = {
-    ((b.toDouble+256)%256) / 255
+    ((b.toDouble + 256) % 256) / 255
   }
 
   private[ply] def any2Double(any: Any): Double = {
     any match {
-      case d: Double => d
-      case f: Float => f.toDouble
-      case l: Long => l.toDouble
-      case i: Int => i.toDouble
-      case s: Short => s.toDouble
-      case c: Char => c.toDouble
-      case b: Byte => b.toDouble
+      case d: Double  => d
+      case f: Float   => f.toDouble
+      case l: Long    => l.toDouble
+      case i: Int     => i.toDouble
+      case s: Short   => s.toDouble
+      case c: Char    => c.toDouble
+      case b: Byte    => b.toDouble
       case b: Boolean => if (b) 1.0 else 0.0
       case _ =>
         throw new NumberFormatException("Could not make double from " + any)
     }
   }
 
-
-
   private[ply] def any2Byte(any: Any): Byte = {
     any match {
-      case c: Char => c.toByte
-      case b: Byte => b
+      case c: Char    => c.toByte
+      case b: Byte    => b
       case b: Boolean => if (b) 1.toByte else 0.toByte
       case _ =>
         throw new NumberFormatException("Could not make double from " + any)
@@ -65,10 +62,10 @@ object PlyMeshHelper {
 
   private[ply] def any2Int(any: Any): Int = {
     any match {
-      case i: Int => i
-      case s: Short => s.toInt
-      case c: Char => c.toInt
-      case b: Byte => b.toInt
+      case i: Int     => i
+      case s: Short   => s.toInt
+      case c: Char    => c.toInt
+      case b: Byte    => b.toInt
       case b: Boolean => if (b) 1 else 0
       case _ =>
         throw new NumberFormatException("Could not make int from " + any)
@@ -78,9 +75,11 @@ object PlyMeshHelper {
   private[ply] def listOfAny2ListOfPointIDs(any: Any): List[PointId] = {
     any match {
       case list: List[Any] =>
-        list.map { a =>
-          any2Int(a)
-        }.map(a=>PointId(a))
+        list
+          .map { a =>
+            any2Int(a)
+          }
+          .map(a => PointId(a))
       case _ =>
         throw new NumberFormatException("Could not make list of doubles from " + any)
     }
@@ -89,9 +88,13 @@ object PlyMeshHelper {
   private[ply] def listOfAny2ListOfPoint2D(any: Any): Seq[Point[_2D]] = {
     any match {
       case list: List[Any] =>
-        list.map{ a =>
-          any2Double(a)
-        }.grouped(2).map(a=>Point(a(0),a(1))).toSeq
+        list
+          .map { a =>
+            any2Double(a)
+          }
+          .grouped(2)
+          .map(a => Point(a(0), a(1)))
+          .toSeq
       case _ =>
         throw new NumberFormatException("Could not make list of doubles from " + any)
     }
@@ -100,9 +103,13 @@ object PlyMeshHelper {
   private[ply] def listOfAny2ListOfVector3D(any: Any): Seq[EuclideanVector[_3D]] = {
     any match {
       case list: List[Any] =>
-        list.map{ a =>
-          any2Double(a)
-        }.grouped(3).map(a=>EuclideanVector(a(0),a(1),a(2))).toSeq
+        list
+          .map { a =>
+            any2Double(a)
+          }
+          .grouped(3)
+          .map(a => EuclideanVector(a(0), a(1), a(2)))
+          .toSeq
       case _ =>
         throw new NumberFormatException("Could not make list of doubles from " + any)
     }

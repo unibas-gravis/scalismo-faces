@@ -21,15 +21,18 @@ import scalismo.geometry._
 import scalismo.mesh._
 
 /**
-  * provide basic geometric mesh operations, such as pruning, clipping, masking
-  */
+ * provide basic geometric mesh operations, such as pruning, clipping, masking
+ */
 object MeshOperations {
+
   /**
-    * clip points behind clipping plane
-    *
-    * @param point  point in clipping plane
-    * @param normal normal vector of clipping plane
-    */
+   * clip points behind clipping plane
+   *
+   * @param point
+   *   point in clipping plane
+   * @param normal
+   *   normal vector of clipping plane
+   */
   def clipMeshPoints(mesh: TriangleMesh[_3D], point: Point[_3D], normal: EuclideanVector[_3D]): CompactMesh = {
     val n = normal.normalize
     maskPoints(
@@ -39,65 +42,82 @@ object MeshOperations {
   }
 
   /**
-    * compact mesh: remove unreferenced points and invalid triangles ("pruning")
-    */
+   * compact mesh: remove unreferenced points and invalid triangles ("pruning")
+   */
   def compactMesh(mesh: TriangleMesh[_3D]): CompactMesh = CompactMesh(mesh, id => true, id => true)
 
   /**
-    * mask a mesh: remove triangles (and affected points)
-    *
-    * @param triangleFilter filter applied to triangles, keep on true
-    */
-  def maskTriangles(mesh: TriangleMesh[_3D], triangleFilter: TriangleId => Boolean): CompactMesh = new CompactMesh(mesh, triangleFilter, id => true)
+   * mask a mesh: remove triangles (and affected points)
+   *
+   * @param triangleFilter
+   *   filter applied to triangles, keep on true
+   */
+  def maskTriangles(mesh: TriangleMesh[_3D], triangleFilter: TriangleId => Boolean): CompactMesh =
+    new CompactMesh(mesh, triangleFilter, id => true)
 
   /**
-    * mask a mesh: remove points (and affected triangles)
-    *
-    * @param pointFilter filter applied to points, keep on true
-    */
-  def maskPoints(mesh: TriangleMesh[_3D], pointFilter: PointId => Boolean): CompactMesh = new CompactMesh(mesh, id => true, pointFilter)
+   * mask a mesh: remove points (and affected triangles)
+   *
+   * @param pointFilter
+   *   filter applied to points, keep on true
+   */
+  def maskPoints(mesh: TriangleMesh[_3D], pointFilter: PointId => Boolean): CompactMesh =
+    new CompactMesh(mesh, id => true, pointFilter)
 
   /**
-    * filter points and triangles in mesh, removes excess parts (compacts)
-    * @param mesh original mesh
-    * @param pointFilter predicate for points, keep on true
-    * @param triangleFilter predicate for triangles, keep on true
-    * @return
-    */
-  def filterMesh(mesh: TriangleMesh[_3D], pointFilter: PointId => Boolean, triangleFilter: TriangleId => Boolean): CompactMesh = new CompactMesh(mesh, triangleFilter, pointFilter)
+   * filter points and triangles in mesh, removes excess parts (compacts)
+   * @param mesh
+   *   original mesh
+   * @param pointFilter
+   *   predicate for points, keep on true
+   * @param triangleFilter
+   *   predicate for triangles, keep on true
+   * @return
+   */
+  def filterMesh(mesh: TriangleMesh[_3D],
+                 pointFilter: PointId => Boolean,
+                 triangleFilter: TriangleId => Boolean
+  ): CompactMesh = new CompactMesh(mesh, triangleFilter, pointFilter)
 }
 
 /**
-  * a general operation on mesh, can also alter surface properties
-  */
+ * a general operation on mesh, can also alter surface properties
+ */
 trait MeshOperation {
+
   /**
-    * get the transformed mesh
-    */
+   * get the transformed mesh
+   */
   def transformedMesh: TriangleMesh[_3D]
 
   /**
-    * apply operation to a surface property
-    * default implementation: warps old surface property (general but inefficient)
-    *
-    * @param property surface property to transform
-    */
-  def applyToSurfaceProperty[A](property: MeshSurfaceProperty[A]): MeshSurfaceProperty[A] = WarpedMeshSurfaceProperty(property, meshSurfaceCorrespondence)
+   * apply operation to a surface property default implementation: warps old surface property (general but inefficient)
+   *
+   * @param property
+   *   surface property to transform
+   */
+  def applyToSurfaceProperty[A](property: MeshSurfaceProperty[A]): MeshSurfaceProperty[A] =
+    WarpedMeshSurfaceProperty(property, meshSurfaceCorrespondence)
 
   /**
-    * correspondence on new surface, returns old surface coordinates for each new point on surface
-    */
+   * correspondence on new surface, returns old surface coordinates for each new point on surface
+   */
   def meshSurfaceCorrespondence: MeshSurfaceCorrespondence
 }
 
 /**
-  * compact a mesh: remove unreferenced points and triangles with invalid points, also respects external filters for points and triangles
-  *
-  * @param mesh           mesh to compact
-  * @param triangleFilter filter to remove triangles, keeps on true
-  * @param pointFilter    filter to remove points, keeps on true
-  */
-class CompactMesh(mesh: TriangleMesh[_3D], triangleFilter: TriangleId => Boolean, pointFilter: PointId => Boolean) extends MeshOperation {
+ * compact a mesh: remove unreferenced points and triangles with invalid points, also respects external filters for
+ * points and triangles
+ *
+ * @param mesh
+ *   mesh to compact
+ * @param triangleFilter
+ *   filter to remove triangles, keeps on true
+ * @param pointFilter
+ *   filter to remove points, keeps on true
+ */
+class CompactMesh(mesh: TriangleMesh[_3D], triangleFilter: TriangleId => Boolean, pointFilter: PointId => Boolean)
+    extends MeshOperation {
   private val invalidPoint = PointId(-1)
 
   private val meshPoints: Int = mesh.pointSet.numberOfPoints
@@ -116,10 +136,10 @@ class CompactMesh(mesh: TriangleMesh[_3D], triangleFilter: TriangleId => Boolean
   private def isTriangleValid(triangleId: TriangleId): Boolean = {
     val t = mesh.triangulation.triangle(triangleId)
     triangleId != TriangleId.invalid &&
-      triangleFilter(triangleId) &&
-      isPointValid(t.ptId1) &&
-      isPointValid(t.ptId2) &&
-      isPointValid(t.ptId3)
+    triangleFilter(triangleId) &&
+    isPointValid(t.ptId1) &&
+    isPointValid(t.ptId2) &&
+    isPointValid(t.ptId3)
   }
 
   private val newTriangles: IndexedSeq[TriangleId] = {
@@ -128,7 +148,9 @@ class CompactMesh(mesh: TriangleMesh[_3D], triangleFilter: TriangleId => Boolean
 
   // find valid points: points referenced by valid triangles
   private val newPoints: IndexedSeq[PointId] = {
-    newTriangles.iterator.map{mesh.triangulation.triangle}.flatMap{_.pointIds}.toIndexedSeq.distinct.sortBy{_.id}
+    newTriangles.iterator.map { mesh.triangulation.triangle }.flatMap { _.pointIds }.toIndexedSeq.distinct.sortBy {
+      _.id
+    }
   }
 
   private val numberOfPoints = newPoints.size
@@ -164,27 +186,36 @@ class CompactMesh(mesh: TriangleMesh[_3D], triangleFilter: TriangleId => Boolean
     require(property.triangulation == mesh.triangulation, "surface property is not compatible with mesh")
     property match {
       case trProp: TriangleProperty[A] =>
-        val newTriangleData = transformedMesh.triangulation.triangleIds.map{tId => trProp.onTriangle(triangleBackMap(tId))}
+        val newTriangleData = transformedMesh.triangulation.triangleIds.map { tId =>
+          trProp.onTriangle(triangleBackMap(tId))
+        }
         TriangleProperty(transformedMesh.triangulation, newTriangleData)
       case ptProp: SurfacePointProperty[A] =>
-        val newPointData = transformedMesh.pointSet.pointIds.map{pId => ptProp.atPoint(pointBackMap(pId))}.toIndexedSeq
+        val newPointData = transformedMesh.pointSet.pointIds.map { pId =>
+          ptProp.atPoint(pointBackMap(pId))
+        }.toIndexedSeq
         SurfacePointProperty(transformedMesh.triangulation, newPointData)(ptProp.interpolator)
       case _ => super.applyToSurfaceProperty(property) // inefficient default warping
     }
   }
 
   /**
-    * new surface correspondence: maps new triangle id to old
-    */
+   * new surface correspondence: maps new triangle id to old
+   */
   override def meshSurfaceCorrespondence: MeshSurfaceCorrespondence = new MeshSurfaceCorrespondence {
     override def triangulation: TriangleList = transformedMesh.triangulation
 
     override def targetTriangulation: TriangleList = mesh.triangulation
 
-    override def correspondingPoint(triangleId: TriangleId, bcc: BarycentricCoordinates): (TriangleId, BarycentricCoordinates) = (triangleBackMap(triangleId), bcc)
+    override def correspondingPoint(triangleId: TriangleId,
+                                    bcc: BarycentricCoordinates
+    ): (TriangleId, BarycentricCoordinates) = (triangleBackMap(triangleId), bcc)
   }
 }
 
 object CompactMesh {
-  def apply(mesh: TriangleMesh[_3D], triangleFilter: TriangleId => Boolean, pointFilter: PointId => Boolean): CompactMesh = new CompactMesh(mesh, triangleFilter, pointFilter)
+  def apply(mesh: TriangleMesh[_3D],
+            triangleFilter: TriangleId => Boolean,
+            pointFilter: PointId => Boolean
+  ): CompactMesh = new CompactMesh(mesh, triangleFilter, pointFilter)
 }

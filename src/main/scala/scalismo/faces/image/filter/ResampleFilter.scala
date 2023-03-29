@@ -22,7 +22,9 @@ import scalismo.faces.image.{ColumnMajorImageDomain, InterpolationKernel, PixelI
 import scala.reflect.ClassTag
 
 /** filter to resample a discrete image, uses a kernel filter to interpolate or decimate (filtered down-sampling) */
-case class ResampleFilter[A: ClassTag](cols: Int, rows: Int, kernel: InterpolationKernel)(implicit ops: ColorSpaceOperations[A]) extends ImageFilter[A, A] {
+case class ResampleFilter[A: ClassTag](cols: Int, rows: Int, kernel: InterpolationKernel)(implicit
+  ops: ColorSpaceOperations[A]
+) extends ImageFilter[A, A] {
   require(cols > 0 && rows > 0, s"cannot resample to new size of 0: ($cols, $rows)")
 
   /** image resampling with a proper convolution kernel, can interpolate and decimate */
@@ -32,8 +34,13 @@ case class ResampleFilter[A: ClassTag](cols: Int, rows: Int, kernel: Interpolati
 }
 
 object ResampleFilter {
+
   /** resample a discrete image, uses a kernel filter to interpolate or decimate (filtered down-sampling) */
-  def resampleImage[@specialized(Double, Float, Int, Boolean) A: ClassTag](image: PixelImage[A], cols: Int, rows: Int, kernel: InterpolationKernel)(implicit ops: ColorSpaceOperations[A]): PixelImage[A] = {
+  def resampleImage[@specialized(Double, Float, Int, Boolean) A: ClassTag](image: PixelImage[A],
+                                                                           cols: Int,
+                                                                           rows: Int,
+                                                                           kernel: InterpolationKernel
+  )(implicit ops: ColorSpaceOperations[A]): PixelImage[A] = {
     require(cols > 0 && rows > 0, s"cannot resample to new size of 0: ($cols, $rows)")
     require(image.width > 0 && image.height > 0, s"cannot resample image size of 0: (${image.width}, ${image.height})")
     import ColorSpaceOperations.implicits._
@@ -75,7 +82,7 @@ object ResampleFilter {
           }
           kvsum / kSumX
         }
-        PixelImage(cols, image.height, f(_,_))
+        PixelImage(cols, image.height, f(_, _))
       }
     }
 
@@ -85,7 +92,7 @@ object ResampleFilter {
     // do the resampling: choose inner loop based on image domain, buffer the intermediate result (careful with access modes)
     image.domain match {
       case _: ColumnMajorImageDomain => image.transposed.filter(colFilter).transposed.filter(rowFilter)
-      case _: RowMajorImageDomain => image.filter(rowFilter).transposed.filter(colFilter).transposed
+      case _: RowMajorImageDomain    => image.filter(rowFilter).transposed.filter(colFilter).transposed
     }
   }
 }

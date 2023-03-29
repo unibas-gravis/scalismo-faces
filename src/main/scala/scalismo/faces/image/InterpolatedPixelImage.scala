@@ -22,17 +22,21 @@ import scalismo.faces.image.filter.ResampleFilter
 
 import scala.reflect.ClassTag
 
-/** continuous access image (create e.g. using PixelImage.interpolate) !!! WARNING: not specialized, specialized version leads to IllegalAccessError on width and height (https://issues.scala-lang.org/browse/SI-4511) */
-case class InterpolatedPixelImage[Pixel](image: PixelImage[Pixel],
-  kernel: InterpolationKernel)(implicit ops: ColorSpaceOperations[Pixel])
-    extends ContinuousPixelImage[Pixel] {
+/**
+ * continuous access image (create e.g. using PixelImage.interpolate) !!! WARNING: not specialized, specialized version
+ * leads to IllegalAccessError on width and height (https://issues.scala-lang.org/browse/SI-4511)
+ */
+case class InterpolatedPixelImage[Pixel](image: PixelImage[Pixel], kernel: InterpolationKernel)(implicit
+  ops: ColorSpaceOperations[Pixel]
+) extends ContinuousPixelImage[Pixel] {
 
   override val width: Double = image.width
   override val height: Double = image.height
 
   private val f: (Double, Double) => Pixel = image.domain match {
-      case _: ColumnMajorImageDomain => (x, y) => InterpolatedPixelImage.interpolatedImageAccessColFirst(image, x, y, kernel)
-      case _: RowMajorImageDomain => (x, y) => InterpolatedPixelImage.interpolateCellBasedRowFirst(image, x, y, kernel)
+    case _: ColumnMajorImageDomain =>
+      (x, y) => InterpolatedPixelImage.interpolatedImageAccessColFirst(image, x, y, kernel)
+    case _: RowMajorImageDomain => (x, y) => InterpolatedPixelImage.interpolateCellBasedRowFirst(image, x, y, kernel)
   }
 
   /** read the value at the given location, "continuous pixel index" (Double coordinates) */
@@ -44,18 +48,33 @@ case class InterpolatedPixelImage[Pixel](image: PixelImage[Pixel],
   /**
    * resamples the image to produce a new discrete PixelImage - filtered sampling, using the filter of construction
    *
-   * @param w Number of samples along x axis (width of image)
-   * @param h Number of samples along y axis (height of image)
+   * @param w
+   *   Number of samples along x axis (width of image)
+   * @param h
+   *   Number of samples along y axis (height of image)
    */
-  override def sample(w: Int, h: Int)(implicit tag: ClassTag[Pixel]): PixelImage[Pixel] = ResampleFilter.resampleImage(image, w, h, kernel)
+  override def sample(w: Int, h: Int)(implicit tag: ClassTag[Pixel]): PixelImage[Pixel] =
+    ResampleFilter.resampleImage(image, w, h, kernel)
 
-  /** drop original samples, treat as direct continuous 2d function (removes resampling with filtering, interpolation only) */
+  /**
+   * drop original samples, treat as direct continuous 2d function (removes resampling with filtering, interpolation
+   * only)
+   */
   def toFunction2D = Function2DImage(width, height, f)
 }
 
 object InterpolatedPixelImage {
-  /** direct interpolated image access with kernel-based interpolation, column major: inner loop over y, cell-based interpolation: (0.0, 0.0) is at top left, first sample (0,0) lies at (0.5, 0.5) */
-  def interpolatedImageAccessColFirst[@specialized(Double, Float, Int, Boolean) A](image: PixelImage[A], x: Double, y: Double, kernel: InterpolationKernel = InterpolationKernel.BilinearKernel)(implicit ops: ColorSpaceOperations[A]): A = {
+
+  /**
+   * direct interpolated image access with kernel-based interpolation, column major: inner loop over y, cell-based
+   * interpolation: (0.0, 0.0) is at top left, first sample (0,0) lies at (0.5, 0.5)
+   */
+  def interpolatedImageAccessColFirst[@specialized(Double, Float, Int, Boolean) A](image: PixelImage[A],
+                                                                                   x: Double,
+                                                                                   y: Double,
+                                                                                   kernel: InterpolationKernel =
+                                                                                     InterpolationKernel.BilinearKernel
+  )(implicit ops: ColorSpaceOperations[A]): A = {
 
     // kernel
     val r = math.max(0.5, kernel.radius)
@@ -93,8 +112,16 @@ object InterpolatedPixelImage {
     kvsumX / ksumX
   }
 
-  /** direct interpolated image access with kernel-based interpolation, row major: inner loop over x, cell-based interpolation: (0.0, 0.0) is at top left, first sample (0,0) lies at (0.5, 0.5) */
-  def interpolateCellBasedRowFirst[@specialized(Double, Float, Int, Boolean) A](image: PixelImage[A], x: Double, y: Double, kernel: InterpolationKernel = InterpolationKernel.BilinearKernel)(implicit ops: ColorSpaceOperations[A]): A = {
+  /**
+   * direct interpolated image access with kernel-based interpolation, row major: inner loop over x, cell-based
+   * interpolation: (0.0, 0.0) is at top left, first sample (0,0) lies at (0.5, 0.5)
+   */
+  def interpolateCellBasedRowFirst[@specialized(Double, Float, Int, Boolean) A](image: PixelImage[A],
+                                                                                x: Double,
+                                                                                y: Double,
+                                                                                kernel: InterpolationKernel =
+                                                                                  InterpolationKernel.BilinearKernel
+  )(implicit ops: ColorSpaceOperations[A]): A = {
 
     // kernel
     val r = math.max(0.5, kernel.radius)
@@ -131,7 +158,7 @@ object InterpolatedPixelImage {
   }
 }
 
-/** Special case for nearest neighbour interpolated continuous images.*/
+/** Special case for nearest neighbour interpolated continuous images. */
 case class NearestNeighbourPixelImage[A](image: PixelImage[A]) extends ContinuousPixelImage[A] {
   override val width: Double = image.width
   override val height: Double = image.height
@@ -148,16 +175,18 @@ case class NearestNeighbourPixelImage[A](image: PixelImage[A]) extends Continuou
   override def map[B](g: (A) => B): ContinuousPixelImage[B] = MappedContinuousPixelImage(this, g)
 
   /**
-    * resamples the image to produce a new discrete PixelImage. Nearest neighbour values are selected during resampling.
-    *
-    * @param w Number of samples along x axis (width of image)
-    * @param h Number of samples along y axis (height of image)
-    */
+   * resamples the image to produce a new discrete PixelImage. Nearest neighbour values are selected during resampling.
+   *
+   * @param w
+   *   Number of samples along x axis (width of image)
+   * @param h
+   *   Number of samples along y axis (height of image)
+   */
   override def sample(w: Int, h: Int)(implicit tag: ClassTag[A]): PixelImage[A] = nearestNeighbourResample(image, w, h)
 
   /**
-    * Chooses nearest neighbour pixel for pixel value during resampling.
-    * */
+   * Chooses nearest neighbour pixel for pixel value during resampling.
+   */
   def nearestNeighbourResample(image: PixelImage[A], cols: Int, rows: Int)(implicit tag: ClassTag[A]): PixelImage[A] = {
     require(cols > 0 && rows > 0, s"cannot resample to new size of 0: ($cols, $rows)")
     require(image.width > 0 && image.height > 0, s"cannot resample image size of 0: (${image.width}, ${image.height})")
@@ -171,14 +200,17 @@ case class NearestNeighbourPixelImage[A](image: PixelImage[A]) extends Continuou
 
     val domain = image.domain match {
       case _: ColumnMajorImageDomain => ColumnMajorImageDomain(cols, rows)
-      case _: RowMajorImageDomain => RowMajorImageDomain(cols, rows)
+      case _: RowMajorImageDomain    => RowMajorImageDomain(cols, rows)
     }
     val access = (x: Int, y: Int) => interpolateNearestNeighbour(image, (x + 0.5) * scaleW, (y + 0.5) * scaleH)
     PixelImage(domain, access).withAccessMode(AccessMode.Functional(access))
   }
 }
 
-/** special class to hold a mapped interpolated pixel image or nearest neighbour pixel image: be careful, apply is mapped "f(apply)" and resample "resample(f)" */
+/**
+ * special class to hold a mapped interpolated pixel image or nearest neighbour pixel image: be careful, apply is mapped
+ * "f(apply)" and resample "resample(f)"
+ */
 case class MappedContinuousPixelImage[A, B](image: ContinuousPixelImage[A], f: A => B) extends ContinuousPixelImage[B] {
   override val width: Double = image.width
   override val height: Double = image.height

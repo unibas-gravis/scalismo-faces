@@ -50,7 +50,7 @@ class MoMoTests extends FacesTestSuite {
 
     // Build random PCA model for projection tests and write it to disk
     lazy val randomMomo = randomGridModel(10, 5, 0.1)
-    val rf = File.createTempFile("momo-gravismomoio-test", ".json")
+    val rf = File.createTempFile("momo-gravismomoio-test", ".h5.json")
     rf.deleteOnExit()
     MoMoIO.write(randomMomo, rf)
 
@@ -167,7 +167,7 @@ class MoMoTests extends FacesTestSuite {
       norm(meanCoeffs.shape) + norm(meanCoeffs.color) should be < 0.01 * momoCoeffs.shape.length + 0.01 * momoCoeffs.color.length
     }
 
-    val f = File.createTempFile("momo", ".json")
+    val f = File.createTempFile("momo", ".h5.json")
     f.deleteOnExit()
     MoMoIO.write(momo, f).get
     val loadedMomo = MoMoIO.read(f).get.expressionModel.get
@@ -244,7 +244,7 @@ class MoMoTests extends FacesTestSuite {
 //    }
 
     it("can be written to disk and be read again (and be equal)") {
-      val f = File.createTempFile("reduced-model", ".json")
+      val f = File.createTempFile("reduced-model", ".h5.json")
       f.deleteOnExit()
       MoMoIO.write(momo, f).get
       val loadedMomo = MoMoIO.read(f).get

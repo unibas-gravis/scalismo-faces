@@ -19,16 +19,16 @@ package scalismo.faces.sampling.face
 import scalismo.color.{RGB, RGBA}
 import scalismo.faces.image.PixelImage
 import scalismo.faces.parameters.{ColorTransform, ParametricRenderer, RenderParameter}
-import scalismo.geometry.{Point, EuclideanVector, _3D}
+import scalismo.geometry.{_3D, EuclideanVector, Point}
 import scalismo.mesh.{BarycentricCoordinates, SurfacePointProperty, TriangleId}
-
 
 object ModalityRenderers {
 
   object DepthMapRenderer {
     def apply(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer) = new DepthMapRenderer(correspondenceMoMoRenderer)
   }
-  class DepthMapRenderer(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer) extends ParametricImageRenderer[Option[Double]] {
+  class DepthMapRenderer(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer)
+      extends ParametricImageRenderer[Option[Double]] {
 
     override def renderImage(parameters: RenderParameter): PixelImage[Option[Double]] = {
       val correspondenceImage = correspondenceMoMoRenderer.renderCorrespondenceImage(parameters)
@@ -44,7 +44,8 @@ object ModalityRenderers {
   object NormalsRenderer {
     def apply(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer) = new NormalsRenderer(correspondenceMoMoRenderer)
   }
-  class NormalsRenderer(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer) extends ParametricImageRenderer[Option[EuclideanVector[_3D]]] {
+  class NormalsRenderer(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer)
+      extends ParametricImageRenderer[Option[EuclideanVector[_3D]]] {
 
     override def renderImage(parameters: RenderParameter): PixelImage[Option[EuclideanVector[_3D]]] = {
       val correspondenceImage = correspondenceMoMoRenderer.renderCorrespondenceImage(parameters)
@@ -55,65 +56,79 @@ object ModalityRenderers {
       }
     }
 
-    def renderNormalsVisualization(parameters: RenderParameter, clearColor: RGBA = RGBA.BlackTransparent): PixelImage[RGBA] = {
+    def renderNormalsVisualization(parameters: RenderParameter,
+                                   clearColor: RGBA = RGBA.BlackTransparent
+    ): PixelImage[RGBA] = {
       val normals = renderImage(parameters)
       colorNormalImage(normals, clearColor)
     }
   }
 
-  object AlbedoRenderer{
-    def apply(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer, clearColor: RGBA = RGBA.BlackTransparent) = new AlbedoRenderer(correspondenceMoMoRenderer, clearColor)
+  object AlbedoRenderer {
+    def apply(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer, clearColor: RGBA = RGBA.BlackTransparent) =
+      new AlbedoRenderer(correspondenceMoMoRenderer, clearColor)
   }
-  class AlbedoRenderer(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer, clearColor: RGBA) extends ParametricImageRenderer[RGBA] {
+  class AlbedoRenderer(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer, clearColor: RGBA)
+      extends ParametricImageRenderer[RGBA] {
 
     override def renderImage(parameters: RenderParameter): PixelImage[RGBA] = {
       val instance = correspondenceMoMoRenderer.instance(parameters)
       val correspondenceImage = correspondenceMoMoRenderer.renderCorrespondenceImage(parameters)
       correspondenceImage.map { optFrag =>
-        optFrag.map { fragment =>
-          instance.color.onSurface(fragment.triangleId, fragment.worldBCC)
-        }.getOrElse(clearColor)
+        optFrag
+          .map { fragment =>
+            instance.color.onSurface(fragment.triangleId, fragment.worldBCC)
+          }
+          .getOrElse(clearColor)
       }
     }
   }
 
   object IlluminationVisualizationRenderer {
-    def apply(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer, clearColor: RGBA = RGBA.BlackTransparent) = new IlluminationVisualizationRenderer(correspondenceMoMoRenderer, clearColor)
+    def apply(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer, clearColor: RGBA = RGBA.BlackTransparent) =
+      new IlluminationVisualizationRenderer(correspondenceMoMoRenderer, clearColor)
   }
-  class IlluminationVisualizationRenderer(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer, clearColor: RGBA) extends ParametricImageRenderer[RGBA] {
+  class IlluminationVisualizationRenderer(correspondenceMoMoRenderer: CorrespondenceMoMoRenderer, clearColor: RGBA)
+      extends ParametricImageRenderer[RGBA] {
 
-    override def renderImage(parameters: RenderParameter) : PixelImage[RGBA] = {
+    override def renderImage(parameters: RenderParameter): PixelImage[RGBA] = {
       val instance = correspondenceMoMoRenderer.instance(parameters)
-      val noColorInst = instance.copy(color = SurfacePointProperty(instance.shape.triangulation, instance.color.pointData.map(_ => RGBA(0.5, 0.5, 0.5))))
+      val noColorInst = instance.copy(color =
+        SurfacePointProperty(instance.shape.triangulation, instance.color.pointData.map(_ => RGBA(0.5, 0.5, 0.5)))
+      )
       val correspondenceImage = correspondenceMoMoRenderer.renderCorrespondenceImage(parameters)
       val shader = parameters.noColorTransform.pixelShader(noColorInst)
-      correspondenceImage.map{ optFrag =>
-        optFrag.map{ fragment =>
-          shader(fragment.triangleId,fragment.worldBCC,Point(fragment.x,fragment.y,fragment.z))
-        }.getOrElse(clearColor)
+      correspondenceImage.map { optFrag =>
+        optFrag
+          .map { fragment =>
+            shader(fragment.triangleId, fragment.worldBCC, Point(fragment.x, fragment.y, fragment.z))
+          }
+          .getOrElse(clearColor)
       }
     }
 
   }
 
-  def normalizeDepthMapIamge(depthMap: PixelImage[Option[Double]], clearValue: Double) : PixelImage[Double] = {
+  def normalizeDepthMapIamge(depthMap: PixelImage[Option[Double]], clearValue: Double): PixelImage[Double] = {
     val values = depthMap.values.flatten.toIndexedSeq
     if (!values.isEmpty) {
       val max = values.max
       val min = values.min
-      val mami = max-min
-      depthMap.map(v => v.map(d => (d-min)/mami).getOrElse(clearValue))
+      val mami = max - min
+      depthMap.map(v => v.map(d => (d - min) / mami).getOrElse(clearValue))
     } else {
       depthMap.map(v => v.getOrElse(clearValue))
     }
   }
 
-  def colorNormalImage(normals: PixelImage[Option[EuclideanVector[_3D]]], clearColor: RGBA) : PixelImage[RGBA] = {
+  def colorNormalImage(normals: PixelImage[Option[EuclideanVector[_3D]]], clearColor: RGBA): PixelImage[RGBA] = {
     normals.map { opt =>
-      opt.map { normal =>
-        val v = normal * 0.5
-        RGBA(0.5 - v.x, 0.5 - v.y, 0.5 - v.z, 1.0)
-      }.getOrElse(clearColor)
+      opt
+        .map { normal =>
+          val v = normal * 0.5
+          RGBA(0.5 - v.x, 0.5 - v.y, 0.5 - v.z, 1.0)
+        }
+        .getOrElse(clearColor)
     }
   }
 

@@ -19,18 +19,21 @@ package scalismo.faces.image.filter
 import scalismo.faces.image.PixelImage
 
 object Dilation {
+
   /**
-    * dilation filter with box element
-    * @param size side length of box
-    */
+   * dilation filter with box element
+   * @param size
+   *   side length of box
+   */
   def box(size: Int): SeparableMorphologicalFilter[Double] = {
     SeparableMorphologicalFilter(SeparableMorphologicalFilter.lineElement(size), list => list.max)
   }
 
   /**
-    * general dilation filter with specified structuring element
-    * @param structuringElement structuring element, see morphological filter
-    */
+   * general dilation filter with specified structuring element
+   * @param structuringElement
+   *   structuring element, see morphological filter
+   */
   def apply(structuringElement: PixelImage[Boolean]): MorphologicalFilter[Double] = {
     MorphologicalFilter[Double](structuringElement, values => values.max)
   }

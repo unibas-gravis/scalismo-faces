@@ -19,13 +19,15 @@ package scalismo.faces.mesh
 import scalismo.mesh.{BarycentricCoordinates, MeshSurfaceProperty, TriangleId, TriangleList}
 
 /** indirected property, can be used to attach different materials */
-case class IndirectProperty[@specialized(Double, Float, Int, Boolean) A]
-(override val triangulation: TriangleList,
- triangleIndirectionIndex: IndexedSeq[Int],
- properties: IndexedSeq[MeshSurfaceProperty[A]])
-  extends MeshSurfaceProperty[A] {
-  require(triangleIndirectionIndex.size == triangulation.triangleIds.size, "IndirectedProperty: Indirection index is not per triangle.")
+case class IndirectProperty[@specialized(Double, Float, Int, Boolean) A](override val triangulation: TriangleList,
+                                                                         triangleIndirectionIndex: IndexedSeq[Int],
+                                                                         properties: IndexedSeq[MeshSurfaceProperty[A]]
+) extends MeshSurfaceProperty[A] {
+  require(triangleIndirectionIndex.size == triangulation.triangleIds.size,
+          "IndirectedProperty: Indirection index is not per triangle."
+  )
   require(triangleIndirectionIndex.forall(properties.isDefinedAt))
+
   /** access via triangle coordinates */
   override def onSurface(triangleId: TriangleId, bcc: BarycentricCoordinates): A = {
     // get real surface property

@@ -25,7 +25,8 @@ import scalismo.utils.Random
 
 /** Random Gaussian Proposal for Color.gain, Color.contrast and Color.offset */
 case class GaussianColorProposal(logSdevGain: RGB, logSdevColorContrast: Double, sdevOffset: RGB)(implicit rnd: Random)
-  extends ProposalGenerator[ColorTransform] with TransitionProbability[ColorTransform] {
+    extends ProposalGenerator[ColorTransform]
+    with TransitionProbability[ColorTransform] {
   override def propose(current: ColorTransform): ColorTransform = {
     val proposedGain = RGB(
       current.gain.r * math.exp(rnd.scalaRandom.nextGaussian() * logSdevGain.r),
@@ -46,12 +47,12 @@ case class GaussianColorProposal(logSdevGain: RGB, logSdevColorContrast: Double,
   }
 
   override def logTransitionProbability(from: ColorTransform, to: ColorTransform): Double = {
-    //gain
-    LogNormalDistribution.logDensity(to.gain.r/from.gain.r, 0.0, logSdevGain.r) +
-      LogNormalDistribution.logDensity(to.gain.g/from.gain.g, 0.0, logSdevGain.g) +
-      LogNormalDistribution.logDensity(to.gain.b/from.gain.b, 0.0, logSdevGain.b) +
+    // gain
+    LogNormalDistribution.logDensity(to.gain.r / from.gain.r, 0.0, logSdevGain.r) +
+      LogNormalDistribution.logDensity(to.gain.g / from.gain.g, 0.0, logSdevGain.g) +
+      LogNormalDistribution.logDensity(to.gain.b / from.gain.b, 0.0, logSdevGain.b) +
       // contrast
-      LogNormalDistribution.logDensity(to.colorContrast/from.colorContrast, 0.0, logSdevColorContrast) +
+      LogNormalDistribution.logDensity(to.colorContrast / from.colorContrast, 0.0, logSdevColorContrast) +
       // offset
       GaussianEvaluator.logDensity(to.offset.r, from.offset.r, sdevOffset.r) +
       GaussianEvaluator.logDensity(to.offset.g, from.offset.g, sdevOffset.g) +

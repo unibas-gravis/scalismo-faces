@@ -34,7 +34,7 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
 
     override def read(json: JsValue): EuclideanVector[_1D] = json match {
       case JsArray(Seq(JsNumber(x))) => EuclideanVector(x.toDouble)
-      case _ => deserializationError("Expected EuclideanVector[_1D], got:" + json)
+      case _                         => deserializationError("Expected EuclideanVector[_1D], got:" + json)
     }
   }
 
@@ -43,7 +43,7 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
 
     override def read(json: JsValue): EuclideanVector[_2D] = json match {
       case JsArray(Seq(JsNumber(x), JsNumber(y))) => EuclideanVector(x.toDouble, y.toDouble)
-      case _ => deserializationError("Expected EuclideanVector[_2D], got:" + json)
+      case _                                      => deserializationError("Expected EuclideanVector[_2D], got:" + json)
     }
   }
 
@@ -61,7 +61,7 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
 
     override def read(json: JsValue): RGB = json match {
       case JsArray(Seq(JsNumber(r), JsNumber(g), JsNumber(b))) => RGB(r.toDouble, g.toDouble, b.toDouble)
-      case _ => deserializationError(s"Expected RGB, got: $json")
+      case _                                                   => deserializationError(s"Expected RGB, got: $json")
     }
   }
 
@@ -69,7 +69,8 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
     override def write(col: RGBA): JsValue = JsArray(JsNumber(col.r), JsNumber(col.g), JsNumber(col.b), JsNumber(col.a))
 
     override def read(json: JsValue): RGBA = json match {
-      case JsArray(Seq(JsNumber(r), JsNumber(g), JsNumber(b), JsNumber(a))) => RGBA(r.toDouble, g.toDouble, b.toDouble, a.toDouble)
+      case JsArray(Seq(JsNumber(r), JsNumber(g), JsNumber(b), JsNumber(a))) =>
+        RGBA(r.toDouble, g.toDouble, b.toDouble, a.toDouble)
       case _ => deserializationError(s"Expected RGBA, got: $json")
     }
   }
@@ -77,34 +78,32 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
   implicit val uriFormat: JsonFormat[URI] = new JsonFormat[URI] {
     override def read(json: JsValue): URI = json match {
       case JsString(uri) => new URI(uri)
-      case _ => throw DeserializationException(s"expected URI, got $json")
+      case _             => throw DeserializationException(s"expected URI, got $json")
     }
 
     override def write(obj: URI): JsValue = JsString(obj.toString)
   }
 
   implicit val colorFormat: RootJsonFormat[ColorTransform] = new RootJsonFormat[ColorTransform] {
-    override def write(color: ColorTransform): JsValue = JsObject(
-      "gain" -> color.gain.toJson,
-      "gamma" -> color.colorContrast.toJson,
-      "offset" -> color.offset.toJson)
+    override def write(color: ColorTransform): JsValue =
+      JsObject("gain" -> color.gain.toJson, "gamma" -> color.colorContrast.toJson, "offset" -> color.offset.toJson)
 
     override def read(json: JsValue): ColorTransform = {
       val fields = json.asJsObject(s"expected Color object, got: $json").fields
-      ColorTransform(
-        gain = fields("gain").convertTo[RGB],
-        colorContrast = fields("gamma").convertTo[Double],
-        offset = fields("offset").convertTo[RGB])
+      ColorTransform(gain = fields("gain").convertTo[RGB],
+                     colorContrast = fields("gamma").convertTo[Double],
+                     offset = fields("offset").convertTo[RGB]
+      )
     }
   }
 
   implicit val poseFormat: RootJsonFormat[Pose] = new RootJsonFormat[Pose] {
-    override def write(p: Pose): JsValue = JsObject(
-      ("scaling", p.scaling.toJson),
-      ("translation", p.translation.toJson),
-      ("roll",p.roll.toJson),
-      ("yaw", p.yaw.toJson),
-      ("pitch", p.pitch.toJson))
+    override def write(p: Pose): JsValue = JsObject(("scaling", p.scaling.toJson),
+                                                    ("translation", p.translation.toJson),
+                                                    ("roll", p.roll.toJson),
+                                                    ("yaw", p.yaw.toJson),
+                                                    ("pitch", p.pitch.toJson)
+    )
 
     override def read(json: JsValue): Pose = {
       val fields = json.asJsObject(s"expected Pose object, got: $json").fields
@@ -113,7 +112,8 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
         translation = fields("translation").convertTo[EuclideanVector[_3D]],
         roll = fields("roll").convertTo[Double],
         yaw = fields("yaw").convertTo[Double],
-        pitch = fields("pitch").convertTo[Double])
+        pitch = fields("pitch").convertTo[Double]
+      )
     }
   }
 
@@ -127,9 +127,10 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
                                   sensorSize: EuclideanVector[_2D],
                                   skewFactor: Double,
                                   translation: EuclideanVector[_3D],
-                                  yaw: Double) {
+                                  yaw: Double
+  ) {
     def toCamera(imageSize: ImageSize): Camera = {
-      val pp = Point(2 * principlePoint.x/imageSize.width, 2 * principlePoint.y/imageSize.height)
+      val pp = Point(2 * principlePoint.x / imageSize.width, 2 * principlePoint.y / imageSize.height)
       Camera(
         focalLength,
         pp,
@@ -162,11 +163,12 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
         sensorSize = cam.sensorSize * cam.near,
         skewFactor = 1.0,
         translation = view.translation,
-        yaw = view.yaw)
+        yaw = view.yaw
+      )
     }
   }
 
-  private implicit val legacyCameraFormat: RootJsonFormat[LegacyCamera] = jsonFormat11(LegacyCamera.apply)
+  implicit private val legacyCameraFormat: RootJsonFormat[LegacyCamera] = jsonFormat11(LegacyCamera.apply)
 
   implicit val imageFormat: JsonFormat[ImageSize] = new JsonFormat[ImageSize] {
     override def write(img: ImageSize): JsValue = JsArray(JsNumber(img.height), JsNumber(img.width))
@@ -174,16 +176,16 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
     override def read(json: JsValue): ImageSize = json match {
       // warning: order of width and height is not as expected!!
       case JsArray(Seq(JsNumber(height), JsNumber(width))) => ImageSize(width.toInt, height.toInt)
-      case _ => deserializationError("Expected Image, got:" + json)
+      case _                                               => deserializationError("Expected Image, got:" + json)
     }
   }
 
   implicit val directionalLightFormat: RootJsonFormat[DirectionalLight] = new RootJsonFormat[DirectionalLight] {
-    override def write(light: DirectionalLight): JsValue = JsObject(
-      ("ambient", light.ambient.toJson),
-      ("diffuse", light.diffuse.toJson),
-      ("direction", light.direction.toJson),
-      ("specular", light.specular.toJson))
+    override def write(light: DirectionalLight): JsValue = JsObject(("ambient", light.ambient.toJson),
+                                                                    ("diffuse", light.diffuse.toJson),
+                                                                    ("direction", light.direction.toJson),
+                                                                    ("specular", light.specular.toJson)
+    )
 
     override def read(json: JsValue): DirectionalLight = {
       val fields = json.asJsObject(s"expected DirectionalLight object, got: $json").fields
@@ -191,59 +193,67 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
         ambient = fields("ambient").convertTo[RGB],
         diffuse = fields("diffuse").convertTo[RGB],
         direction = fields("direction").convertTo[EuclideanVector[_3D]],
-        specular = fields("specular").convertTo[RGB])
+        specular = fields("specular").convertTo[RGB]
+      )
     }
   }
 
   private case class MoMoInstanceLegacy(shapeCoefficients: IndexedSeq[Double],
-                                colorCoefficients: IndexedSeq[Double],
-                                modelURI: URI,
-                                shininess: Double) {
+                                        colorCoefficients: IndexedSeq[Double],
+                                        modelURI: URI,
+                                        shininess: Double
+  ) {
     def toMoMoInstance = MoMoInstance(shapeCoefficients, colorCoefficients, IndexedSeq.empty, modelURI)
   }
 
   private object MoMoInstanceLegacy {
-    def apply(momo: MoMoInstance, shininess: Double): MoMoInstanceLegacy = MoMoInstanceLegacy(momo.shape, momo.color, momo.modelURI, shininess)
+    def apply(momo: MoMoInstance, shininess: Double): MoMoInstanceLegacy =
+      MoMoInstanceLegacy(momo.shape, momo.color, momo.modelURI, shininess)
   }
 
-  private implicit val momoLegacyFormat: RootJsonFormat[MoMoInstanceLegacy] = jsonFormat4(MoMoInstanceLegacy.apply)
+  implicit private val momoLegacyFormat: RootJsonFormat[MoMoInstanceLegacy] = jsonFormat4(MoMoInstanceLegacy.apply)
 
-  implicit val sphericalHarmonicsLightFormat: RootJsonFormat[SphericalHarmonicsLight] = new RootJsonFormat[SphericalHarmonicsLight] {
+  implicit val sphericalHarmonicsLightFormat: RootJsonFormat[SphericalHarmonicsLight] =
+    new RootJsonFormat[SphericalHarmonicsLight] {
 
-    override def write(shl: SphericalHarmonicsLight): JsValue = {
-      def convertSHLToJz(shl: IndexedSeq[EuclideanVector[_3D]]): IndexedSeq[EuclideanVector[_3D]] = {
-        if (shl.isEmpty)
-          shl
-        else if (shl.size > 9)
-          throw new SerializationException("SHL json writer (V1): cannot write more than 9 coefficients in jz format (use modern version)")
-        else {
-          // 1 - 9 coefficients
-          val permutation = IndexedSeq(0, 3, 1, 2, 6, 5, 7, 4, 8).take(shl.size)
-          permutation map (i => shl(i))
+      override def write(shl: SphericalHarmonicsLight): JsValue = {
+        def convertSHLToJz(shl: IndexedSeq[EuclideanVector[_3D]]): IndexedSeq[EuclideanVector[_3D]] = {
+          if (shl.isEmpty)
+            shl
+          else if (shl.size > 9)
+            throw new SerializationException(
+              "SHL json writer (V1): cannot write more than 9 coefficients in jz format (use modern version)"
+            )
+          else {
+            // 1 - 9 coefficients
+            val permutation = IndexedSeq(0, 3, 1, 2, 6, 5, 7, 4, 8).take(shl.size)
+            permutation map (i => shl(i))
+          }
         }
+
+        convertSHLToJz(shl.coefficients).toJson
       }
 
-      convertSHLToJz(shl.coefficients).toJson
-    }
-
-    override def read(value: JsValue): SphericalHarmonicsLight = {
-      // need to convert from V1 order to our own order (jz order -> ss order)
-      def convertJzToSHL(shl: IndexedSeq[EuclideanVector[_3D]]): IndexedSeq[EuclideanVector[_3D]] = {
-        if (shl.isEmpty)
-          shl
-        else if (shl.size > 9)
-          throw DeserializationException("SHL json reader (V1): cannot read more than 2 bands (9 coeffs), there is no conversion from jz to our format")
-        else {
-          // 1 - 0 coeffs
-          val permutation = IndexedSeq(0, 2, 3, 1, 7, 5, 4, 6, 8).take(shl.size)
-          permutation map (i => shl(i))
+      override def read(value: JsValue): SphericalHarmonicsLight = {
+        // need to convert from V1 order to our own order (jz order -> ss order)
+        def convertJzToSHL(shl: IndexedSeq[EuclideanVector[_3D]]): IndexedSeq[EuclideanVector[_3D]] = {
+          if (shl.isEmpty)
+            shl
+          else if (shl.size > 9)
+            throw DeserializationException(
+              "SHL json reader (V1): cannot read more than 2 bands (9 coeffs), there is no conversion from jz to our format"
+            )
+          else {
+            // 1 - 0 coeffs
+            val permutation = IndexedSeq(0, 2, 3, 1, 7, 5, 4, 6, 8).take(shl.size)
+            permutation map (i => shl(i))
+          }
         }
-      }
 
-      val shl = value.convertTo[IndexedSeq[EuclideanVector[_3D]]]
-      SphericalHarmonicsLight(convertJzToSHL(shl))
+        val shl = value.convertTo[IndexedSeq[EuclideanVector[_3D]]]
+        SphericalHarmonicsLight(convertJzToSHL(shl))
+      }
     }
-  }
 
   implicit val renderParameterFormat: RootJsonFormat[RenderParameter] = new RootJsonFormat[RenderParameter] {
 
@@ -282,7 +292,9 @@ trait RenderParameterJSONFormatLegacy extends DefaultJsonProtocol {
       val momo = momoLegacy.toMoMoInstance
 
       val shLight = fields("sphericalHarmonicsLight").convertTo[SphericalHarmonicsLight]
-      val dirLight = if (shLight.nonEmpty) DirectionalLight.off else fields("directionalLight").convertTo[DirectionalLight].copy(shininess = momoLegacy.shininess)
+      val dirLight =
+        if (shLight.nonEmpty) DirectionalLight.off
+        else fields("directionalLight").convertTo[DirectionalLight].copy(shininess = momoLegacy.shininess)
 
       val illumination = if (shLight.nonEmpty) shLight else dirLight
 

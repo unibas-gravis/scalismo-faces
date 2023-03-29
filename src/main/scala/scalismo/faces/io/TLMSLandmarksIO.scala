@@ -26,7 +26,8 @@ import scala.io.Source
 import scala.util.Try
 
 object TLMSLandmarksIO {
-  /** read TLMS 2D format from a file (format: "id visible x y")*/
+
+  /** read TLMS 2D format from a file (format: "id visible x y") */
   def read2D(file: File): Try[IndexedSeq[TLMSLandmark2D]] = {
     ResourceManagement.usingTry(Try(new FileInputStream(file)))(read2DFromStream)
   }
@@ -36,7 +37,10 @@ object TLMSLandmarksIO {
     val lines = Source.fromInputStream(stream).getLines().filter(!_.isEmpty)
     lines.map { line =>
       val fields = line.split("\\s+").map(_.trim)
-      require(fields.length == 4, "landmark file not in correct format, expects name, visibility (0 or 1), x-coordinate, y-coordinate per line")
+      require(
+        fields.length == 4,
+        "landmark file not in correct format, expects name, visibility (0 or 1), x-coordinate, y-coordinate per line"
+      )
       val name = fields(0)
       val visibility: Boolean = fields(1).toInt > 0
       val x = fields(2).toFloat
@@ -55,7 +59,10 @@ object TLMSLandmarksIO {
     val lines = Source.fromInputStream(stream).getLines().filter(!_.isEmpty)
     lines.map { line =>
       val fields = line.split("\\s+").map(_.trim)
-      require(fields.length == 5, "landmark file not in correct format, expects name, visibility (0 or 1), x-coordinate, y-coordinate, z-coordinate per line")
+      require(
+        fields.length == 5,
+        "landmark file not in correct format, expects name, visibility (0 or 1), x-coordinate, y-coordinate, z-coordinate per line"
+      )
       val name = fields(0)
       val visibility: Boolean = fields(1).toInt > 0
       val x = fields(2).toFloat
@@ -68,9 +75,9 @@ object TLMSLandmarksIO {
   /** write TLMS 2D landmarks format to a stream (format: "id visible x y") */
   def write2DToStream(landmarks: IndexedSeq[TLMSLandmark2D], stream: OutputStream): Try[Unit] = Try {
     ResourceManagement.using(new PrintWriter(stream), (wr: PrintWriter) => wr.flush()) { writer =>
-      landmarks.foreach{lm =>
+      landmarks.foreach { lm =>
         val visible = if (lm.visible) "1" else "0"
-        val line = "%s %s %.17g %.17g".formatLocal(java.util.Locale.US, lm.id, visible, lm.point.x,lm.point.y)
+        val line = "%s %s %.17g %.17g".formatLocal(java.util.Locale.US, lm.id, visible, lm.point.x, lm.point.y)
         writer.println(line)
       }
     }
@@ -86,7 +93,8 @@ object TLMSLandmarksIO {
     ResourceManagement.using(new PrintWriter(stream), (wr: PrintWriter) => wr.flush()) { writer =>
       landmarks.foreach { lm =>
         val visible = if (lm.visible) "1" else "0"
-        val line = "%s %s %.17g %.17g %.17g".formatLocal(java.util.Locale.US, lm.id, visible, lm.point.x,lm.point.y,lm.point.z)
+        val line =
+          "%s %s %.17g %.17g %.17g".formatLocal(java.util.Locale.US, lm.id, visible, lm.point.x, lm.point.y, lm.point.z)
         writer.println(line)
       }
     }

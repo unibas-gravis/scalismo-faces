@@ -48,6 +48,7 @@ class Permutation(p: Array[Int]) {
 }
 
 object Permutation {
+
   /** create default identity permutation */
   def identity(n: Int): Permutation = new Permutation(Array.empty[Int]) {
     override def apply(i: Int): Int = i

@@ -18,18 +18,19 @@ package scalismo.faces.image.pyramid
 import scalismo.faces.image.PixelImage
 
 /**
-  * ImagePyramid trait that offers access to the levels of the pyramid and the number of levels.
-  * @tparam A Pixel type of underlying images in the Pyramid.
-  */
+ * ImagePyramid trait that offers access to the levels of the pyramid and the number of levels.
+ * @tparam A
+ *   Pixel type of underlying images in the Pyramid.
+ */
 trait ImagePyramid[A] {
 
   /**
-    * Number of levels of the pyramid.
-    */
+   * Number of levels of the pyramid.
+   */
   val levels: Int
 
   /**
-    * Sequence of levels. Usually head is the largest image and tail the smallest.
-    */
+   * Sequence of levels. Usually head is the largest image and tail the smallest.
+   */
   val level: Seq[PixelImage[A]]
 }

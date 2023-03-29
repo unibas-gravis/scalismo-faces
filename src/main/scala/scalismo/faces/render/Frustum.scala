@@ -17,7 +17,7 @@
 package scalismo.faces.render
 
 import scalismo.geometry.Point._
-import scalismo.geometry.{Point, EuclideanVector, _2D}
+import scalismo.geometry.{_2D, EuclideanVector, Point}
 
 /** viewing frustum for camera projections, defines the viewing volume, see also: OpenGL */
 case class Frustum(left: Double, right: Double, bottom: Double, top: Double, near: Double, far: Double) {
@@ -28,7 +28,8 @@ case class Frustum(left: Double, right: Double, bottom: Double, top: Double, nea
   /**
    * get closest orthographic frustum, matches the behaviour at the given z distance, defaults to near plane
    *
-   * @param z z position of plane with identical transformation behavior (depth, units identical to near and far)
+   * @param z
+   *   z position of plane with identical transformation behavior (depth, units identical to near and far)
    */
   def closestOrthographic(z: Double = near): Frustum = {
     Frustum(left * z / near, right * z / near, bottom * z / near, top * z / near, near, far)
@@ -37,7 +38,8 @@ case class Frustum(left: Double, right: Double, bottom: Double, top: Double, nea
   /**
    * move scene in this frustum through an off-center projection, center point in NDC [-1,1]x[-1,1]
    *
-   * @param center center position, in NDC [-1, 1]x[-1, 1] (outside is possible)
+   * @param center
+   *   center position, in NDC [-1, 1]x[-1, 1] (outside is possible)
    */
   def withCenter(center: Point[_2D]): Frustum = {
     val Frustum(l, r, b, t, n, f) = centered
@@ -57,15 +59,19 @@ case class Frustum(left: Double, right: Double, bottom: Double, top: Double, nea
   /**
    * scale this frustum (near plane is not scaled), larger frustum -> smaller image
    *
-   * @param horizontal horizontal scale factor
-   * @param vertical   vertical scale factor
+   * @param horizontal
+   *   horizontal scale factor
+   * @param vertical
+   *   vertical scale factor
    */
-  def scale(horizontal: Double, vertical: Double): Frustum = Frustum(left * horizontal, right * horizontal, bottom * vertical, top * vertical, near, far)
+  def scale(horizontal: Double, vertical: Double): Frustum =
+    Frustum(left * horizontal, right * horizontal, bottom * vertical, top * vertical, near, far)
 
   /**
    * scale this frustum (near plane is not scaled), larger frustum -> smaller image
    *
-   * @param f scale factor
+   * @param f
+   *   scale factor
    */
   def scale(f: Double): Frustum = scale(f, f)
 
@@ -79,13 +85,18 @@ case class Frustum(left: Double, right: Double, bottom: Double, top: Double, nea
 
 object Frustum {
   import scalismo.geometry.EuclideanVector._
+
   /**
    * construct frustum from field of view, both horizontal and vertical
    *
-   * @param fovX horizontal field of view (radians)
-   * @param fovY vertical field of view (radians)
-   * @param near near plane (absolute value)
-   * @param far  far plane (absolute value)
+   * @param fovX
+   *   horizontal field of view (radians)
+   * @param fovY
+   *   vertical field of view (radians)
+   * @param near
+   *   near plane (absolute value)
+   * @param far
+   *   far plane (absolute value)
    */
   def fromFOV(fovX: Double, fovY: Double, near: Double, far: Double): Frustum = {
     require(fovX > 0.0, "field of view must be positive")
@@ -98,10 +109,14 @@ object Frustum {
   /**
    * construct frustum from vertical field of view and aspect ratio (w/h)
    *
-   * @param fovY   vertical field of view (radians)
-   * @param aspect aspect ratio: width/height
-   * @param near   near plane (absolute value)
-   * @param far    far plane (absolute value)
+   * @param fovY
+   *   vertical field of view (radians)
+   * @param aspect
+   *   aspect ratio: width/height
+   * @param near
+   *   near plane (absolute value)
+   * @param far
+   *   far plane (absolute value)
    */
   def fromVerticalFOV(fovY: Double, aspect: Double, near: Double, far: Double): Frustum = {
     fromFocal(1.0 / math.tan(fovY / 2), aspect, near, far)
@@ -110,10 +125,14 @@ object Frustum {
   /**
    * construct frustum from focal length and aspect ratio (w/h)
    *
-   * @param focalLength focal length corresponding to a unit sensor size of 1
-   * @param aspect      aspect ratio: width/height
-   * @param near        near plane (absolute value)
-   * @param far         far plane (absolute value)
+   * @param focalLength
+   *   focal length corresponding to a unit sensor size of 1
+   * @param aspect
+   *   aspect ratio: width/height
+   * @param near
+   *   near plane (absolute value)
+   * @param far
+   *   far plane (absolute value)
    */
   def fromFocal(focalLength: Double, aspect: Double, near: Double, far: Double): Frustum = {
     require(focalLength > 0.0, "focal length must be strictly positive")
@@ -126,10 +145,14 @@ object Frustum {
   /**
    * construct frustum from focal length and sensor size
    *
-   * @param focalLength focal length of lens
-   * @param sensorSize  sensor size, same units as focalLength, usually mm
-   * @param near        near plane (absolute value)
-   * @param far         far plane (absolute value)
+   * @param focalLength
+   *   focal length of lens
+   * @param sensorSize
+   *   sensor size, same units as focalLength, usually mm
+   * @param near
+   *   near plane (absolute value)
+   * @param far
+   *   far plane (absolute value)
    */
   def fromFocalWithSensor(focalLength: Double, sensorSize: EuclideanVector[_2D], near: Double, far: Double): Frustum = {
     require(sensorSize.x > 0.0 && sensorSize.y > 0.0, "sensor size must be positive")

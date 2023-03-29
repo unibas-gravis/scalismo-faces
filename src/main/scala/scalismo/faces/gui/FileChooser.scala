@@ -22,7 +22,8 @@ import javax.swing.JFileChooser
 import javax.swing.filechooser.FileNameExtensionFilter
 
 /** file chooser dialog with a possible extension filter */
-class FileChooser(directory: Option[File] = None, fileFilter: Option[FileNameExtensionFilter] = None) extends JFileChooser {
+class FileChooser(directory: Option[File] = None, fileFilter: Option[FileNameExtensionFilter] = None)
+    extends JFileChooser {
   fileFilter.foreach(setFileFilter)
   directory.foreach(setCurrentDirectory)
 

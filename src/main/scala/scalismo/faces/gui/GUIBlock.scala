@@ -33,13 +33,13 @@ object GUIBlock {
   /** close all named GUIFrames */
   def closeAllFrames(): Unit = {
     openFrames.synchronized {
-      openFrames.values.foreach{ frame => runInSwing{frame.dispose()}}
+      openFrames.values.foreach { frame => runInSwing { frame.dispose() } }
       openFrames.clear()
     }
   }
 
   /** get the open frame with the title, None if no such frame exists */
-  def getFrame(title: String): Option[GUIFrame] = openFrames.synchronized{ openFrames.get(title) }
+  def getFrame(title: String): Option[GUIFrame] = openFrames.synchronized { openFrames.get(title) }
 
   /** execute action in Swing Event Dispatch Thread (async) */
   def runInSwing(action: => Unit): Unit = {
@@ -119,7 +119,7 @@ object GUIBlock {
 
   /** vertical container, full width */
   def fullWidthStack(compenents: JComponent*): JPanel = {
-    withMutable(new JPanel)  { panel =>
+    withMutable(new JPanel) { panel =>
       panel.setLayout(new GridBagLayout())
       panel.setAlignmentX(SwingConstants.TOP)
       val gbc = new GridBagConstraints()
@@ -149,11 +149,15 @@ object GUIBlock {
   /** display a message */
   def alert(msg: String): Unit = alert(msg, null)
 
-  /** create a button with a listener and a shortcut
-    * @param text text to display on button
-    * @param action action to be executed on click
-    * @param shortcut e.g. "control S"
-    */
+  /**
+   * create a button with a listener and a shortcut
+   * @param text
+   *   text to display on button
+   * @param action
+   *   action to be executed on click
+   * @param shortcut
+   *   e.g. "control S"
+   */
   def button(text: String, action: => Unit = {}, shortcut: Option[String] = None): JButton = {
     withMutable(new JButton(text)) { b =>
       b.addActionListener(
@@ -161,11 +165,12 @@ object GUIBlock {
           new AbstractAction() {
             override def actionPerformed(e: ActionEvent): Unit = action
           }
-        ){ l =>
-          if(shortcut.isDefined){
+        ) { l =>
+          if (shortcut.isDefined) {
             l.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(shortcut.get))
             b.getActionMap.put(s"${shortcut}Action", l)
-            b.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(l.getValue(Action.ACCELERATOR_KEY).asInstanceOf[KeyStroke], s"${shortcut}Action")
+            b.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+              .put(l.getValue(Action.ACCELERATOR_KEY).asInstanceOf[KeyStroke], s"${shortcut}Action")
             b.setToolTipText(s"Shortcut: ${shortcut.get}")
           }
         }
@@ -196,7 +201,12 @@ object GUIBlock {
   def label(text: String) = new JLabel(text)
 
   /** create a slider element */
-  def slider(min: Int, max: Int, value: Int, changeListener: Int => Unit, orientation: Int = SwingConstants.VERTICAL): JSlider = {
+  def slider(min: Int,
+             max: Int,
+             value: Int,
+             changeListener: Int => Unit,
+             orientation: Int = SwingConstants.VERTICAL
+  ): JSlider = {
     withMutable(new JSlider(orientation, min, max, value)) { s =>
       s.addChangeListener(new ChangeListener {
         override def stateChanged(e: ChangeEvent): Unit = changeListener(s.getValue)
@@ -225,11 +235,11 @@ object GUIBlock {
   case class ToolbarEntry(entry: JComponent) extends ToolbarItem
 
   def toolbar(name: String, elements: ToolbarItem*): JToolBar = {
-    withMutable(new JToolBar(name)){ tb =>
-      elements.foreach{
-        case ToolbarSeparator => tb.addSeparator()
+    withMutable(new JToolBar(name)) { tb =>
+      elements.foreach {
+        case ToolbarSeparator        => tb.addSeparator()
         case ToolbarEntry(component) => tb.add(component)
-        case ToolbarAction(action) => tb.add(action)
+        case ToolbarAction(action)   => tb.add(action)
       }
     }
   }
@@ -248,7 +258,8 @@ object GUIBlock {
                    center: Component = empty,
                    left: Component = empty,
                    right: Component = empty,
-                   bottom: Component = empty): JPanel = {
+                   bottom: Component = empty
+  ): JPanel = {
     withMutable(new JPanel()) { panel =>
       panel.setLayout(new BorderLayout())
       panel.add(top, BorderLayout.PAGE_START)
@@ -288,7 +299,8 @@ object GUIBlock {
              tooltip: String = "",
              icon: Icon = null,
              accelerator: KeyStroke = null,
-             action: => Unit = {}): Action = {
+             action: => Unit = {}
+  ): Action = {
     withMutable(new AbstractAction(text, icon) {
       override def actionPerformed(e: ActionEvent): Unit = action
     }) { a =>
@@ -304,7 +316,7 @@ object GUIBlock {
   def action(name: String, action: => Unit): Action = {
     withMutable(new AbstractAction(name) {
       override def actionPerformed(e: ActionEvent): Unit = action
-    }){ action =>
+    }) { action =>
       action.putValue(Action.SHORT_DESCRIPTION, name)
     }
   }
@@ -314,8 +326,8 @@ object GUIBlock {
   // need an own menu item type to wrap separators, items and sub menus all in one type
   sealed trait MenuItem
   case object MenuSeparator extends MenuItem
-  case class  MenuEntry(item: JMenuItem) extends MenuItem
-  case class  Menu(menu: JMenu) extends MenuItem
+  case class MenuEntry(item: JMenuItem) extends MenuItem
+  case class Menu(menu: JMenu) extends MenuItem
 
   implicit def menu2JMenu(menu: Menu): JMenu = menu.menu
   implicit def menuEntry2JMenuItem(menuEntry: MenuEntry): JMenuItem = menuEntry.item
@@ -362,10 +374,10 @@ object GUIBlock {
   /** create a menu consisting of menu items (entry, separator or sub menu) */
   def menu(name: String, items: MenuItem*): Menu = {
     val menu = new JMenu(name)
-    items.foreach{
+    items.foreach {
       case MenuEntry(item) => menu.add(item)
-      case Menu(m) => menu.add(m)
-      case MenuSeparator => menu.addSeparator()
+      case Menu(m)         => menu.add(m)
+      case MenuSeparator   => menu.addSeparator()
     }
     Menu(menu)
   }
@@ -377,8 +389,3 @@ object GUIBlock {
     }
   }
 }
-
-
-
-
-

@@ -21,7 +21,7 @@ import scalismo.color.RGB
 /** HSV color value with Hue in [0.0,2*Pi), Saturation in [0.0,1.0] and Value in [0.0,1.0] */
 case class HSV(hue: Double, saturation: Double, value: Double) {
 
-  /** convert to RGB value. May throw or result in undefined behaviour if values outside of ranges.*/
+  /** convert to RGB value. May throw or result in undefined behaviour if values outside of ranges. */
   def toRGB: RGB = {
     val hs = hue / (math.Pi / 3.0)
     val h: Int = hs.toInt
@@ -51,17 +51,18 @@ object HSV {
     val RGB(r, g, b) = rgb
     val h: Double = maxCh match {
       case `minCh` => 0.0
-      case `r` => math.Pi / 3.0 * (0.0 + (g - b) / (maxCh - minCh))
-      case `g` => math.Pi / 3.0 * (2.0 + (b - r) / (maxCh - minCh))
-      case `b` => math.Pi / 3.0 * (4.0 + (r - g) / (maxCh - minCh))
+      case `r`     => math.Pi / 3.0 * (0.0 + (g - b) / (maxCh - minCh))
+      case `g`     => math.Pi / 3.0 * (2.0 + (b - r) / (maxCh - minCh))
+      case `b`     => math.Pi / 3.0 * (4.0 + (r - g) / (maxCh - minCh))
     }
     val s = if (maxCh > 0.0) (maxCh - minCh) / maxCh else 0.0
     val v = maxCh
-    HSV( if(h<0) h+2.0*math.Pi else h, s, v)
+    HSV(if (h < 0) h + 2.0 * math.Pi else h, s, v)
   }
 
   /** ColorBlender for HSV colors */
   implicit object HSVBlender extends ColorBlender[HSV] {
+
     /** Blend two colors (or other objects), necessary for interpolation in images, l is within [0, 1] */
     override def blend(obj1: HSV, obj2: HSV, l: Double): HSV = {
       val m = 1.0 - l
@@ -69,7 +70,7 @@ object HSV {
       val h2 = obj2.hue
 
       val hue_nonSanitized = math.atan2(l * math.sin(h1) + m * math.cos(h1), l * math.sin(h2) + m * math.cos(h2))
-      val hue =   if(hue_nonSanitized < 0){
+      val hue = if (hue_nonSanitized < 0) {
         hue_nonSanitized % (2 * Math.PI) + (2 * Math.PI)
       } else {
         hue_nonSanitized % (2 * Math.PI)

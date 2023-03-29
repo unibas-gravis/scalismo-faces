@@ -25,29 +25,36 @@ import scala.reflect.ClassTag
 object PixelImageOperations {
 
   /**
-    * Blends the foreground over the background according to the mask.
-    * The foreground is visible where the mask is 1.0. The Background is visible where the mask is 0.0. For other mask
-    * values the two images are blended accordingly.
-    * @param background visible when mask = 0.0
-    * @param foreground visible when mask = 1.0
-    * @param mask used for blending the colors
-    * @return
-    */
-  def alphaBlending(background: PixelImage[RGB], foreground: PixelImage[RGB], mask: PixelImage[Double]): PixelImage[RGB] = {
-    alphaBlending(background,setAlpha(foreground,mask))
+   * Blends the foreground over the background according to the mask. The foreground is visible where the mask is 1.0.
+   * The Background is visible where the mask is 0.0. For other mask values the two images are blended accordingly.
+   * @param background
+   *   visible when mask = 0.0
+   * @param foreground
+   *   visible when mask = 1.0
+   * @param mask
+   *   used for blending the colors
+   * @return
+   */
+  def alphaBlending(background: PixelImage[RGB],
+                    foreground: PixelImage[RGB],
+                    mask: PixelImage[Double]
+  ): PixelImage[RGB] = {
+    alphaBlending(background, setAlpha(foreground, mask))
   }
 
   /**
-    * Blends the foreground over the background according to the alpha channel of the foreground.
-    * The foreground is visible where its alpha channel is 1.0. The Background is visible when the foreground alpha
-    * channel is 0.0. For other values the two images are blended accordingly.
-    * @param background visible when alpha channel of foreground = 0.0
-    * @param foreground visible when alpha channel = 1.0
-    * @return
-    */
+   * Blends the foreground over the background according to the alpha channel of the foreground. The foreground is
+   * visible where its alpha channel is 1.0. The Background is visible when the foreground alpha channel is 0.0. For
+   * other values the two images are blended accordingly.
+   * @param background
+   *   visible when alpha channel of foreground = 0.0
+   * @param foreground
+   *   visible when alpha channel = 1.0
+   * @return
+   */
   def alphaBlending(background: PixelImage[RGB], foreground: PixelImage[RGBA]): PixelImage[RGB] = {
-    background.zip(foreground).map{
-      case (bg,fg) => bg.blend(fg)
+    background.zip(foreground).map { case (bg, fg) =>
+      bg.blend(fg)
     }
   }
 
@@ -84,14 +91,16 @@ object PixelImageOperations {
   }
 
   /** Calculate variance of pixels in image. */
-  def variancePerChannel[Pixel: ClassTag](img: PixelImage[Pixel])(implicit pixOps: ColorSpaceOperations[Pixel]): Pixel = {
+  def variancePerChannel[Pixel: ClassTag](
+    img: PixelImage[Pixel]
+  )(implicit pixOps: ColorSpaceOperations[Pixel]): Pixel = {
     val mu = mean(img)
     val muSquared = pixOps.multiply(mu, mu)
     val muImageSquared = mean(img.map[Pixel](c => pixOps.multiply(c, c)))
     pixOps.add(muImageSquared, pixOps.scale(muSquared, -1.0))
   }
 
-  /**Calculate mean of pixels in image.*/
+  /** Calculate mean of pixels in image. */
   def mean[Pixel](img: PixelImage[Pixel])(implicit pixOps: ColorSpaceOperations[Pixel]): Pixel = {
     val sum = img.values.reduce((p, q) => pixOps.add(p, q))
     pixOps.scale(sum, 1.0 / (img.width * img.height))
@@ -116,28 +125,45 @@ object PixelImageOperations {
 
   /** inset an image into a larger one, copy patch */
   def insetImage[A: ClassTag](targetImage: PixelImage[A], inset: PixelImage[A], left: Int, top: Int): PixelImage[A] = {
-    PixelImage.fromTemplate(targetImage, (x, y) =>
-      if (x >= left && x < left + inset.width && y >= top && y < top + inset.height)
-        inset(x - left, y - top)
-      else
-        targetImage(x, y))
+    PixelImage.fromTemplate(targetImage,
+                            (x, y) =>
+                              if (x >= left && x < left + inset.width && y >= top && y < top + inset.height)
+                                inset(x - left, y - top)
+                              else
+                                targetImage(x, y)
+    )
   }
 
   /** inset an image into a larger one, copy patch */
   def insetView[A](targetImage: PixelImage[A], inset: PixelImage[A], left: Int, top: Int): PixelImage[A] = {
-    PixelImage.view(targetImage.domain, (x, y) =>
-      if (x >= left && x < left + inset.width && y >= top && y < top + inset.height)
-        inset(x - left, y - top)
-      else
-        targetImage(x, y)).withAccessMode(targetImage.accessMode)
+    PixelImage
+      .view(targetImage.domain,
+            (x, y) =>
+              if (x >= left && x < left + inset.width && y >= top && y < top + inset.height)
+                inset(x - left, y - top)
+              else
+                targetImage(x, y)
+      )
+      .withAccessMode(targetImage.accessMode)
   }
 
   /** pad image with constant values */
-  def padImage[A: ClassTag](image: PixelImage[A], targetWidth: Int, targetHeight: Int, value: A, left: Int = 0, top: Int = 0): PixelImage[A] = {
-    PixelImage.view(targetWidth, targetHeight, (x, y) => {
-      if (x >= left && x < left + image.width && y >= top && y < top + image.height) image(x - left, y - top)
-      else value
-    }).withAccessMode(image.accessMode)
+  def padImage[A: ClassTag](image: PixelImage[A],
+                            targetWidth: Int,
+                            targetHeight: Int,
+                            value: A,
+                            left: Int = 0,
+                            top: Int = 0
+  ): PixelImage[A] = {
+    PixelImage
+      .view(targetWidth,
+            targetHeight,
+            (x, y) => {
+              if (x >= left && x < left + image.width && y >= top && y < top + image.height) image(x - left, y - top)
+              else value
+            }
+      )
+      .withAccessMode(image.accessMode)
   }
 
   /** calculate the L2 norm of an image */
@@ -151,9 +177,15 @@ object PixelImageOperations {
   }
 
   /** average an image to half its size multiple times */
-  def pyramidAverage[A](image: PixelImage[A], levels: Int = 1)(implicit ops: ColorSpaceOperations[A], tag: ClassTag[A]): PixelImage[A] = {
-    def shrink2(image: PixelImage[A]): PixelImage[A] = image.resample(image.width / 2, image.height / 2, InterpolationKernel.BilinearKernel)
-    LanguageUtilities.iterate(image, levels)(shrink2).resample(image.width, image.height, InterpolationKernel.BilinearKernel)
+  def pyramidAverage[A](image: PixelImage[A], levels: Int = 1)(implicit
+    ops: ColorSpaceOperations[A],
+    tag: ClassTag[A]
+  ): PixelImage[A] = {
+    def shrink2(image: PixelImage[A]): PixelImage[A] =
+      image.resample(image.width / 2, image.height / 2, InterpolationKernel.BilinearKernel)
+    LanguageUtilities
+      .iterate(image, levels)(shrink2)
+      .resample(image.width, image.height, InterpolationKernel.BilinearKernel)
   }
 
   /** convert a masked image into an optional image with None outside the mask region */
@@ -166,18 +198,22 @@ object PixelImageOperations {
 
   /** generate an image with patterns of increasing frequency from the the center outwards */
   def chirpImage(width: Int): PixelImage[Double] = {
-    PixelImage(width, width, (x: Int, y: Int) => {
-      val (dx, dy) = (x - width / 2.0, y - width / 2.0)
+    PixelImage(
+      width,
+      width,
+      (x: Int, y: Int) => {
+        val (dx, dy) = (x - width / 2.0, y - width / 2.0)
 
-      val rSq = dx * dx + dy * dy
-      val r = math.sqrt(rSq)
-      val km = 1.2 * math.Pi
-      val rm = 0.9 * width
-      val w = rm / 5.0
-      val term1 = math.sin((km * rSq) / (2.0 * rm))
-      val term2 = 0.5 * math.tanh((rm - r) / w) + 0.5
-      (term1 * term2 + 1.0) / 2.0
-    })
+        val rSq = dx * dx + dy * dy
+        val r = math.sqrt(rSq)
+        val km = 1.2 * math.Pi
+        val rm = 0.9 * width
+        val w = rm / 5.0
+        val term1 = math.sin((km * rSq) / (2.0 * rm))
+        val term2 = 0.5 * math.tanh((rm - r) / w) + 0.5
+        (term1 * term2 + 1.0) / 2.0
+      }
+    )
   }
 
   /** extract bounding box of predicate in format: (left, top, right, bottom) */
@@ -197,12 +233,15 @@ object PixelImageOperations {
   }
 
   /** Interprets the target as a multi channel image and extracts each channel as a separate image. */
-  def extractChannels[Pixel](target: PixelImage[Pixel])(implicit vec: ComponentRepresentation[Pixel]): IndexedSeq[PixelImage[Double]] = {
+  def extractChannels[Pixel](
+    target: PixelImage[Pixel]
+  )(implicit vec: ComponentRepresentation[Pixel]): IndexedSeq[PixelImage[Double]] = {
     val targetMC = MultiChannelImageBuffer.vectorize(target)
     for (i <- 0 until vec.size) yield {
       PixelImage(targetMC.width, targetMC.height, (x, y) => targetMC(x, y, i))
     }
   }
+
   /** Flips the target at the horizontally */
   def flipHorizontal[A](target: PixelImage[A]): PixelImage[A] = {
     PixelImage.view(target.width, target.height, (x, y) => target(target.width - x - 1, y))
@@ -212,6 +251,5 @@ object PixelImageOperations {
   def flipVertical[A](target: PixelImage[A]): PixelImage[A] = {
     PixelImage.view(target.width, target.height, (x, y) => target(x, target.height - y - 1))
   }
-
 
 }

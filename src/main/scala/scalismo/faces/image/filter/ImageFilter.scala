@@ -34,4 +34,3 @@ object ImageFilter {
     override def filter(image: PixelImage[A]): PixelImage[B] = f(image)
   }
 }
-

@@ -17,7 +17,7 @@
 package scalismo.faces.image.filter
 
 import scalismo.faces.image.PixelImage
-import scalismo.geometry.{Point, Point1D, _1D}
+import scalismo.geometry.{_1D, Point, Point1D}
 import scalismo.sampling.DistributionEvaluator
 
 /** calculates general maximum convolutions on images */

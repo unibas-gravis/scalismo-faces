@@ -23,11 +23,15 @@ import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 
 /**
-  * Filter the image according to ordinal decisions in a "kernel window" (erode, dilate, median filter) - Morphological operation with block structuring element
-  * @param structuringElement Structuring element of morphological operation
-  * @param windowFilter Function to extract value from filtering
-  */
-case class MorphologicalFilter[A: ClassTag](structuringElement: PixelImage[Boolean], windowFilter: (Seq[A]) => A) extends ImageFilter[A, A] {
+ * Filter the image according to ordinal decisions in a "kernel window" (erode, dilate, median filter) - Morphological
+ * operation with block structuring element
+ * @param structuringElement
+ *   Structuring element of morphological operation
+ * @param windowFilter
+ *   Function to extract value from filtering
+ */
+case class MorphologicalFilter[A: ClassTag](structuringElement: PixelImage[Boolean], windowFilter: (Seq[A]) => A)
+    extends ImageFilter[A, A] {
   override def filter(image: PixelImage[A]): PixelImage[A] = {
     val width = structuringElement.width
     val height = structuringElement.height
@@ -54,7 +58,7 @@ case class MorphologicalFilter[A: ClassTag](structuringElement: PixelImage[Boole
         image(x, y)
     }
 
-    if(width <= 0 || height <= 0)
+    if (width <= 0 || height <= 0)
       image
     else
       PixelImage(image.width, image.height, perPixel, Strict())
@@ -62,5 +66,6 @@ case class MorphologicalFilter[A: ClassTag](structuringElement: PixelImage[Boole
 }
 
 object MorphologicalFilter {
-  def boxElement(size: Int): PixelImage[Boolean] = PixelImage.view(size, size, (x, y) => x >= 0 && x < size && y >= 0 && y < size)
+  def boxElement(size: Int): PixelImage[Boolean] =
+    PixelImage.view(size, size, (x, y) => x >= 0 && x < size && y >= 0 && y < size)
 }
