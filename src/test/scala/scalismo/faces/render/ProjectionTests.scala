@@ -18,7 +18,7 @@ package scalismo.faces.render
 
 import breeze.linalg.DenseVector
 import scalismo.faces.FacesTestSuite
-import scalismo.geometry.{Point, EuclideanVector, _2D, _3D}
+import scalismo.geometry.{_2D, _3D, EuclideanVector, Point}
 
 class ProjectionTests extends FacesTestSuite {
 
@@ -89,7 +89,10 @@ class ProjectionTests extends FacesTestSuite {
     val p = FrustumPinholeProjection(frustum)
 
     it("is properly inverted") {
-      val x3d = Point(rnd.scalaRandom.nextDouble() * 1e3, rnd.scalaRandom.nextDouble() * 1e3, rnd.scalaRandom.nextDouble() * 10e3 + 1e3)
+      val x3d = Point(rnd.scalaRandom.nextDouble() * 1e3,
+                      rnd.scalaRandom.nextDouble() * 1e3,
+                      rnd.scalaRandom.nextDouble() * 10e3 + 1e3
+      )
       val x3dp = p.inverse(p(x3d))
       (x3d - x3dp).norm should be < 1.0
     }
@@ -99,15 +102,17 @@ class ProjectionTests extends FacesTestSuite {
         (Point(0f, 0f, -2e3), Point(0f, 0f, 0.515151515)),
         (Point(100f, -50f, -1.5e3), Point(0.1904762, -0.12820514, 0.34680134))
       )
-      pointsWithTarget.foreach {
-        case (x, target) =>
-          (p(x) - target).norm should be < 1.0
+      pointsWithTarget.foreach { case (x, target) =>
+        (p(x) - target).norm should be < 1.0
       }
     }
 
     it("provides a result which is consistent with homogeneous coordinates") {
       val m4 = p.matrix4
-      val x = Point(rnd.scalaRandom.nextDouble() * 1e3, rnd.scalaRandom.nextDouble() * 1e3, rnd.scalaRandom.nextDouble() * 10e3 + 1e3)
+      val x = Point(rnd.scalaRandom.nextDouble() * 1e3,
+                    rnd.scalaRandom.nextDouble() * 1e3,
+                    rnd.scalaRandom.nextDouble() * 10e3 + 1e3
+      )
       val xh: DenseVector[Double] = DenseVector(x.x, x.y, x.z, 1.0)
       val xhp: DenseVector[Double] = m4 * xh
       val xp = Point(xhp(0) / xhp(3), xhp(1) / xhp(3), xhp(2) / xhp(3))
@@ -119,7 +124,10 @@ class ProjectionTests extends FacesTestSuite {
     val p = FrustumOrthographicProjection(frustum)
 
     it("is properly inverted") {
-      val x3d = Point(rnd.scalaRandom.nextDouble() * 1e3, rnd.scalaRandom.nextDouble() * 1e3, rnd.scalaRandom.nextDouble() * 10e3 + 1e3)
+      val x3d = Point(rnd.scalaRandom.nextDouble() * 1e3,
+                      rnd.scalaRandom.nextDouble() * 1e3,
+                      rnd.scalaRandom.nextDouble() * 10e3 + 1e3
+      )
       val x3dp = p.inverse(p(x3d))
       (x3d - x3dp).norm should be < 1.0
     }
@@ -132,15 +140,17 @@ class ProjectionTests extends FacesTestSuite {
 
       val projected = pointsWithTarget.map(x => (p(x._1), x._2))
 
-      projected.foreach {
-        case (x, px) =>
-          (x - px).norm should be < 1.0
+      projected.foreach { case (x, px) =>
+        (x - px).norm should be < 1.0
       }
     }
 
     it("provides a result which is consistent with homogeneous coordinates") {
       val m4 = p.matrix4
-      val x = Point(rnd.scalaRandom.nextDouble() * 1e3, rnd.scalaRandom.nextDouble() * 1e3, rnd.scalaRandom.nextDouble() * 10e3 + 1e3)
+      val x = Point(rnd.scalaRandom.nextDouble() * 1e3,
+                    rnd.scalaRandom.nextDouble() * 1e3,
+                    rnd.scalaRandom.nextDouble() * 10e3 + 1e3
+      )
       val xh: DenseVector[Double] = DenseVector(x.x, x.y, x.z, 1.0)
       val xhp: DenseVector[Double] = m4 * xh
       val xp = Point(xhp(0) / xhp(3), xhp(1) / xhp(3), xhp(2) / xhp(3))

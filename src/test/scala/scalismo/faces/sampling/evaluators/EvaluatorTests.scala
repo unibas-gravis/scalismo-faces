@@ -31,7 +31,7 @@ class EvaluatorTests extends FacesTestSuite {
 
     it("returns the same value if evaluated as a factor around 1.0 or as value around the mean (mean can be shifted)") {
       val dLogM = LogNormalDistribution.logDensity(2.0, math.log(1.5), math.log(1.5))
-      val dLogZ = LogNormalDistribution.logDensity(2.0/1.5, 0.0, math.log(1.5))
+      val dLogZ = LogNormalDistribution.logDensity(2.0 / 1.5, 0.0, math.log(1.5))
       dLogM shouldBe dLogZ +- 1e-5
     }
   }

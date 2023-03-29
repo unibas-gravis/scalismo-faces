@@ -17,7 +17,7 @@
 package scalismo.faces.momo
 
 import java.io.*
-import breeze.linalg.{DenseVector, norm, sum}
+import breeze.linalg.{norm, sum, DenseVector}
 import breeze.stats.distributions.Rand.FixedSeed.randBasis
 import breeze.stats.distributions.Gaussian
 import scalismo.faces.FacesTestSuite
@@ -30,8 +30,12 @@ import scala.util.Try
 class MoMoTests extends FacesTestSuite {
 
   def meshDist(mesh1: VertexColorMesh3D, mesh2: VertexColorMesh3D): Double = {
-    val shp1: DenseVector[Double] = DenseVector(mesh1.shape.pointSet.points.toIndexedSeq.flatMap(p => IndexedSeq(p.x, p.y, p.z)).toArray)
-    val shp2: DenseVector[Double] = DenseVector(mesh2.shape.pointSet.points.toIndexedSeq.flatMap(p => IndexedSeq(p.x, p.y, p.z)).toArray)
+    val shp1: DenseVector[Double] = DenseVector(
+      mesh1.shape.pointSet.points.toIndexedSeq.flatMap(p => IndexedSeq(p.x, p.y, p.z)).toArray
+    )
+    val shp2: DenseVector[Double] = DenseVector(
+      mesh2.shape.pointSet.points.toIndexedSeq.flatMap(p => IndexedSeq(p.x, p.y, p.z)).toArray
+    )
     val col1: DenseVector[Double] = DenseVector(mesh1.color.pointData.flatMap(p => IndexedSeq(p.r, p.g, p.b)).toArray)
     val col2: DenseVector[Double] = DenseVector(mesh2.color.pointData.flatMap(p => IndexedSeq(p.r, p.g, p.b)).toArray)
     val shapeDistSq = sum((shp1 - shp2).map(v => v * v))
@@ -43,7 +47,9 @@ class MoMoTests extends FacesTestSuite {
     require(coeffs1.shape.length == coeffs2.shape.length)
     require(coeffs1.color.length == coeffs2.color.length)
     require(coeffs1.expression.length == coeffs2.expression.length)
-    norm(coeffs1.shape - coeffs2.shape) + norm(coeffs1.color - coeffs2.color) + norm(coeffs1.expression - coeffs2.expression)
+    norm(coeffs1.shape - coeffs2.shape) + norm(coeffs1.color - coeffs2.color) + norm(
+      coeffs1.expression - coeffs2.expression
+    )
   }
 
   describe("A MoMo") {
@@ -67,12 +73,12 @@ class MoMoTests extends FacesTestSuite {
     // PCA model needed for projection tests
     lazy val momo = MoMoIO.read(rf).get.expressionModel.get
 
-    val momoPCA = MoMo(
-      momo.referenceMesh,
-      PancakeDLRGP(momo.shape.gpModel),
-      PancakeDLRGP(momo.color.gpModel),
-      PancakeDLRGP(momo.expression.gpModel),
-      momo.landmarks)
+    val momoPCA = MoMo(momo.referenceMesh,
+                       PancakeDLRGP(momo.shape.gpModel),
+                       PancakeDLRGP(momo.color.gpModel),
+                       PancakeDLRGP(momo.expression.gpModel),
+                       momo.landmarks
+    )
 
     lazy val shapeCoeffs = for (_ <- 0 until momo.shape.rank) yield Gaussian(0, 1).draw()
     lazy val colorCoeffs = for (_ <- 0 until momo.color.rank) yield Gaussian(0, 1).draw()
@@ -97,11 +103,11 @@ class MoMoTests extends FacesTestSuite {
     }
 
     it("can generate random samples") {
-      momo.sample().shape.triangulation.pointIds should be (momo.referenceMesh.triangulation.pointIds)
+      momo.sample().shape.triangulation.pointIds should be(momo.referenceMesh.triangulation.pointIds)
     }
 
     it("can generate random samples (PCA)") {
-      momoPCA.sample().shape.triangulation.pointIds should be (momoPCA.referenceMesh.triangulation.pointIds)
+      momoPCA.sample().shape.triangulation.pointIds should be(momoPCA.referenceMesh.triangulation.pointIds)
     }
 
     it("can create samples with fewer parameters set") {
@@ -143,7 +149,9 @@ class MoMoTests extends FacesTestSuite {
     it("should regularize the coefficients of a sample (closer to mean)") {
       val projCoeffs = momo.coefficients(sample)
       val projCoeffPCA = momoPCA.coefficients(sample)
-      norm(projCoeffs.shape) + norm(projCoeffs.expression) should be < (norm(projCoeffPCA.shape) + norm(projCoeffPCA.expression))
+      norm(projCoeffs.shape) + norm(projCoeffs.expression) should be < (norm(projCoeffPCA.shape) + norm(
+        projCoeffPCA.expression
+      ))
     }
 
     it("should regularize the coefficients of a sample of the neutral model (closer to mean)") {
@@ -164,7 +172,9 @@ class MoMoTests extends FacesTestSuite {
     it("should yield proper coefficients for the mean sample") {
       val meanSample = momo.mean
       val meanCoeffs = momo.coefficients(meanSample)
-      norm(meanCoeffs.shape) + norm(meanCoeffs.color) should be < 0.01 * momoCoeffs.shape.length + 0.01 * momoCoeffs.color.length
+      norm(meanCoeffs.shape) + norm(
+        meanCoeffs.color
+      ) should be < 0.01 * momoCoeffs.shape.length + 0.01 * momoCoeffs.color.length
     }
 
     val f = File.createTempFile("momo", ".h5.json")
@@ -198,7 +208,11 @@ class MoMoTests extends FacesTestSuite {
       val result = MoMoIO.read(new File(getClass.getResource("/random-l4.h5").getPath))
       require(result.isFailure)
       require(result.failed.get.isInstanceOf[IllegalArgumentException])
-      require(result.failed.get.getMessage.contains("Probably you tried to read a legacy model file. Please convert the datatype of the cells data to the type int."))
+      require(
+        result.failed.get.getMessage.contains(
+          "Probably you tried to read a legacy model file. Please convert the datatype of the cells data to the type int."
+        )
+      )
     }
 
     lazy val reducedMomo = momo.truncate(5, 5, 5)
@@ -211,7 +225,6 @@ class MoMoTests extends FacesTestSuite {
     lazy val reducedSample = reducedMomo.instance(reducedMomoCoeffs)
     @unused
     lazy val reducedSampleNoEx = reducedMomo.neutralModel.instance(reducedMomoCoeffs)
-
 
     it("can be reduced to 5 shape components") {
       reducedMomo.shape.rank should be(5)
@@ -235,7 +248,9 @@ class MoMoTests extends FacesTestSuite {
 
     it("should not alter a sample through projection (reduced)") {
       val projected = reducedMomo.project(reducedSample)
-      meshDist(projected, reducedSample) should be < 0.1 * reducedSample.shape.pointSet.numberOfPoints + 0.01 * reducedSample.color.pointData.length
+      meshDist(projected,
+               reducedSample
+      ) should be < 0.1 * reducedSample.shape.pointSet.numberOfPoints + 0.01 * reducedSample.color.pointData.length
     }
 
 //    it("should yield the same coefficients used to draw a sample (reduced)") {

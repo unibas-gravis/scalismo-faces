@@ -32,7 +32,7 @@ import scalismo.utils.Random
 
 class TextureExtractionTests extends FacesTestSuite {
   import scalismo.faces.image.PixelImage.implicits._
-  override  implicit val rnd = Random(43)
+  implicit override val rnd = Random(43)
 
   val w = 100
   val h = 100
@@ -46,13 +46,22 @@ class TextureExtractionTests extends FacesTestSuite {
   val texture: TextureMappedProperty[RGBA] = gridMesh.color.asInstanceOf[TextureMappedProperty[RGBA]]
 
   val texImage: PixelImage[RGBA] = texture.texture
-  val rndTexture: PixelImage[RGBA] = randomImageRGBA(texImage.width / 20, texImage.height / 20).resample(texImage.width, texImage.height, BilinearKernel)
+  val rndTexture: PixelImage[RGBA] =
+    randomImageRGBA(texImage.width / 20, texImage.height / 20).resample(texImage.width, texImage.height, BilinearKernel)
 
-  val rps: RenderParameter = RenderParameter.default.copy(
-    camera = Camera.for35mmFilm(focalLength = 100),
-    pose = Pose.neutral.copy(translation = EuclideanVector(-100, -100, -1000))).noLightAndColor
+  val rps: RenderParameter = RenderParameter.default
+    .copy(camera = Camera.for35mmFilm(focalLength = 100),
+          pose = Pose.neutral.copy(translation = EuclideanVector(-100, -100, -1000))
+    )
+    .noLightAndColor
 
-  val renderedImage: PixelImage[RGBA] = TriangleRenderer.renderMesh(mesh, rps.pointShader, PropertyShader(texture), ZBuffer[RGBA](rps.imageSize.width, rps.imageSize.height, RGBA(1, 0, 1, 0))).toImage
+  val renderedImage: PixelImage[RGBA] = TriangleRenderer
+    .renderMesh(mesh,
+                rps.pointShader,
+                PropertyShader(texture),
+                ZBuffer[RGBA](rps.imageSize.width, rps.imageSize.height, RGBA(1, 0, 1, 0))
+    )
+    .toImage
 
   val frustum = Frustum(-1, 1, -1, 1, 0.1, 2)
   val perspP = FrustumPinholeProjection(frustum)
@@ -69,14 +78,22 @@ class TextureExtractionTests extends FacesTestSuite {
 
   describe("TextureExtractionTests") {
     // make random image
-    val rndImage: PixelImage[RGBA] = randomImageRGBA(rps.imageSize.width / 10, rps.imageSize.height / 10).resample(rps.imageSize.width, rps.imageSize.height)
+    val rndImage: PixelImage[RGBA] = randomImageRGBA(rps.imageSize.width / 10, rps.imageSize.height / 10)
+      .resample(rps.imageSize.width, rps.imageSize.height)
 
     // imageAsSurfaceProperty
     it("should extract and re-render an image as surface property consistently") {
       // extract texture as surface property
-      val imageAsSurfaceProp: MeshSurfaceProperty[RGBA] = TextureExtraction.imageAsSurfaceProperty(mesh, rps.pointShader, rndImage).map(_.getOrElse(RGBA(1, 1, 0, 0)))
+      val imageAsSurfaceProp: MeshSurfaceProperty[RGBA] =
+        TextureExtraction.imageAsSurfaceProperty(mesh, rps.pointShader, rndImage).map(_.getOrElse(RGBA(1, 1, 0, 0)))
       // render extracted texture as surface property
-      val rendImageAsProperty = TriangleRenderer.renderMesh(mesh, rps.pointShader, PropertyShader(imageAsSurfaceProp), rps.imageSize.zBuffer(RGBA.BlackTransparent)).toImage
+      val rendImageAsProperty = TriangleRenderer
+        .renderMesh(mesh,
+                    rps.pointShader,
+                    PropertyShader(imageAsSurfaceProp),
+                    rps.imageSize.zBuffer(RGBA.BlackTransparent)
+        )
+        .toImage
       // images should match
       imDiffRGBA(rendImageAsProperty, rndImage) should be < 1.0
     }
@@ -84,33 +101,53 @@ class TextureExtractionTests extends FacesTestSuite {
     // imageAsTexture
     it("should use the image as a texture using the rendered points as texture mapping and re-render consistently") {
       // extract texture
-      val imageAsTexture: TextureMappedProperty[RGBA] = TextureExtraction.imageAsTexture(mesh, rps.pointShader, rndImage)
+      val imageAsTexture: TextureMappedProperty[RGBA] =
+        TextureExtraction.imageAsTexture(mesh, rps.pointShader, rndImage)
       // render with given texture
-      val rendImageAsTexture = TriangleRenderer.renderMesh(mesh, rps.pointShader, PropertyShader(imageAsTexture), rps.imageSize.zBuffer(RGBA.BlackTransparent)).toImage
+      val rendImageAsTexture = TriangleRenderer
+        .renderMesh(mesh, rps.pointShader, PropertyShader(imageAsTexture), rps.imageSize.zBuffer(RGBA.BlackTransparent))
+        .toImage
       // images should match
       imDiffRGBA(rendImageAsTexture, rndImage) should be < 1.0
     }
 
     // sample TextureMappedProperty from imageAsSurface property
-    it("should extract an image as surface property, raster it into a texture map representation and re-render it consistently") {
+    it(
+      "should extract an image as surface property, raster it into a texture map representation and re-render it consistently"
+    ) {
       // extract texture as surface property
-      val imageAsSurfaceProp: MeshSurfaceProperty[RGBA] = TextureExtraction.imageAsSurfaceProperty(mesh, rps.pointShader, rndImage).map(_.getOrElse(RGBA(1, 1, 0, 1)))
+      val imageAsSurfaceProp: MeshSurfaceProperty[RGBA] =
+        TextureExtraction.imageAsSurfaceProperty(mesh, rps.pointShader, rndImage).map(_.getOrElse(RGBA(1, 1, 0, 1)))
       // texture map representation
-      val tex = TextureMappedProperty.fromSurfaceProperty(imageAsSurfaceProp, texture.textureMapping, texture.texture.domain, RGBA(0, 1, 0, 1))
+      val tex = TextureMappedProperty.fromSurfaceProperty(imageAsSurfaceProp,
+                                                          texture.textureMapping,
+                                                          texture.texture.domain,
+                                                          RGBA(0, 1, 0, 1)
+      )
       // render extracted texture as surface property
-      val rendImageTex = TriangleRenderer.renderMesh(mesh, rps.pointShader, PropertyShader(tex), rps.imageSize.zBuffer(RGBA.BlackTransparent)).toImage
+      val rendImageTex = TriangleRenderer
+        .renderMesh(mesh, rps.pointShader, PropertyShader(tex), rps.imageSize.zBuffer(RGBA.BlackTransparent))
+        .toImage
       // images should match
       imDiffRGBA(rendImageTex, rndImage) should be < 32.0
     }
 
     // sample TextureMappedProperty from imageAsSurface property
-    it("should extract an image as texture, raster it into a texture map representation and re-render it consistently") {
+    it(
+      "should extract an image as texture, raster it into a texture map representation and re-render it consistently"
+    ) {
       // extract texture as surface property
       val imageAsTexture: MeshSurfaceProperty[RGBA] = TextureExtraction.imageAsTexture(mesh, rps.pointShader, rndImage)
       // texture map representation
-      val tex: TextureMappedProperty[RGBA] = TextureMappedProperty.fromSurfaceProperty(imageAsTexture, texture.textureMapping, texture.texture.domain, RGBA(0, 1, 0, 1))
+      val tex: TextureMappedProperty[RGBA] = TextureMappedProperty.fromSurfaceProperty(imageAsTexture,
+                                                                                       texture.textureMapping,
+                                                                                       texture.texture.domain,
+                                                                                       RGBA(0, 1, 0, 1)
+      )
       // render extracted texture as surface property
-      val rendImageTex = TriangleRenderer.renderMesh(mesh, rps.pointShader, PropertyShader(tex), rps.imageSize.zBuffer(RGBA.BlackTransparent)).toImage
+      val rendImageTex = TriangleRenderer
+        .renderMesh(mesh, rps.pointShader, PropertyShader(tex), rps.imageSize.zBuffer(RGBA.BlackTransparent))
+        .toImage
       // images should match
       imDiffRGBA(rendImageTex, rndImage) should be < 30.0
     }
@@ -118,10 +155,14 @@ class TextureExtractionTests extends FacesTestSuite {
     // extractTextureAsImage
     it("should extract and re-render an image into a texture map representation consistently") {
       // extract texture image
-      val texImg = TextureExtraction.extractTextureAsImage(mesh, rps.pointShader, rndImage, texture.texture.domain, texture.textureMapping).map(_.getOrElse(RGBA(1, 1, 0, 1)))
+      val texImg = TextureExtraction
+        .extractTextureAsImage(mesh, rps.pointShader, rndImage, texture.texture.domain, texture.textureMapping)
+        .map(_.getOrElse(RGBA(1, 1, 0, 1)))
       // render extracted texture
       val tex = texture.copy(texture = texImg)
-      val rendImageTexEx = TriangleRenderer.renderMesh(mesh, rps.pointShader, PropertyShader(tex), rps.imageSize.zBuffer(RGBA.BlackTransparent)).toImage
+      val rendImageTexEx = TriangleRenderer
+        .renderMesh(mesh, rps.pointShader, PropertyShader(tex), rps.imageSize.zBuffer(RGBA.BlackTransparent))
+        .toImage
       // images should match
       imDiffRGBA(rendImageTexEx, rndImage) should be < 32.0
     }

@@ -69,7 +69,7 @@ class TransformationTests extends FacesTestSuite {
     }
 
     it("respects upright vector direction") {
-      val vT = RenderTransforms.viewTransformLookAt(origin, x.copy(y = 0), - EuclideanVector3D.unitY)
+      val vT = RenderTransforms.viewTransformLookAt(origin, x.copy(y = 0), -EuclideanVector3D.unitY)
       val d = x.toVector.norm
       vT(x).y shouldBe -2.0
       vT(y).y shouldBe -1.0
@@ -85,8 +85,9 @@ class TransformationTests extends FacesTestSuite {
 
   describe("window transform") {
 
-    def within(a: Double, b: Double, eps: Double) = math.abs(a-b) < eps
-    def pointWithin(a: Point[_3D], b: Point[_3D], eps: Double) = within(a.x, b.x, eps) && within(a.y, b.y, eps) && within(a.z, b.z, eps)
+    def within(a: Double, b: Double, eps: Double) = math.abs(a - b) < eps
+    def pointWithin(a: Point[_3D], b: Point[_3D], eps: Double) =
+      within(a.x, b.x, eps) && within(a.y, b.y, eps) && within(a.z, b.z, eps)
 
     it("is inverted correctly") {
 
@@ -110,18 +111,23 @@ class TransformationTests extends FacesTestSuite {
       def renderedImageSameAsExtractedBox() = {
         val param = RenderParameter.defaultSquare
         val mesh = randomGridMesh(100, 100, 0.25)
-        val rendering =  {
+        val rendering = {
           val buffer = ZBuffer(param.imageSize.width, param.imageSize.height, RGBA.BlackTransparent)
           TriangleRenderer.renderMesh(mesh.shape, param.pointShader, PixelShaders.PropertyShader(mesh.color), buffer)
           buffer.toImage
         }
-        //define box
+        // define box
         val (x, y) = (350, 150)
         val (w, h) = (20, 20)
         val trfScreen = WindowBoxTransform(param.imageSize.width, param.imageSize.height, w, h, x, y)
-        val renderingBox =  {
+        val renderingBox = {
           val buffer = ZBuffer(w, h, RGBA.BlackTransparent)
-          TriangleRenderer.renderMesh(mesh.shape, param.pointShader, trfScreen, PixelShaders.PropertyShader(mesh.color), buffer)
+          TriangleRenderer.renderMesh(mesh.shape,
+                                      param.pointShader,
+                                      trfScreen,
+                                      PixelShaders.PropertyShader(mesh.color),
+                                      buffer
+          )
           buffer.toImage
         }
         val groundTruth = PixelImageOperations.subImage(rendering, x, y, w, h)

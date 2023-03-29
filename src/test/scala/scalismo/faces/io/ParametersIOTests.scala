@@ -46,38 +46,31 @@ class ParametersIOTests extends FacesTestSuite {
     val n = rnd.scalaRandom.nextInt(400)
 
     RenderParameter(
-      pose = Pose(
-        scaling = d * 2 + 1f,
-        translation = EuclideanVector(d * 100, d * 100, -10000 * d),
-        pitch = randomAngle(),
-        yaw = randomAngle(),
-        roll = randomAngle()),
-      view = ViewParameter(
-        translation = EuclideanVector(d * 100, d * 100, d * 1000),
-        pitch = randomAngle(),
-        yaw = randomAngle(),
-        roll = randomAngle()),
+      pose = Pose(scaling = d * 2 + 1f,
+                  translation = EuclideanVector(d * 100, d * 100, -10000 * d),
+                  pitch = randomAngle(),
+                  yaw = randomAngle(),
+                  roll = randomAngle()
+      ),
+      view = ViewParameter(translation = EuclideanVector(d * 100, d * 100, d * 1000),
+                           pitch = randomAngle(),
+                           yaw = randomAngle(),
+                           roll = randomAngle()
+      ),
       camera = Camera(
         focalLength = d * 40,
         principalPoint = Point(d * 2 - 1, d * 2 - 1),
         sensorSize = EuclideanVector(d * 100, d * 100),
         near = d * 0.1,
         far = 1e12,
-        orthographic = rnd.scalaRandom.nextBoolean()),
+        orthographic = rnd.scalaRandom.nextBoolean()
+      ),
       environmentMap = SphericalHarmonicsLight(IndexedSeq.fill(9)(EuclideanVector(d, d, d))),
       directionalLight = DirectionalLight.off,
-      momo = MoMoInstance(
-        shape = randomList(n),
-        color = randomList(n),
-        expression = randomList(n),
-        randomURI(20)),
-      imageSize = ImageSize(
-        width = w,
-        height = h),
-      colorTransform = ColorTransform(
-        gain = randomRGB,
-        colorContrast = d,
-        offset = randomRGB))
+      momo = MoMoInstance(shape = randomList(n), color = randomList(n), expression = randomList(n), randomURI(20)),
+      imageSize = ImageSize(width = w, height = h),
+      colorTransform = ColorTransform(gain = randomRGB, colorContrast = d, offset = randomRGB)
+    )
   }
 
   def vec2Close(v1: EuclideanVector[_2D], v2: EuclideanVector[_2D]): Unit = {
@@ -114,7 +107,7 @@ class ParametersIOTests extends FacesTestSuite {
 
   def writeReadTest[A: ClassTag](a: A)(implicit format: JsonFormat[A]): Unit = {
     val tag = implicitly[ClassTag[A]]
-    it(s"consistently writes/reads ${tag.runtimeClass.getName}"){
+    it(s"consistently writes/reads ${tag.runtimeClass.getName}") {
       a.toJson.convertTo[A] shouldBe a
     }
   }
@@ -139,11 +132,14 @@ class ParametersIOTests extends FacesTestSuite {
 
       writeReadTest(MeshFile(randomURI(10)))
 
-      writeReadTest(MoMoInstance(
-        shape = IndexedSeq.fill(10)(rnd.scalaRandom.nextDouble()),
-        color = IndexedSeq.fill(10)(rnd.scalaRandom.nextDouble()),
-        expression = IndexedSeq.empty,
-        modelURI = randomURI(10)))
+      writeReadTest(
+        MoMoInstance(
+          shape = IndexedSeq.fill(10)(rnd.scalaRandom.nextDouble()),
+          color = IndexedSeq.fill(10)(rnd.scalaRandom.nextDouble()),
+          expression = IndexedSeq.empty,
+          modelURI = randomURI(10)
+        )
+      )
     }
 
     describe("JSON format for MeshSurfaceProperties") {
@@ -160,22 +156,31 @@ class ParametersIOTests extends FacesTestSuite {
           Point(cent.x / ex.x, cent.y / ex.y)
         }
 
-        val uvPoints = mesh.shape.pointSet.points.map{pnorm}.toIndexedSeq
+        val uvPoints = mesh.shape.pointSet.points.map { pnorm }.toIndexedSeq
         SurfacePointProperty(mesh.shape.triangulation, uvPoints)
       }
 
-      val colTex = TextureMappedProperty.fromSurfaceProperty(mesh.color, textureMapping, PixelImageDomain(10, 10), RGBA(1, 1, 0, 1))
+      val colTex = TextureMappedProperty.fromSurfaceProperty(mesh.color,
+                                                             textureMapping,
+                                                             PixelImageDomain(10, 10),
+                                                             RGBA(1, 1, 0, 1)
+      )
       writeReadTest(colTex)
 
       val vcPerTriangle = VertexPropertyPerTriangle.fromPointProperty(mesh.shape.vertexNormals)
       writeReadTest(vcPerTriangle)
 
-      val indirect = IndirectProperty(mesh.shape.triangulation, IndexedSeq.fill(mesh.shape.triangulation.triangles.length)(0), IndexedSeq(mesh.color))
+      val indirect = IndirectProperty(mesh.shape.triangulation,
+                                      IndexedSeq.fill(mesh.shape.triangulation.triangles.length)(0),
+                                      IndexedSeq(mesh.color)
+      )
       writeReadTest(indirect)
     }
 
     describe("Illumination JSON format") {
-      writeReadTest(DirectionalLight(randomRGB, randomRGB, randomVector3D.normalize, randomRGB, rnd.scalaRandom.nextDouble()))
+      writeReadTest(
+        DirectionalLight(randomRGB, randomRGB, randomVector3D.normalize, randomRGB, rnd.scalaRandom.nextDouble())
+      )
       writeReadTest(randomParam.environmentMap)
     }
 
@@ -201,12 +206,13 @@ class ParametersIOTests extends FacesTestSuite {
     }
 
     describe("SceneTree") {
-      def randomPose() = Pose(randomDouble, randomVector3D, randomAngle() - math.Pi, randomAngle() - math.Pi, randomAngle() - math.Pi)
+      def randomPose() =
+        Pose(randomDouble, randomVector3D, randomAngle() - math.Pi, randomAngle() - math.Pi, randomAngle() - math.Pi)
 
       def checkTrafoEqual(t1: Transform3D, t2: Transform3D): Unit = {
         def d() = 2 * rnd.scalaRandom.nextDouble() - 1
         def randomPoint() = Point3D(d(), d(), d())
-        for(i <- 0 until 20) {
+        for (i <- 0 until 20) {
           val p = randomPoint()
           val v = p.toVector
           t1(v) shouldBe t2(v)
@@ -286,18 +292,20 @@ class ParametersIOTests extends FacesTestSuite {
         )
 
         val sp: SceneTree =
-          PoseNode(pose = px, children = IndexedSeq(
-            PoseNode(pose = py, children = IndexedSeq(
-              PoseNode(pose = pz, children = IndexedSeq(
-                so)),
-              so)),
-            so))
+          PoseNode(pose = px,
+                   children = IndexedSeq(PoseNode(pose = py,
+                                                  children =
+                                                    IndexedSeq(PoseNode(pose = pz, children = IndexedSeq(so)), so)
+                                         ),
+                                         so
+                   )
+          )
 
         val posedObjects = sp.posedObjects
 
-        for{
+        for {
           ((pose, renderObject), (targetPose, targetObject)) <- posedObjects.zip(targetObjects)
-        }{
+        } {
           checkTrafoEqual(pose, targetPose)
           renderObject shouldBe targetObject
         }
@@ -309,11 +317,14 @@ class ParametersIOTests extends FacesTestSuite {
     import RenderParameterJSONFormat.version4._
 
     describe("MoMoInstance JSON format") {
-      writeReadTest(MoMoInstance(
-        shape = IndexedSeq.fill(10)(rnd.scalaRandom.nextDouble()),
-        color = IndexedSeq.fill(10)(rnd.scalaRandom.nextDouble()),
-        expression = IndexedSeq.empty,
-        modelURI = randomURI(10)))
+      writeReadTest(
+        MoMoInstance(
+          shape = IndexedSeq.fill(10)(rnd.scalaRandom.nextDouble()),
+          color = IndexedSeq.fill(10)(rnd.scalaRandom.nextDouble()),
+          expression = IndexedSeq.empty,
+          modelURI = randomURI(10)
+        )
+      )
     }
   }
 
@@ -333,24 +344,28 @@ class ParametersIOTests extends FacesTestSuite {
 
     // explicit json to parse with target
     val targetParam = RenderParameter(
-      view = ViewParameter(
-        translation = EuclideanVector(10.0, 20.0, 2000.0),
-        pitch = 0.75,
-        roll = -0.125,
-        yaw = 1.5),
+      view = ViewParameter(translation = EuclideanVector(10.0, 20.0, 2000.0), pitch = 0.75, roll = -0.125, yaw = 1.5),
       camera = Camera(
         far = 100000.0,
         focalLength = 50.0,
         near = 1.0,
         orthographic = false,
         principalPoint = Point(0.005555555555555556, -0.016666666666666666),
-        sensorSize = EuclideanVector(36.0, 24.0)),
+        sensorSize = EuclideanVector(36.0, 24.0)
+      ),
       colorTransform = ColorTransform(RGB(1.0, 0.5, 0.25), 1.0, RGB(0.25, 0.125, 0.75)),
-      environmentMap = SphericalHarmonicsLight(IndexedSeq(EuclideanVector(0.5, 0.25, 0.125), EuclideanVector(0.125, 0.25, 0.5), EuclideanVector(0.25, 0.5, 0.125), EuclideanVector(0.5, 0.125, 0.25))),
+      environmentMap = SphericalHarmonicsLight(
+        IndexedSeq(EuclideanVector(0.5, 0.25, 0.125),
+                   EuclideanVector(0.125, 0.25, 0.5),
+                   EuclideanVector(0.25, 0.5, 0.125),
+                   EuclideanVector(0.5, 0.125, 0.25)
+        )
+      ),
       directionalLight = DirectionalLight(RGB.Black, RGB.Black, EuclideanVector3D.unitZ, RGB.Black, 10.0),
       imageSize = ImageSize(width = 720, height = 480),
       momo = MoMoInstance(IndexedSeq(-1.0, 0.5, -0.25), IndexedSeq(1.0, 0.0, 0.5), IndexedSeq(), new URI("modelPath1")),
-      pose = Pose(1.0, EuclideanVector(0.0, 0.0, -1000.0), roll = 0.125, yaw = -0.125, pitch = 0.25))
+      pose = Pose(1.0, EuclideanVector(0.0, 0.0, -1000.0), roll = 0.125, yaw = -0.125, pitch = 0.25)
+    )
 
     def readResourceAsString(resource: String): String = {
       Source.fromURL(this.getClass.getResource("/" + resource)).toString()
@@ -366,25 +381,41 @@ class ParametersIOTests extends FacesTestSuite {
 
     it("can read old C++ json") {
       import RenderParameterJSONFormat.version1._
-      val cxxParam = Source.fromURL(this.getClass.getResource("/renderParametersV1.rps")).mkString.parseJson.convertTo[RenderParameter]
+      val cxxParam = Source
+        .fromURL(this.getClass.getResource("/renderParametersV1.rps"))
+        .mkString
+        .parseJson
+        .convertTo[RenderParameter]
       cxxParam shouldBe targetParam
     }
 
     it("can read V2 example json") {
       import RenderParameterJSONFormat.version2._
-      val v2Param = Source.fromURL(this.getClass.getResource("/renderParametersV2.rps")).mkString.parseJson.convertTo[RenderParameter]
+      val v2Param = Source
+        .fromURL(this.getClass.getResource("/renderParametersV2.rps"))
+        .mkString
+        .parseJson
+        .convertTo[RenderParameter]
       v2Param shouldBe targetParam
     }
 
     it("can read V3 example json") {
       import RenderParameterJSONFormat.version3._
-      val v3Param = Source.fromURL(this.getClass.getResource("/renderParametersV3.rps")).mkString.parseJson.convertTo[RenderParameter]
+      val v3Param = Source
+        .fromURL(this.getClass.getResource("/renderParametersV3.rps"))
+        .mkString
+        .parseJson
+        .convertTo[RenderParameter]
       v3Param shouldBe targetParam
     }
 
     it("can read V4 example json") {
       import RenderParameterJSONFormat.version4._
-      val v4Param = Source.fromURL(this.getClass.getResource("/renderParametersV4.rps")).mkString.parseJson.convertTo[RenderParameter]
+      val v4Param = Source
+        .fromURL(this.getClass.getResource("/renderParametersV4.rps"))
+        .mkString
+        .parseJson
+        .convertTo[RenderParameter]
       v4Param shouldBe targetParam
     }
 
@@ -396,10 +427,9 @@ class ParametersIOTests extends FacesTestSuite {
         "/renderParametersV1.rps"
       ) foreach { filename =>
         val param = RenderParameterIO.read(new File(this.getClass.getResource(filename).getPath)).get
-        identical(param,targetParam)
+        identical(param, targetParam)
       }
     }
-
 
     it("can be written to and read from a file") {
       val f = File.createTempFile("ParameterIOTest", ".rps")
@@ -410,7 +440,7 @@ class ParametersIOTests extends FacesTestSuite {
     }
 
     it("can be written to and read from a file at a certain path") {
-      val path = IndexedSeq.fill(4){rnd.scalaRandom.alphanumeric.take(6).mkString("")}.mkString("/")
+      val path = IndexedSeq.fill(4) { rnd.scalaRandom.alphanumeric.take(6).mkString("") }.mkString("/")
       val f = File.createTempFile("ParameterIOTest", ".rps")
       f.deleteOnExit()
       RenderParameterIO.writeWithPath(randomParam, f, path).get

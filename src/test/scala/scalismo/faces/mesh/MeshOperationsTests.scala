@@ -19,7 +19,7 @@ package scalismo.faces.mesh
 import scalismo.color.RGBA
 import scalismo.common.PointId
 import scalismo.faces.FacesTestSuite
-import scalismo.geometry.{EuclideanVector3D, Point, _3D}
+import scalismo.geometry.{_3D, EuclideanVector3D, Point}
 import scalismo.mesh._
 import scalismo.faces.mesh.MeshOperations
 
@@ -35,7 +35,7 @@ class MeshOperationsTests extends FacesTestSuite {
     val n = mesh.pointSet.numberOfPoints
     def pointValid(pointId: PointId): Boolean = pointId.id >= 0 && pointId.id < n
 
-    mesh.triangulation.triangles.forall{_.pointIds.forall{pointValid}} &&
+    mesh.triangulation.triangles.forall { _.pointIds.forall { pointValid } } &&
     n == mesh.triangulation.pointIds.length
   }
 
@@ -51,7 +51,7 @@ class MeshOperationsTests extends FacesTestSuite {
 
         it("does not alter its surface property type (SurfacePointProperty)") {
           val compactColor = basicCompact.applyToSurfaceProperty(basicMesh.color)
-          compactColor shouldBe a [SurfacePointProperty[_]]
+          compactColor shouldBe a[SurfacePointProperty[_]]
         }
 
         it("does not alter its surface property") {
@@ -83,7 +83,7 @@ class MeshOperationsTests extends FacesTestSuite {
         val invalidColored = basicMesh.color.copy(triangulation = meshWithInvalidTriangles.triangulation)
 
         it("the test mesh is not compact") {
-            assert(!isCompact(meshWithInvalidTriangles))
+          assert(!isCompact(meshWithInvalidTriangles))
         }
 
         it("removes invalid triangles") {
@@ -102,17 +102,20 @@ class MeshOperationsTests extends FacesTestSuite {
 
       describe("applied to a mesh with unreferenced points") {
         val meshWithUnreferencedPoints: VertexColorMesh3D = {
-          val newPoints = IndexedSeq.fill(5){randomVector3D.toPoint}
-          val newColors = IndexedSeq.fill(5){randomRGBA}
+          val newPoints = IndexedSeq.fill(5) { randomVector3D.toPoint }
+          val newColors = IndexedSeq.fill(5) { randomRGBA }
 
           def up(pointId: PointId): PointId = PointId(pointId.id + 5)
           val trList = TriangleList(
-            basicMesh.shape.triangulation.triangles.map{case TriangleCell(p1, p2, p3) => TriangleCell(up(p1), up(p2), up(p3))}
+            basicMesh.shape.triangulation.triangles.map { case TriangleCell(p1, p2, p3) =>
+              TriangleCell(up(p1), up(p2), up(p3))
+            }
           )
 
           VertexColorMesh3D(
             shape = TriangleMesh3D(newPoints ++ basicMesh.shape.pointSet.points.toIndexedSeq, trList),
-            color = SurfacePointProperty(trList, newColors ++ basicMesh.color.pointData))
+            color = SurfacePointProperty(trList, newColors ++ basicMesh.color.pointData)
+          )
         }
 
         val compactMesh = MeshOperations.compactMesh(meshWithUnreferencedPoints.shape)
@@ -127,7 +130,7 @@ class MeshOperationsTests extends FacesTestSuite {
 
         it("transforms a surface property to match new triangle layout") {
           val compactColor = compactMesh.applyToSurfaceProperty(meshWithUnreferencedPoints.color)
-          val ptColor = SurfacePointProperty.sampleSurfaceProperty[RGBA](compactColor, {_.head})
+          val ptColor = SurfacePointProperty.sampleSurfaceProperty[RGBA](compactColor, { _.head })
           ptColor shouldBe basicMesh.color
         }
 
@@ -151,7 +154,8 @@ class MeshOperationsTests extends FacesTestSuite {
       }
 
       it("removes appropriate points and keeps good points") {
-        val goodPoints: IndexedSeq[Point[_3D]] = basicMesh.shape.pointSet.pointIds.filter(removeLeft).map(basicMesh.shape.pointSet.point).toIndexedSeq
+        val goodPoints: IndexedSeq[Point[_3D]] =
+          basicMesh.shape.pointSet.pointIds.filter(removeLeft).map(basicMesh.shape.pointSet.point).toIndexedSeq
         val keptPoints: IndexedSeq[Point[_3D]] = masker.transformedMesh.pointSet.points.toIndexedSeq
         keptPoints should contain theSameElementsAs goodPoints
       }
@@ -163,7 +167,7 @@ class MeshOperationsTests extends FacesTestSuite {
       it("transforms a point property accordingly") {
         val goodColors = basicMesh.shape.pointSet.pointIds.filter(removeLeft).map(basicMesh.color.atPoint).toIndexedSeq
         val trafoColor = masker.applyToSurfaceProperty(basicMesh.color)
-        val maskColor = SurfacePointProperty.sampleSurfaceProperty[RGBA](trafoColor, {_.head})
+        val maskColor = SurfacePointProperty.sampleSurfaceProperty[RGBA](trafoColor, { _.head })
         maskColor.pointData shouldBe goodColors
       }
     }
@@ -180,7 +184,9 @@ class MeshOperationsTests extends FacesTestSuite {
       }
 
       it("removes appropriate points and keeps good points") {
-        val goodPoints: IndexedSeq[Point[_3D]] = basicMesh.shape.pointSet.points.filter{ p => (p - p0).dot(n) >= 0}.toIndexedSeq
+        val goodPoints: IndexedSeq[Point[_3D]] = basicMesh.shape.pointSet.points.filter { p =>
+          (p - p0).dot(n) >= 0
+        }.toIndexedSeq
         val keptPoints: IndexedSeq[Point[_3D]] = clipper.transformedMesh.pointSet.points.toIndexedSeq
         keptPoints should contain theSameElementsAs goodPoints
       }
@@ -190,11 +196,11 @@ class MeshOperationsTests extends FacesTestSuite {
       }
 
       it("transforms a point property accordingly") {
-        val goodPoints = basicMesh.shape.pointSet.points.filter{p => (p - p0).dot(n) >= 0}.toIndexedSeq
-        val goodIds: IndexedSeq[PointId] = goodPoints.map{p => basicMesh.shape.pointSet.pointId(p).get}
+        val goodPoints = basicMesh.shape.pointSet.points.filter { p => (p - p0).dot(n) >= 0 }.toIndexedSeq
+        val goodIds: IndexedSeq[PointId] = goodPoints.map { p => basicMesh.shape.pointSet.pointId(p).get }
         val goodColors = goodIds.map(basicMesh.color.atPoint)
         val trafoColor = clipper.applyToSurfaceProperty(basicMesh.color)
-        val maskColor = SurfacePointProperty.sampleSurfaceProperty[RGBA](trafoColor, {_.head})
+        val maskColor = SurfacePointProperty.sampleSurfaceProperty[RGBA](trafoColor, { _.head })
         maskColor.pointData shouldBe goodColors
       }
     }

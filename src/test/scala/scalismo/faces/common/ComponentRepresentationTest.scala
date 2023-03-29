@@ -19,11 +19,13 @@ package scalismo.faces.common
 import scalismo.faces.FacesTestSuite
 import scalismo.color.{RGB, RGBA}
 import scalismo.common.ComponentRepresentation
-import scalismo.geometry.{EuclideanVector, _2D, _3D}
+import scalismo.geometry.{_2D, _3D, EuclideanVector}
 
 class ComponentRepresentationTest extends FacesTestSuite {
 
-  def testComponentRepresentation[A](expectedDimensionality: Int)(implicit vectorizer: ComponentRepresentation[A]): Unit = {
+  def testComponentRepresentation[A](
+    expectedDimensionality: Int
+  )(implicit vectorizer: ComponentRepresentation[A]): Unit = {
     // dim
     val d = vectorizer.size
     it("should have the right dimensionality") {

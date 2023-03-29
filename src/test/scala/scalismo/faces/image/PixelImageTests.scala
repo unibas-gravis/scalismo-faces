@@ -181,7 +181,9 @@ class PixelImageTests extends FacesTestSuite {
     it("can be buffered (preserving all values)") {
       val b = image.buffer
       b.isBuffered shouldBe true
-      b.withDomain(b.domain.toColumnMajor).values sameElements image.withDomain(image.domain.toColumnMajor).values shouldBe true
+      b.withDomain(b.domain.toColumnMajor).values sameElements image
+        .withDomain(image.domain.toColumnMajor)
+        .values shouldBe true
     }
 
     it("uses a buffer which has the same values as the image") {
@@ -282,4 +284,3 @@ class PixelImageTests extends FacesTestSuite {
     }
   }
 }
-

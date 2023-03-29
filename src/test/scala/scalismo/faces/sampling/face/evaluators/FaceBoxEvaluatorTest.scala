@@ -17,7 +17,7 @@
 package scalismo.faces.sampling.face.evaluators
 
 import scalismo.faces.FacesTestSuite
-import scalismo.geometry.{Point, Point2D, EuclideanVector}
+import scalismo.geometry.{EuclideanVector, Point, Point2D}
 
 class FaceBoxEvaluatorTest extends FacesTestSuite {
 

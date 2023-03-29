@@ -41,11 +41,13 @@ class MeshIOTests extends FacesTestSuite {
     texDiff should be < 0.01
 
     val sptm1 = SurfacePointProperty.sampleSurfaceProperty[Point[_2D]](tex1.textureMapping, {
-      _.head
-    })
+                                                                         _.head
+                                                                       }
+    )
     val sptm2 = SurfacePointProperty.sampleSurfaceProperty[Point[_2D]](tex2.textureMapping, {
-      _.head
-    })
+                                                                         _.head
+                                                                       }
+    )
     val tmMaxDiff = math.sqrt(sptm1.pointData.zip(sptm2.pointData).map { case (p1, p2) => (p1 - p2).norm2 }.max)
 
     // difference in texture coordinates should be small
@@ -53,21 +55,29 @@ class MeshIOTests extends FacesTestSuite {
 
     // color difference lookup should be small
     // random sample points on surface to determine color difference
-    val surfacePoints = IndexedSeq.fill(10)((TriangleId(randomInt(tex1.triangulation.triangles.length)), BarycentricCoordinates.randomUniform))
+    val surfacePoints = IndexedSeq.fill(10)(
+      (TriangleId(randomInt(tex1.triangulation.triangles.length)), BarycentricCoordinates.randomUniform)
+    )
     val colorValues1 = surfacePoints.map { case (tId, bcc) => tex1.onSurface(tId, bcc) }
     val colorValues2 = surfacePoints.map { case (tId, bcc) => tex2.onSurface(tId, bcc) }
 
-    val maxColorDiff = math.sqrt(colorValues1.zip(colorValues2).map {
-      case (read, target) =>
-        val d = read - target
-        d.dot(d)
-    }.max)
+    val maxColorDiff = math.sqrt(
+      colorValues1
+        .zip(colorValues2)
+        .map { case (read, target) =>
+          val d = read - target
+          d.dot(d)
+        }
+        .max
+    )
 
     // color difference should be small
     maxColorDiff should be < 0.01
   }
 
-  private def testDiffOptionalColorNormalMesh3D(mesh1: OptionalColorNormalMesh3D, mesh2: OptionalColorNormalMesh3D): Unit = {
+  private def testDiffOptionalColorNormalMesh3D(mesh1: OptionalColorNormalMesh3D,
+                                                mesh2: OptionalColorNormalMesh3D
+  ): Unit = {
     // ensure same parts are there
     mesh1.color.isDefined shouldBe mesh2.color.isDefined
     mesh1.normals.isDefined shouldBe mesh2.normals.isDefined
@@ -77,24 +87,35 @@ class MeshIOTests extends FacesTestSuite {
     mesh1.shape.pointSet.numberOfPoints shouldBe mesh2.shape.pointSet.numberOfPoints
 
     // shape difference
-    val maxPointDiff = math.sqrt(mesh1.shape.pointSet.points.zip(mesh2.shape.pointSet.points).map {
-      case (read, target) => (read - target).norm2
-    }.max)
+    val maxPointDiff = math.sqrt(
+      mesh1.shape.pointSet.points
+        .zip(mesh2.shape.pointSet.points)
+        .map { case (read, target) =>
+          (read - target).norm2
+        }
+        .max
+    )
 
     maxPointDiff should be < 0.01
 
     // color difference
     for (col1 <- mesh1.color; col2 <- mesh2.color) {
       // random sample points on surface to determine color difference
-      val surfacePoints = IndexedSeq.fill(10)((TriangleId(randomInt(mesh1.shape.triangulation.triangles.length)), BarycentricCoordinates.randomUniform))
+      val surfacePoints = IndexedSeq.fill(10)(
+        (TriangleId(randomInt(mesh1.shape.triangulation.triangles.length)), BarycentricCoordinates.randomUniform)
+      )
       val colorValues1 = surfacePoints.map { case (tId, bcc) => col1.onSurface(tId, bcc) }
       val colorValues2 = surfacePoints.map { case (tId, bcc) => col2.onSurface(tId, bcc) }
 
-      val maxColorDiff = math.sqrt(colorValues1.zip(colorValues2).map {
-        case (read, target) =>
-          val d = read - target
-          d.dot(d)
-      }.max)
+      val maxColorDiff = math.sqrt(
+        colorValues1
+          .zip(colorValues2)
+          .map { case (read, target) =>
+            val d = read - target
+            d.dot(d)
+          }
+          .max
+      )
 
       // color difference should be small
       maxColorDiff should be < 0.01
@@ -102,12 +123,19 @@ class MeshIOTests extends FacesTestSuite {
 
     // normal difference
     for (norm1 <- mesh1.normals; norm2 <- mesh2.normals) {
-      val surfacePoints = IndexedSeq.fill(10)((TriangleId(randomInt(mesh1.shape.triangulation.triangles.length)), BarycentricCoordinates.randomUniform))
+      val surfacePoints = IndexedSeq.fill(10)(
+        (TriangleId(randomInt(mesh1.shape.triangulation.triangles.length)), BarycentricCoordinates.randomUniform)
+      )
       val normalValues1 = surfacePoints.map { case (tId, bcc) => norm1.onSurface(tId, bcc) }
       val normalValues2 = surfacePoints.map { case (tId, bcc) => norm2.onSurface(tId, bcc) }
-      val maxNormalDiff = math.sqrt(normalValues1.zip(normalValues2).map {
-        case (read, target) => (read - target).norm2
-      }.max)
+      val maxNormalDiff = math.sqrt(
+        normalValues1
+          .zip(normalValues2)
+          .map { case (read, target) =>
+            (read - target).norm2
+          }
+          .max
+      )
 
       // normals should be similar
       maxNormalDiff should be < 0.01
@@ -133,12 +161,12 @@ class MeshIOTests extends FacesTestSuite {
     assert(readMesh.hasNormals)
     val vcReadMesh = readMesh.colorNormalMesh3D
     assert(vcReadMesh.isDefined)
-    testDiffTexture(
-      vcReadMesh.get.color.asInstanceOf[TextureMappedProperty[RGBA]],
-      mesh.color.asInstanceOf[TextureMappedProperty[RGBA]])
-    testDiffOptionalColorNormalMesh3D(
-      OptionalColorNormalMesh3D.fromColorNormalMesh(vcReadMesh.get),
-      OptionalColorNormalMesh3D.fromColorNormalMesh(mesh))
+    testDiffTexture(vcReadMesh.get.color.asInstanceOf[TextureMappedProperty[RGBA]],
+                    mesh.color.asInstanceOf[TextureMappedProperty[RGBA]]
+    )
+    testDiffOptionalColorNormalMesh3D(OptionalColorNormalMesh3D.fromColorNormalMesh(vcReadMesh.get),
+                                      OptionalColorNormalMesh3D.fromColorNormalMesh(mesh)
+    )
   }
 
   private def testWriteReadCyclePLY(mesh: OptionalColorNormalMesh3D): Unit = {
@@ -147,9 +175,10 @@ class MeshIOTests extends FacesTestSuite {
     MeshIO.write(mesh, f).get
     val readMesh = MeshIO.read(f).get
 
-    val correctedMesh = if ( readMesh.normals.isDefined && !mesh.normals.isDefined){ // maybe normals are generated while reading
-      OptionalColorNormalMesh3D(readMesh.shape,readMesh.color,None)
-    } else readMesh
+    val correctedMesh =
+      if (readMesh.normals.isDefined && !mesh.normals.isDefined) { // maybe normals are generated while reading
+        OptionalColorNormalMesh3D(readMesh.shape, readMesh.color, None)
+      } else readMesh
 
     testDiffOptionalColorNormalMesh3D(
       correctedMesh,
@@ -179,9 +208,9 @@ class MeshIOTests extends FacesTestSuite {
       val rndMesh: ColorNormalMesh3D = randomGridMeshWithTexture(25, 25)
 
       it("check: mesh is similar to itself") {
-        testDiffOptionalColorNormalMesh3D(
-          OptionalColorNormalMesh3D.fromColorNormalMesh(rndMesh),
-          OptionalColorNormalMesh3D.fromColorNormalMesh(rndMesh))
+        testDiffOptionalColorNormalMesh3D(OptionalColorNormalMesh3D.fromColorNormalMesh(rndMesh),
+                                          OptionalColorNormalMesh3D.fromColorNormalMesh(rndMesh)
+        )
       }
 
       it("with ply format") {
@@ -199,7 +228,9 @@ class MeshIOTests extends FacesTestSuite {
 
     describe("can deal with various mesh complexities in ply format") {
       val rndMeshTex: ColorNormalMesh3D = randomGridMeshWithTexture(5, 5)
-      val rndMesh: ColorNormalMesh3D = ColorNormalMesh3D(VertexColorMesh3D(rndMeshTex.shape, SurfacePointProperty.averagedPointProperty(rndMeshTex.color)))
+      val rndMesh: ColorNormalMesh3D = ColorNormalMesh3D(
+        VertexColorMesh3D(rndMeshTex.shape, SurfacePointProperty.averagedPointProperty(rndMeshTex.color))
+      )
 
       it("a pure shape mesh") {
         val mesh = OptionalColorNormalMesh3D(rndMeshTex.shape, None, None)
@@ -224,14 +255,16 @@ class MeshIOTests extends FacesTestSuite {
 
     describe("can correctly write and read transformed meshes") {
       val rndMeshTex: ColorNormalMesh3D = randomGridMeshWithTexture(5, 5)
-      val rndMesh: ColorNormalMesh3D = ColorNormalMesh3D(VertexColorMesh3D(rndMeshTex.shape, SurfacePointProperty.averagedPointProperty(rndMeshTex.color)))
+      val rndMesh: ColorNormalMesh3D = ColorNormalMesh3D(
+        VertexColorMesh3D(rndMeshTex.shape, SurfacePointProperty.averagedPointProperty(rndMeshTex.color))
+      )
 
       it("a mesh with texture and normals") {
         val mesh = OptionalColorNormalMesh3D(rndMeshTex.shape, Some(rndMeshTex.color), Some(rndMesh.normals))
 
-        val trafo = new  Transform3D {
-          override def apply(x: Point[_3D]): Point[_3D] = x + EuclideanVector(100,0,0)
-          override def apply(v: EuclideanVector[_3D]): EuclideanVector[_3D] = v+ EuclideanVector(100,0,0)
+        val trafo = new Transform3D {
+          override def apply(x: Point[_3D]): Point[_3D] = x + EuclideanVector(100, 0, 0)
+          override def apply(v: EuclideanVector[_3D]): EuclideanVector[_3D] = v + EuclideanVector(100, 0, 0)
         }
 
         val transformed = mesh.transform(trafo)

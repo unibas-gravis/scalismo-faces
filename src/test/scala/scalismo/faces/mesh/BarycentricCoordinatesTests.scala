@@ -17,10 +17,10 @@
 package scalismo.faces.mesh
 
 import scalismo.faces.FacesTestSuite
-import scalismo.geometry.{Point, _3D}
+import scalismo.geometry.{_3D, Point}
 import scalismo.mesh.BarycentricCoordinates
 
-class BarycentricCoordinatesTests extends FacesTestSuite{
+class BarycentricCoordinatesTests extends FacesTestSuite {
   describe("pointInTriangle3D") {
     it("should be in triangle") {
       def pass(a: Double, b: Double) = math.abs(a - b) < 1e-5
@@ -32,13 +32,13 @@ class BarycentricCoordinatesTests extends FacesTestSuite{
         pass(bcc.a, bccNew.a) && pass(bcc.b, bccNew.b) && pass(bcc.c, bccNew.c)
       }
 
-      val v1 = Point(2,3,1)
-      val v2 = Point(3,2,2)
-      val v3 = Point(1,1,3)
+      val v1 = Point(2, 3, 1)
+      val v2 = Point(3, 2, 2)
+      val v3 = Point(1, 1, 3)
 
-      val v21 = Point(2.1f,3.5f,-1)
-      val v22 = Point(3,2,200)
-      val v23 = Point(-1,-1,-3)
+      val v21 = Point(2.1f, 3.5f, -1)
+      val v22 = Point(3, 2, 200)
+      val v23 = Point(-1, -1, -3)
 
       assert(testPoint(v1, v2, v3) && testPoint(v21, v22, v23))
     }

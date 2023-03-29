@@ -26,8 +26,12 @@ class SurfacePropertyTests extends FacesTestSuite {
   describe("MeshSurfaceProperty equalities:") {
 
     // different triangulation instances with identical data
-    val t1 = TriangleList(IndexedSeq(TriangleCell(PointId(0), PointId(1), PointId(2)), TriangleCell(PointId(1), PointId(2), PointId(3))))
-    val t2 = TriangleList(IndexedSeq(TriangleCell(PointId(0), PointId(1), PointId(2)), TriangleCell(PointId(1), PointId(2), PointId(3))))
+    val t1 = TriangleList(
+      IndexedSeq(TriangleCell(PointId(0), PointId(1), PointId(2)), TriangleCell(PointId(1), PointId(2), PointId(3)))
+    )
+    val t2 = TriangleList(
+      IndexedSeq(TriangleCell(PointId(0), PointId(1), PointId(2)), TriangleCell(PointId(1), PointId(2), PointId(3)))
+    )
 
     // different data arrays with same data
     val d1: IndexedSeq[Double] = (0 to 5).map(_.toDouble)

@@ -30,16 +30,16 @@ class GeneralMaxConvolutionTests extends FacesTestSuite {
     def areEqual(a: Double, b: Any): Boolean =
       b match {
         case p: Double => a === p +- 0.0
-        case _ => false
+        case _         => false
       }
   }
 
   class Evaluator1D(sdev: Double) extends DistributionEvaluator[Point[_1D]] {
-    override def logValue(sample: Point[_1D]): Double = -math.pow(sample.x, 2)/2.0/sdev/sdev
+    override def logValue(sample: Point[_1D]): Double = -math.pow(sample.x, 2) / 2.0 / sdev / sdev
   }
 
   class Evaluator2D(sdev: Double) extends DistributionEvaluator[Point[_2D]] {
-    override def logValue(sample: Point[_2D]): Double = -sample.toVector.norm2/2.0/sdev/sdev
+    override def logValue(sample: Point[_2D]): Double = -sample.toVector.norm2 / 2.0 / sdev / sdev
   }
 
   describe("general max convolution") {
@@ -64,9 +64,12 @@ class GeneralMaxConvolutionTests extends FacesTestSuite {
       val eval2d = new Evaluator2D(noise)
       val width = 5
       val height = 5
-      val image = PixelImage(width, height, (x, y) => {
-        (x + y).toDouble
-      }).map(p => log(p / (width + height - 2) * 0.9 + 0.1))
+      val image = PixelImage(width,
+                             height,
+                             (x, y) => {
+                               (x + y).toDouble
+                             }
+      ).map(p => log(p / (width + height - 2) * 0.9 + 0.1))
       val row = image.row(0)
     }
 
@@ -76,7 +79,7 @@ class GeneralMaxConvolutionTests extends FacesTestSuite {
         val result = GeneralMaxConvolution.maxConvolution1D(f.row.toArray, f.eval)
 
         def evalForPosition(p: Int): Unit = {
-          val allValues = f.row.toArray.zipWithIndex.map { case(v, index) => v + f.eval.logValue(Point1D(index - p)) }
+          val allValues = f.row.toArray.zipWithIndex.map { case (v, index) => v + f.eval.logValue(Point1D(index - p)) }
           result(p) shouldEqual allValues.max
         }
 
@@ -108,4 +111,3 @@ class GeneralMaxConvolutionTests extends FacesTestSuite {
     }
   }
 }
-

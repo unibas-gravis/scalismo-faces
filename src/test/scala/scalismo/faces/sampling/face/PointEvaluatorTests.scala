@@ -18,7 +18,7 @@ package scalismo.faces.sampling.face
 
 import scalismo.faces.FacesTestSuite
 import scalismo.faces.sampling.face.evaluators.PointEvaluators.IsotropicGaussianPointEvaluator
-import scalismo.geometry.{Point, _2D}
+import scalismo.geometry.{_2D, Point}
 
 class PointEvaluatorTests extends FacesTestSuite {
 

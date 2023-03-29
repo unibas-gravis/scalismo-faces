@@ -25,7 +25,7 @@ import scalismo.geometry._
 
 class MSHMeshIOTests extends FacesTestSuite {
   // create a random mesh, write and read it, compare
-  val gridMesh = randomGridMesh(3,3)
+  val gridMesh = randomGridMesh(3, 3)
 
   val mshMesh = MSHMesh.fromTriangleMesh3D(gridMesh.shape, Some(gridMesh.color), Some(gridMesh.shape.vertexNormals))
 
@@ -43,10 +43,14 @@ class MSHMeshIOTests extends FacesTestSuite {
       tMesh.shape.triangulation shouldBe gridMesh.shape.triangulation
       tMesh.shape shouldBe gridMesh.shape
       tMesh.color.pointData.length shouldBe gridMesh.color.pointData.length
-      val diff: Double = tMesh.color.pointData.zip(gridMesh.color.pointData).map { case (a, b) => {
-        val c = a - b; c.dot(c)
-      }
-      }.sum
+      val diff: Double = tMesh.color.pointData
+        .zip(gridMesh.color.pointData)
+        .map {
+          case (a, b) => {
+            val c = a - b; c.dot(c)
+          }
+        }
+        .sum
       diff should be < 1e-4
     }
 
@@ -61,7 +65,6 @@ class MSHMeshIOTests extends FacesTestSuite {
     it("can be read from a file unaltered") {
       val mshRead = MSHMeshIO.read(f).get
 
-
       // NOTE: simulate the loss of precision when writing using floats and reading back in doubles
       def rgbaToFloatToDouble = (c: RGBA) => {
         RGBA(c.r.toFloat.toDouble, c.g.toFloat.toDouble, c.b.toFloat.toDouble, c.a.toFloat.toDouble)
@@ -75,7 +78,7 @@ class MSHMeshIOTests extends FacesTestSuite {
       def textureToFloatToDouble = (t: Option[MSHTexture]) => {
         t match {
           case Some(tex) => Option(MSHTexture(tex.image.map(c => rgbaToFloatToDouble(c)), tex.file))
-          case None => None
+          case None      => None
         }
       }
       def materialToFloatToDouble = (m: MSHMaterial) => {
@@ -85,7 +88,8 @@ class MSHMeshIOTests extends FacesTestSuite {
           diffuse = rgbaToFloatToDouble(m.diffuse),
           specular = rgbaToFloatToDouble(m.specular),
           shininess = m.shininess.toFloat.toDouble,
-          texture = textureToFloatToDouble(m.texture))
+          texture = textureToFloatToDouble(m.texture)
+        )
       }
       def meshToFloatToDouble = (m: MSHMesh) => {
         MSHMesh(
@@ -104,7 +108,8 @@ class MSHMeshIOTests extends FacesTestSuite {
           lci = mshMesh.lci,
           pvi = mshMesh.pvi,
           pci = mshMesh.pci,
-          path = mshMesh.path )
+          path = mshMesh.path
+        )
       }
 
       val readMesh = mshRead.copy(path = new File(""))

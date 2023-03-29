@@ -26,13 +26,15 @@ import scala.reflect.ClassTag
 
 class ImagePyramidTests extends FacesTestSuite {
 
-  def compareImagesApproximately[A: ClassTag](lhs: PixelImage[A], rhs: PixelImage[A], threshold: Double = 1.0e-6)(implicit ops: ColorSpaceOperations[A]): Unit = {
+  def compareImagesApproximately[A: ClassTag](lhs: PixelImage[A], rhs: PixelImage[A], threshold: Double = 1.0e-6)(
+    implicit ops: ColorSpaceOperations[A]
+  ): Unit = {
     lhs.domain.width shouldBe rhs.domain.width
     lhs.domain.height shouldBe rhs.domain.height
-    lhs.values.zip(rhs.values).foreach{ pixels =>
+    lhs.values.zip(rhs.values).foreach { pixels =>
       val l = pixels._1
       val r = pixels._2
-      ops.normSq(ops.add(l,ops.scale(r,-1.0))) should be < threshold
+      ops.normSq(ops.add(l, ops.scale(r, -1.0))) should be < threshold
     }
   }
   def doubleImages = Seq(
@@ -87,27 +89,27 @@ class ImagePyramidTests extends FacesTestSuite {
 
     it("calculates the correct number of levels") {
       val image: PixelImage[Double] = chessBoard(1024, 128, 1.0, 0.0)
-      for( reductions <- 0 to 10 by 2) {
-        val pyramid = GaussPyramid(image,reductions)
-        pyramid.levels shouldBe (reductions+1)
+      for (reductions <- 0 to 10 by 2) {
+        val pyramid = GaussPyramid(image, reductions)
+        pyramid.levels shouldBe (reductions + 1)
       }
     }
 
     it("calculates the correct number of levels for uneven sized image") {
       val image: PixelImage[Double] = chessBoard(1031, 131, 1.0, 0.0)
-      for( reductions <- 0 to 10 by 2) {
-        val pyramid = GaussPyramid(image,reductions)
-        pyramid.levels shouldBe (reductions+1)
+      for (reductions <- 0 to 10 by 2) {
+        val pyramid = GaussPyramid(image, reductions)
+        pyramid.levels shouldBe (reductions + 1)
       }
     }
 
     it("calculates the correct number of levels for strange number of reductions") {
       val image: PixelImage[Double] = chessBoard(1031, 131, 1.0, 0.0)
-      val pyramid = GaussPyramid(image,-1)
+      val pyramid = GaussPyramid(image, -1)
       val maxReductions = pyramid.levels
 
-      for( reductions <- IndexedSeq( (-2, maxReductions), (-1,maxReductions), (maxReductions+10, maxReductions))) {
-        val pyramid = GaussPyramid(image,reductions._1)
+      for (reductions <- IndexedSeq((-2, maxReductions), (-1, maxReductions), (maxReductions + 10, maxReductions))) {
+        val pyramid = GaussPyramid(image, reductions._1)
         pyramid.levels shouldBe (reductions._2)
       }
     }
@@ -162,8 +164,8 @@ class ImagePyramidTests extends FacesTestSuite {
     }
 
     it("has a expand function that is compatible with the reduce function of the GaussPyramid.") {
-      rgbImages.foreach{ (img: PixelImage[RGB]) =>
-        val gpy = new GaussPyramid[RGB](img, GaussPyramid.reduceScaled[RGB](1.0/3.0), -1)
+      rgbImages.foreach { (img: PixelImage[RGB]) =>
+        val gpy = new GaussPyramid[RGB](img, GaussPyramid.reduceScaled[RGB](1.0 / 3.0), -1)
         val lpy = new LaplacePyramid(gpy, LaplacePyramid.expand[RGB])
         compareImagesApproximately(img, lpy.reconstruct)
       }
@@ -172,32 +174,63 @@ class ImagePyramidTests extends FacesTestSuite {
   }
 
   def chessBoard[A: ClassTag](widthTotal: Int = 64, widthSquares: Int = 8, white: A, black: A): PixelImage[A] = {
-    PixelImage(widthTotal, widthTotal, (x, y) => {
-      val X = (x / widthSquares) % 2 == 0
-      val Y = (y / widthSquares) % 2 == 0
-      if (X && Y || !X && !Y) black
-      else white
-    }).withAccessMode(Strict())
+    PixelImage(widthTotal,
+               widthTotal,
+               (x, y) => {
+                 val X = (x / widthSquares) % 2 == 0
+                 val Y = (y / widthSquares) % 2 == 0
+                 if (X && Y || !X && !Y) black
+                 else white
+               }
+    ).withAccessMode(Strict())
   }
 
-  def chessBoardWithMissingPixels[A: ClassTag](widthTotal: Int = 64, widthSquares: Int = 8, coords: Seq[(Int, Int)] = Seq((15, 17), (23, 31)), white: A, black: A, missing: A): PixelImage[A] = {
-    PixelImage(widthTotal, widthTotal, (x, y) => {
-      val X = (x / widthSquares) % 2 == 0
-      val Y = (y / widthSquares) % 2 == 0
-      if (coords.contains((X, Y))) missing
-      else if (X && Y || !X && !Y) black
-      else white
-    }).withAccessMode(Strict())
+  def chessBoardWithMissingPixels[A: ClassTag](widthTotal: Int = 64,
+                                               widthSquares: Int = 8,
+                                               coords: Seq[(Int, Int)] = Seq((15, 17), (23, 31)),
+                                               white: A,
+                                               black: A,
+                                               missing: A
+  ): PixelImage[A] = {
+    PixelImage(
+      widthTotal,
+      widthTotal,
+      (x, y) => {
+        val X = (x / widthSquares) % 2 == 0
+        val Y = (y / widthSquares) % 2 == 0
+        if (coords.contains((X, Y))) missing
+        else if (X && Y || !X && !Y) black
+        else white
+      }
+    ).withAccessMode(Strict())
   }
 
-  def peakImage[A: ClassTag](width: Int = 64, height: Int = 64, x: Int = 16, y: Int = 16, peakColor: A, fillColor: A): PixelImage[A] = {
-    require(x >= 0 && y >= 0 && x < width && y < height, s"the coordinates of the peak (${x}/${y}) need to be inside the rect(0,0,${width},${height}")
+  def peakImage[A: ClassTag](width: Int = 64,
+                             height: Int = 64,
+                             x: Int = 16,
+                             y: Int = 16,
+                             peakColor: A,
+                             fillColor: A
+  ): PixelImage[A] = {
+    require(x >= 0 && y >= 0 && x < width && y < height,
+            s"the coordinates of the peak (${x}/${y}) need to be inside the rect(0,0,${width},${height}"
+    )
     PixelImage(width, height, (X, Y) => if (X == x && Y == y) peakColor else fillColor).withAccessMode(Strict())
   }
 
-  def borderImage[A: ClassTag](width: Int = 64, height: Int = 64, border: Int = 16, borderColor: A, fillColor: A): PixelImage[A] = {
+  def borderImage[A: ClassTag](width: Int = 64,
+                               height: Int = 64,
+                               border: Int = 16,
+                               borderColor: A,
+                               fillColor: A
+  ): PixelImage[A] = {
     require(2 * border < width && 2 * border < height, "border can not be larger than min(width/2,height/2)")
-    PixelImage(width, height, (x, y) => if (x >= border && y >= border && x < (width - border) && y < (height - border)) borderColor else fillColor).withAccessMode(Strict())
+    PixelImage(width,
+               height,
+               (x, y) =>
+                 if (x >= border && y >= border && x < (width - border) && y < (height - border)) borderColor
+                 else fillColor
+    ).withAccessMode(Strict())
   }
 
 }

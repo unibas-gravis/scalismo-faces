@@ -18,7 +18,7 @@ package scalismo.faces
 
 import java.net.URI
 
-import breeze.linalg.{DenseMatrix, DenseVector, qr}
+import breeze.linalg.{qr, DenseMatrix, DenseVector}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.funspec.AnyFunSpec
 import scalismo.color.{RGB, RGBA}
@@ -38,11 +38,17 @@ class FacesTestSuite extends AnyFunSpec with Matchers {
 
   implicit val rnd: Random = Random(43)
 
-  def randomRGB(implicit rnd: Random) = RGB(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
+  def randomRGB(implicit rnd: Random) =
+    RGB(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
 
-  def randomRGBA(implicit rnd: Random) = RGBA(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
+  def randomRGBA(implicit rnd: Random) = RGBA(rnd.scalaRandom.nextDouble(),
+                                              rnd.scalaRandom.nextDouble(),
+                                              rnd.scalaRandom.nextDouble(),
+                                              rnd.scalaRandom.nextDouble()
+  )
 
-  def randomVector3D(implicit rnd: Random) = EuclideanVector3D(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
+  def randomVector3D(implicit rnd: Random) =
+    EuclideanVector3D(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
 
   def randomDouble(implicit rnd: Random): Double = rnd.scalaRandom.nextDouble()
 
@@ -58,15 +64,22 @@ class FacesTestSuite extends AnyFunSpec with Matchers {
     PixelImage(domain, (x, y) => imageSeq(domain.index(x, y))).withAccessMode(AccessMode.Strict())
   }
 
-
   def randomInt(max: Int)(implicit rnd: Random): Int = rnd.scalaRandom.nextInt(max)
 
-  def randomDirection(implicit rnd: Random): EuclideanVector[_2D] = EuclideanVector.fromPolar(1.0, rnd.scalaRandom.nextDouble() * 2.0 * math.Pi)
+  def randomDirection(implicit rnd: Random): EuclideanVector[_2D] =
+    EuclideanVector.fromPolar(1.0, rnd.scalaRandom.nextDouble() * 2.0 * math.Pi)
 
   def randomGridMesh(cols: Int = 3, rows: Int = 3, sdev: Double = 0.25)(implicit rnd: Random): VertexColorMesh3D = {
     val n = cols * rows
 
-    val points = IndexedSeq.tabulate(n)(i => Point(i % cols, i / cols, 0f)).map(p => p + EuclideanVector(rnd.scalaRandom.nextGaussian(), rnd.scalaRandom.nextGaussian(), rnd.scalaRandom.nextGaussian()) * sdev)
+    val points = IndexedSeq
+      .tabulate(n)(i => Point(i % cols, i / cols, 0f))
+      .map(p =>
+        p + EuclideanVector(rnd.scalaRandom.nextGaussian(),
+                            rnd.scalaRandom.nextGaussian(),
+                            rnd.scalaRandom.nextGaussian()
+        ) * sdev
+      )
     val colors = IndexedSeq.fill(n)(randomRGBA)
     // mesh structure
     val triangles = new ArrayBuffer[TriangleCell](n * 2)
@@ -86,10 +99,14 @@ class FacesTestSuite extends AnyFunSpec with Matchers {
     )
   }
 
-  def randomGridMeshWithTexture(cols: Int = 3, rows: Int = 3, sdev: Double = 0.25)(implicit rnd: Random): ColorNormalMesh3D = {
+  def randomGridMeshWithTexture(cols: Int = 3, rows: Int = 3, sdev: Double = 0.25)(implicit
+    rnd: Random
+  ): ColorNormalMesh3D = {
     val vcMesh = randomGridMesh(cols, rows, sdev)
     val centerPoints: IndexedSeq[Point[_2D]] = IndexedSeq.tabulate(cols * rows)(i => Point(i % cols, i / cols))
-    val uvCoords: IndexedSeq[Point[_2D]] = centerPoints.map { pt => TextureMappedProperty.imageCoordinatesToUV(pt, cols, rows) }
+    val uvCoords: IndexedSeq[Point[_2D]] = centerPoints.map { pt =>
+      TextureMappedProperty.imageCoordinatesToUV(pt, cols, rows)
+    }
 
     val texMap: SurfacePointProperty[Point[_2D]] = SurfacePointProperty(vcMesh.shape.triangulation, uvCoords)
     val texture = TextureMappedProperty(vcMesh.shape.triangulation, texMap, randomImageRGBA(cols, rows))
@@ -109,7 +126,13 @@ class FacesTestSuite extends AnyFunSpec with Matchers {
     new URI(string)
   }
 
-  def randomGridModel(rank: Int = 10, sdev: Double = 5.0, noise: Double = 0.05, cols: Int = 5, rows: Int = 5, orthogonalExpressions: Boolean = false)(implicit rnd: Random): MoMo = {
+  def randomGridModel(rank: Int = 10,
+                      sdev: Double = 5.0,
+                      noise: Double = 0.05,
+                      cols: Int = 5,
+                      rows: Int = 5,
+                      orthogonalExpressions: Boolean = false
+  )(implicit rnd: Random): MoMo = {
 
     val reference = randomGridMesh(cols, rows)
 
@@ -123,7 +146,8 @@ class FacesTestSuite extends AnyFunSpec with Matchers {
     assert(shapeMean.length == shapePCABases.rows, "rows is not correct")
     assert(shapePCABases.cols == rank, "model is of incorrect rank")
     assert(shapeVariance.length == shapePCABases.cols, "wrong number of variances")
-    val shape = ModelHelpers.buildFrom[_3D, TriangleMesh, Point[_3D]](reference.shape, shapeMean, shapeVariance, shapePCABases)
+    val shape =
+      ModelHelpers.buildFrom[_3D, TriangleMesh, Point[_3D]](reference.shape, shapeMean, shapeVariance, shapePCABases)
 
     val colorN = compN
     val colorMean = DenseVector.fill[Double](colorN)(rnd.scalaRandom.nextGaussian())
@@ -145,21 +169,29 @@ class FacesTestSuite extends AnyFunSpec with Matchers {
     assert(expressionMean.length == expressionPCABases.rows, "rows is not correct")
     assert(expressionPCABases.cols == rank, "model is of incorrect rank")
     assert(expressionVariance.length == expressionPCABases.cols, "wrong number of variances")
-    val expression = ModelHelpers.buildFrom[_3D, TriangleMesh, EuclideanVector[_3D]](reference.shape, expressionMean, expressionVariance, expressionPCABases)
+    val expression = ModelHelpers.buildFrom[_3D, TriangleMesh, EuclideanVector[_3D]](reference.shape,
+                                                                                     expressionMean,
+                                                                                     expressionVariance,
+                                                                                     expressionPCABases
+    )
 
     def randomName = randomString(10)
-    def randomPointOnRef = reference.shape.pointSet.points.toIndexedSeq(rnd.scalaRandom.nextInt(reference.shape.pointSet.numberOfPoints))
+    def randomPointOnRef =
+      reference.shape.pointSet.points.toIndexedSeq(rnd.scalaRandom.nextInt(reference.shape.pointSet.numberOfPoints))
     def randomLM: Landmark[_3D] = Landmark(randomName, randomPointOnRef)
     val randomLandmarks = for (i <- 0 until 5) yield randomName -> randomLM
 
     MoMo(reference.shape,
-      PancakeDLRGP(shape, noise),
-      PancakeDLRGP(color, noise),
-      PancakeDLRGP(expression, noise),
-      randomLandmarks.toMap)
+         PancakeDLRGP(shape, noise),
+         PancakeDLRGP(color, noise),
+         PancakeDLRGP(expression, noise),
+         randomLandmarks.toMap
+    )
   }
 
-  def randomGridModelExpress(rank: Int = 10, sdev: Double = 5.0, noise: Double = 0.05, cols: Int = 5, rows: Int = 5)(implicit rnd: Random): PancakeDLRGP[_3D, TriangleMesh, EuclideanVector[_3D]] = {
+  def randomGridModelExpress(rank: Int = 10, sdev: Double = 5.0, noise: Double = 0.05, cols: Int = 5, rows: Int = 5)(
+    implicit rnd: Random
+  ): PancakeDLRGP[_3D, TriangleMesh, EuclideanVector[_3D]] = {
     val reference = randomGridMesh(cols, rows)
     val expressionN = 3 * cols * rows
     val expressionMean = DenseVector.fill[Double](expressionN)(rnd.scalaRandom.nextGaussian())
@@ -167,6 +199,12 @@ class FacesTestSuite extends AnyFunSpec with Matchers {
     val expressionPCABases = expressionDecomposition.q
     val expressionVariance = DenseVector.fill[Double](expressionN)(rnd.scalaRandom.nextDouble() * sdev)
     val expressionNoise = rnd.scalaRandom.nextDouble() * noise
-    PancakeDLRGP(ModelHelpers.buildFrom[_3D, TriangleMesh, EuclideanVector[_3D]](reference.shape, expressionMean, expressionVariance, expressionPCABases))
+    PancakeDLRGP(
+      ModelHelpers.buildFrom[_3D, TriangleMesh, EuclideanVector[_3D]](reference.shape,
+                                                                      expressionMean,
+                                                                      expressionVariance,
+                                                                      expressionPCABases
+      )
+    )
   }
 }
