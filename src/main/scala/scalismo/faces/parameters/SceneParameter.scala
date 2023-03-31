@@ -24,30 +24,31 @@ import scalismo.faces.mesh._
 import scalismo.faces.render._
 
 /**
-  * structure to represent a scene tree with pose nodes and render objects
-  */
+ * structure to represent a scene tree with pose nodes and render objects
+ */
 sealed trait SceneTree extends Iterable[SceneTree] {
+
   /**
-    * get all properly transformed meshes in the scene
-    *
-    * @return
-    */
+   * get all properly transformed meshes in the scene
+   *
+   * @return
+   */
   def worldMeshes: IndexedSeq[ColorNormalMesh3D] = {
     val objects: IndexedSeq[(Transform3D, RenderObject)] = posedObjects
-    objects.map{case(pose, renderObject) => RenderObject.instance(renderObject).transform(pose)}
+    objects.map { case (pose, renderObject) => RenderObject.instance(renderObject).transform(pose) }
   }
 
   /**
-    * flatten the tree (recursive), collect all render objects with their model-to-world transformation
-    *
-    * @return
-    */
+   * flatten the tree (recursive), collect all render objects with their model-to-world transformation
+   *
+   * @return
+   */
   def posedObjects: IndexedSeq[(Transform3D, RenderObject)] = {
     // recursive scene traversal
     def treeWalker(node: SceneTree, trafo: Transform3D): IndexedSeq[(Transform3D, RenderObject)] = {
       node match {
         case pn: PoseNode =>
-          pn.children.flatMap{child => treeWalker(child, pn.pose.transform compose trafo)}
+          pn.children.flatMap { child => treeWalker(child, pn.pose.transform compose trafo) }
         case so: SceneObject => IndexedSeq((trafo, so.renderObject))
       }
     }
@@ -56,14 +57,15 @@ sealed trait SceneTree extends Iterable[SceneTree] {
   }
 
   /**
-    * recursive tree walker for Traversable
-    *
-    * @param f function to execute for each node of the tree
-    */
+   * recursive tree walker for Traversable
+   *
+   * @param f
+   *   function to execute for each node of the tree
+   */
   override def foreach[U](f: (SceneTree) => U): Unit = this match {
     case pn: PoseNode =>
       f(pn)
-      pn.children.foreach{f}
+      pn.children.foreach { f }
     case so: SceneObject =>
       f(so)
   }
@@ -74,18 +76,16 @@ sealed trait SceneTree extends Iterable[SceneTree] {
     def treeWalker(node: SceneTree): Iterator[SceneTree] = {
       node match {
         case pn: PoseNode =>
-          pn.children.iterator.flatMap{child => treeWalker(child)}
+          pn.children.iterator.flatMap { child => treeWalker(child) }
         case so: SceneObject => Iterator(so)
       }
     }
     treeWalker(this)
   }
 
-
 }
 
 case class PoseNode(pose: Pose, children: IndexedSeq[SceneTree]) extends SceneTree
-
 
 case class SceneObject(renderObject: RenderObject) extends SceneTree
 
@@ -96,14 +96,17 @@ case class SceneParameter(view: ViewParameter,
                           illuminations: IndexedSeq[Illumination],
                           sceneTree: SceneTree,
                           imageSize: ImageSize,
-                          colorTransform: scalismo.faces.parameters.ColorTransform) {
+                          colorTransform: scalismo.faces.parameters.ColorTransform
+) {
 
   /**
-    * render a scene according to the scene parameter description
-    *
-    * @param buffer buffer to render into (mutated/updated! through RenderBuffer interface)
-    * @return render buffer with rendered scene
-    */
+   * render a scene according to the scene parameter description
+   *
+   * @param buffer
+   *   buffer to render into (mutated/updated! through RenderBuffer interface)
+   * @return
+   *   render buffer with rendered scene
+   */
   def renderSceneToBuffer(buffer: RenderBuffer[RGBA]): RenderBuffer[RGBA] = {
     // color transform (nasty rgb/rgba conversion)
     val ct = colorTransform.transform
@@ -112,11 +115,10 @@ case class SceneParameter(view: ViewParameter,
     // pixel shader for given illumination setting
     def makePixelShader(mesh: ColorNormalMesh3D): PixelShader[RGBA] = {
       val shaders = illuminations.map {
-        case dl: DirectionalLight => dl.shader(mesh, view.eyePosition)
+        case dl: DirectionalLight         => dl.shader(mesh, view.eyePosition)
         case shl: SphericalHarmonicsLight => shl.shader(mesh)
-        case ill => throw new Exception(s"Uknown illumination: $ill")
       }
-      shaders.reduce {_ + _}.map(colT)
+      shaders.reduce { _ + _ }.map(colT)
     }
 
     // triangle filters for a mesh, back face culling
@@ -126,7 +128,7 @@ case class SceneParameter(view: ViewParameter,
     }
 
     // transform meshes to world space
-    val worldMeshes = sceneTree.posedObjects.map{case(t, renderObject) =>
+    val worldMeshes = sceneTree.posedObjects.map { case (t, renderObject) =>
       RenderObject.instance(renderObject).transform(t)
     }
 
@@ -151,57 +153,58 @@ case class SceneParameter(view: ViewParameter,
   }
 
   /**
-    * render a scene according to the scene parameter description
-    *
-    * @return render buffer with rendered scene
-    */
+   * render a scene according to the scene parameter description
+   *
+   * @return
+   *   render buffer with rendered scene
+   */
   def renderSceneToBuffer: RenderBuffer[RGBA] = {
     val buffer = ZBuffer[RGBA](imageSize.width, imageSize.height, RGBA.BlackTransparent)
     renderSceneToBuffer(buffer)
   }
 
   /**
-    * render a scene according to the scene parameter description, produces an image
-    *
-    * @return rendered image of the scene
-    */
+   * render a scene according to the scene parameter description, produces an image
+   *
+   * @return
+   *   rendered image of the scene
+   */
   def renderScene(clearColor: RGBA = RGBA.BlackTransparent): PixelImage[RGBA] = {
     val buffer = ZBuffer[RGBA](imageSize.width, imageSize.height, clearColor)
     renderSceneToBuffer(buffer).toImage
   }
 
-
   /**
-    * convert to a RenderParameter, only works for a single object with single illumination
-    *
-    * @return RenderParameter describing this simple scene
-    */
+   * convert to a RenderParameter, only works for a single object with single illumination
+   *
+   * @return
+   *   RenderParameter describing this simple scene
+   */
   def toRenderParameter: Option[RenderParameter] = {
     for {
       light <- illuminations match {
         case IndexedSeq(envMap: SphericalHarmonicsLight, dirLight: DirectionalLight) => Some((envMap, dirLight))
-        case _ => None
+        case _                                                                       => None
       }
       (pose, face) <- sceneTree match {
         case PoseNode(pose, IndexedSeq(SceneObject(face: MoMoInstance))) => Some((pose, face))
-        case _ => None
+        case _                                                           => None
       }
-    } yield
-      RenderParameter(
-        pose = pose,
-        view = view,
-        camera = camera,
-        environmentMap = light._1,
-        directionalLight = light._2,
-        momo = face,
-        imageSize = imageSize,
-        colorTransform = colorTransform)
+    } yield RenderParameter(pose = pose,
+                            view = view,
+                            camera = camera,
+                            environmentMap = light._1,
+                            directionalLight = light._2,
+                            momo = face,
+                            imageSize = imageSize,
+                            colorTransform = colorTransform
+    )
   }
 }
 
 /**
-  * Renderer for scene descriptions
-  */
+ * Renderer for scene descriptions
+ */
 object SceneParameter {
 
   def apply(renderParameter: RenderParameter): SceneParameter = SceneParameter(
@@ -210,5 +213,6 @@ object SceneParameter {
     illuminations = IndexedSeq(renderParameter.environmentMap, renderParameter.directionalLight),
     sceneTree = PoseNode(renderParameter.pose, IndexedSeq(SceneObject(renderParameter.momo))),
     imageSize = renderParameter.imageSize,
-    colorTransform = renderParameter.colorTransform)
+    colorTransform = renderParameter.colorTransform
+  )
 }

@@ -23,12 +23,13 @@ import scalismo.faces.sampling.face.evaluators.PixelEvaluators.IsotropicGaussian
 import scalismo.sampling.DistributionEvaluator
 import scalismo.sampling.evaluators.{GaussianEvaluator, PairEvaluator}
 
-
 /** evaluate each pixel independently, uses alpha channel to determine between foreground and background */
 class IndependentPixelEvaluator(val pixelEvaluator: PairEvaluator[RGB], val bgEvaluator: DistributionEvaluator[RGB])
-  extends PairEvaluator[PixelImage[RGBA]] {
+    extends PairEvaluator[PixelImage[RGBA]] {
   override def logValue(reference: PixelImage[RGBA], sample: PixelImage[RGBA]): Double = {
-    require(sample.domain == reference.domain, "IndependentPixelEvaluator: images must be comparable! (different sizes)")
+    require(sample.domain == reference.domain,
+            "IndependentPixelEvaluator: images must be comparable! (different sizes)"
+    )
 
     // ugly while for better performance, was a nice zip/map/case before :(
     var sum: Double = 0.0
@@ -47,9 +48,9 @@ class IndependentPixelEvaluator(val pixelEvaluator: PairEvaluator[RGB], val bgEv
       }
       x += 1
     }
-    if(transparencySum > 0) //was something rendered on the image?
+    if (transparencySum > 0) // was something rendered on the image?
       sum
-    else Double.NegativeInfinity  // nothing was rendered on the image!
+    else Double.NegativeInfinity // nothing was rendered on the image!
   }
 
   override def toString: String = {
@@ -64,39 +65,46 @@ class IndependentPixelEvaluator(val pixelEvaluator: PairEvaluator[RGB], val bgEv
 }
 
 object IndependentPixelEvaluator {
-  def apply(pixelEvaluator: PairEvaluator[RGB], bgEvaluator: DistributionEvaluator[RGB]) = new IndependentPixelEvaluator(pixelEvaluator, bgEvaluator)
+  def apply(pixelEvaluator: PairEvaluator[RGB], bgEvaluator: DistributionEvaluator[RGB]) =
+    new IndependentPixelEvaluator(pixelEvaluator, bgEvaluator)
 
   /**
-    * construct an independent pixel likelihood of the target image under the image model */
+   * construct an independent pixel likelihood of the target image under the image model
+   */
   def apply(targetImage: PixelImage[RGBA],
             fgLikelihood: PairEvaluator[RGB],
-            bgLikelihood: DistributionEvaluator[RGB]): DistributionEvaluator[PixelImage[RGBA]] = {
+            bgLikelihood: DistributionEvaluator[RGB]
+  ): DistributionEvaluator[PixelImage[RGBA]] = {
     IndependentPixelEvaluator(fgLikelihood, bgLikelihood).toDistributionEvaluator(targetImage)
   }
 
   /**
-    * construct a likelihood with independent, isotropic Gaussian likelihoods at each pixel (very common case)
-    * */
+   * construct a likelihood with independent, isotropic Gaussian likelihoods at each pixel (very common case)
+   */
   def isotropicGaussian(targetImage: PixelImage[RGBA],
                         sdev: Double,
-                        bgLikelihood: DistributionEvaluator[RGB]): DistributionEvaluator[PixelImage[RGBA]] = {
+                        bgLikelihood: DistributionEvaluator[RGB]
+  ): DistributionEvaluator[PixelImage[RGBA]] = {
     val pixelEvaluator = IsotropicGaussianPixelEvaluator(sdev)
     IndependentPixelEvaluator(targetImage, pixelEvaluator, bgLikelihood)
   }
 
   /**
-    * construct a likelihood with independent, isotropic Gaussian likelihoods at each pixel with a constant background model
-    *
-    * @param bgSdev background model becomes better for a pixel when its deviation to the rendered image color is larger than this value, measured in standard deviations sdev
-    *
-    */
+   * construct a likelihood with independent, isotropic Gaussian likelihoods at each pixel with a constant background
+   * model
+   *
+   * @param bgSdev
+   *   background model becomes better for a pixel when its deviation to the rendered image color is larger than this
+   *   value, measured in standard deviations sdev
+   */
   def isotropicGaussianConstantBackground(targetImage: PixelImage[RGBA],
                                           sdev: Double,
-                                          bgSdev: Double): DistributionEvaluator[PixelImage[RGBA]] = {
+                                          bgSdev: Double
+  ): DistributionEvaluator[PixelImage[RGBA]] = {
     // standardized foreground evaluator, z transform to a std normal
     val pixelEvaluator: PairEvaluator[RGB] = new PairEvaluator[RGB] {
       override def logValue(first: RGB, second: RGB): Double = {
-        val diff = (first - second).norm/sdev
+        val diff = (first - second).norm / sdev
         GaussianEvaluator.logDensity(diff, 0.0, 1.0)
       }
     }

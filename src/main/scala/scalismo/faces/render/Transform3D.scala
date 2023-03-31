@@ -20,10 +20,13 @@ import breeze.linalg.{DenseMatrix, DenseVector}
 import scalismo.geometry._
 
 trait Transform3D { self =>
+
   /** apply transform to a 3d point */
   def apply(x: Point[_3D]): Point[_3D]
+
   /** apply transform to a 3d vector */
   def apply(v: EuclideanVector[_3D]): EuclideanVector[_3D]
+
   /** compose with other transform */
   def compose(t: Transform3D): Transform3D = new Transform3D {
     override def apply(x: Point[_3D]): Point[_3D] = self(t(x))
@@ -39,6 +42,7 @@ object Transform3D {
 }
 
 trait InvertibleTransform3D extends Transform3D { self: Transform3D =>
+
   /** inverted version of this transform */
   def inverted: InvertibleTransform3D
 
@@ -52,19 +56,7 @@ trait InvertibleTransform3D extends Transform3D { self: Transform3D =>
       override def inverted = new InvertibleTransform3D {
         override def apply(x: Point[_3D]): Point[_3D] = u.inverted(t.inverted(x))
         override def apply(v: EuclideanVector[_3D]): EuclideanVector[_3D] = u.inverted(t.inverted(v))
-        override def inverted: InvertibleTransform3D {
-          def inverted: InvertibleTransform3D with Object {
-            def inverted: Any
-
-            def apply(v: EuclideanVector[_3D]): EuclideanVector[_3D]
-
-            def apply(x: Point[_3D]): Point[_3D]
-          }
-
-          def apply(v: EuclideanVector[_3D]): EuclideanVector[_3D]
-
-          def apply(x: Point[_3D]): Point[_3D]
-        } = thisTransform
+        override def inverted = thisTransform
       }
     }
   }

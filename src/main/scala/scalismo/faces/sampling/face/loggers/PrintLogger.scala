@@ -24,11 +24,19 @@ import scalismo.sampling.{DistributionEvaluator, ProposalGenerator}
 /** prints current evaluation result and iteration */
 class PrintLogger[A](output: PrintStream, prefix: String) extends AcceptRejectLogger[A] {
   private var counter = 0
-  override def accept(current: A, sample: A, generator: ProposalGenerator[A], evaluator: DistributionEvaluator[A]): Unit = {
+  override def accept(current: A,
+                      sample: A,
+                      generator: ProposalGenerator[A],
+                      evaluator: DistributionEvaluator[A]
+  ): Unit = {
     output.println(s"$counter A ${evaluator.logValue(sample)}")
     counter += 1
   }
-  override def reject(current: A, sample: A, generator: ProposalGenerator[A], evaluator: DistributionEvaluator[A]): Unit = {
+  override def reject(current: A,
+                      sample: A,
+                      generator: ProposalGenerator[A],
+                      evaluator: DistributionEvaluator[A]
+  ): Unit = {
     output.println(s"$counter R ${evaluator.logValue(sample)}")
     counter += 1
   }
@@ -36,18 +44,26 @@ class PrintLogger[A](output: PrintStream, prefix: String) extends AcceptRejectLo
   def verbose = new VerbosePrintLogger[A](output, prefix)
 }
 
-object PrintLogger{
+object PrintLogger {
   def apply[A](output: PrintStream = Console.out, prefix: String = "") = new PrintLogger[A](output, prefix)
 }
 
 /** prints current evaluation result, iteration number, state, generator and evaluator */
 class VerbosePrintLogger[A](output: PrintStream, prefix: String) extends AcceptRejectLogger[A] {
   private var counter = 0
-  override def accept(current: A, sample: A, generator: ProposalGenerator[A], evaluator: DistributionEvaluator[A]): Unit = {
+  override def accept(current: A,
+                      sample: A,
+                      generator: ProposalGenerator[A],
+                      evaluator: DistributionEvaluator[A]
+  ): Unit = {
     output.println(s"$counter A ${evaluator.logValue(sample)} $generator $evaluator")
     counter += 1
   }
-  override def reject(current: A, sample: A, generator: ProposalGenerator[A], evaluator: DistributionEvaluator[A]): Unit = {
+  override def reject(current: A,
+                      sample: A,
+                      generator: ProposalGenerator[A],
+                      evaluator: DistributionEvaluator[A]
+  ): Unit = {
     output.println(s"$counter R ${evaluator.logValue(sample)} $generator $evaluator")
     counter += 1
   }

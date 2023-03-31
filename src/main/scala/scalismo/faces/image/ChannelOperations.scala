@@ -22,31 +22,43 @@ import scalismo.faces.image.filter.ImageFilter
 import scala.reflect.ClassTag
 
 object ChannelOperations {
-  def fromMultiChannel[A: ClassTag](image: PixelImage[Array[Double]])(implicit vec: ComponentRepresentation[A]): PixelImage[A] = {
+  def fromMultiChannel[A: ClassTag](
+    image: PixelImage[Array[Double]]
+  )(implicit vec: ComponentRepresentation[A]): PixelImage[A] = {
     image.map(a => vec.fromArray(a))
   }
 
-  def filterChannels[A: ClassTag](image: PixelImage[A], channelFilter: ImageFilter[Double, Double])(implicit vec: ComponentRepresentation[A]): PixelImage[A] = {
+  def filterChannels[A: ClassTag](image: PixelImage[A], channelFilter: ImageFilter[Double, Double])(implicit
+    vec: ComponentRepresentation[A]
+  ): PixelImage[A] = {
     val channels = decomposeChannels(image)
     val filteredChannels = channels.map(c => channelFilter.filter(c))
     composeChannels(filteredChannels)
   }
 
-  def decomposeChannels[A](image: PixelImage[A])(implicit vec: ComponentRepresentation[A]): IndexedSeq[PixelImage[Double]] = {
+  def decomposeChannels[A](
+    image: PixelImage[A]
+  )(implicit vec: ComponentRepresentation[A]): IndexedSeq[PixelImage[Double]] = {
     val mcImage = multiChannelImage(image)
     for (i <- 0 until vec.size) yield mcImage.map(a => a(i))
   }
 
-  def multiChannelImage[A](image: PixelImage[A])(implicit vec: ComponentRepresentation[A]): PixelImage[Array[Double]] = {
+  def multiChannelImage[A](
+    image: PixelImage[A]
+  )(implicit vec: ComponentRepresentation[A]): PixelImage[Array[Double]] = {
     image.map(p => vec.toArray(p))
   }
 
-  def composeChannels[A: ClassTag](images: IndexedSeq[PixelImage[Double]])(implicit vec: ComponentRepresentation[A]): PixelImage[A] = {
+  def composeChannels[A: ClassTag](
+    images: IndexedSeq[PixelImage[Double]]
+  )(implicit vec: ComponentRepresentation[A]): PixelImage[A] = {
     require(images.nonEmpty, "no channels")
     val domain = images.head.domain
     require(images.forall(i => i.domain == domain), "domains are not equal")
-    PixelImage(domain, (x, y) => {
-      vec.fromComponents(i => images(i)(x, y))
-    })
+    PixelImage(domain,
+               (x, y) => {
+                 vec.fromComponents(i => images(i)(x, y))
+               }
+    )
   }
 }

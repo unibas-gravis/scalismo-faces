@@ -20,8 +20,14 @@ import scalismo.geometry._
 import scalismo.mesh.BarycentricCoordinates
 
 object RenderTransforms {
+
   /** default model transform, consisting of scaling, 3 (Euler) rotations (x, y, z) and translation */
-  def modelTransform(translation: EuclideanVector[_3D], scaling: Double, pitch: Double, yaw: Double, roll: Double): Affine3D = {
+  def modelTransform(translation: EuclideanVector[_3D],
+                     scaling: Double,
+                     pitch: Double,
+                     yaw: Double,
+                     roll: Double
+  ): Affine3D = {
     val rotX = Rotation3D.rotationX(pitch)
     val rotY = Rotation3D.rotationY(yaw)
     val rotZ = Rotation3D.rotationZ(roll)
@@ -33,9 +39,12 @@ object RenderTransforms {
   /**
    * camera/view transform to look at a certain point, see gluLookAt
    *
-   * @param position position of the camera center
-   * @param lookAt   center point of the camera, looks at given point
-   * @param upright  upwards direction of camera
+   * @param position
+   *   position of the camera center
+   * @param lookAt
+   *   center point of the camera, looks at given point
+   * @param upright
+   *   upwards direction of camera
    */
   def viewTransformLookAt(position: Point[_3D], lookAt: Point[_3D], upright: EuclideanVector[_3D]): Affine3D = {
     // rotations according to lookAt and upright, as in gluLookAt
@@ -54,7 +63,10 @@ object RenderTransforms {
     Affine3D(M, t)
   }
 
-  /** default camera/view transform, consists of three rotations (Euler, xyz) and a translation of the camera center (inverts) */
+  /**
+   * default camera/view transform, consists of three rotations (Euler, xyz) and a translation of the camera center
+   * (inverts)
+   */
   def viewTransform(translation: EuclideanVector[_3D], pitch: Double, yaw: Double, roll: Double): Affine3D = {
     val rotX = Rotation3D.rotationX(pitch)
     val rotY = Rotation3D.rotationY(yaw)
@@ -64,19 +76,29 @@ object RenderTransforms {
   }
 
   /** default correction of barycentric coordinates in screen space to world (3d) space for a perspective projection */
-  def bccScreenToWorldCorrectionPerspective(bccScreen: BarycentricCoordinates, z1: Double, z2: Double, z3: Double): BarycentricCoordinates = {
+  def bccScreenToWorldCorrectionPerspective(bccScreen: BarycentricCoordinates,
+                                            z1: Double,
+                                            z2: Double,
+                                            z3: Double
+  ): BarycentricCoordinates = {
     val d = z2 * z3 + z3 * bccScreen.b * (z1 - z2) + z2 * bccScreen.c * (z1 - z3)
     if (d == 0f) {
       bccScreen
     } else {
       val b = z1 * z3 * bccScreen.b / d
       val c = z1 * z2 * bccScreen.c / d
-      BarycentricCoordinates(1f - b - c, b, c) //lambda world
+      BarycentricCoordinates(1f - b - c, b, c) // lambda world
     }
   }
 
-  /** default correction of barycentric coordinates from world (3d) space to screen space for a perspective projection */
-  def bccWorldToScreenCorrectionPerspective(bccWorld: BarycentricCoordinates, z1: Double, z2: Double, z3: Double): BarycentricCoordinates = {
+  /**
+   * default correction of barycentric coordinates from world (3d) space to screen space for a perspective projection
+   */
+  def bccWorldToScreenCorrectionPerspective(bccWorld: BarycentricCoordinates,
+                                            z1: Double,
+                                            z2: Double,
+                                            z3: Double
+  ): BarycentricCoordinates = {
     val d = z1 - (z1 - z2) * bccWorld.b - (z1 - z3) * bccWorld.c
     if (d == 0f)
       bccWorld
@@ -87,4 +109,3 @@ object RenderTransforms {
     }
   }
 }
-

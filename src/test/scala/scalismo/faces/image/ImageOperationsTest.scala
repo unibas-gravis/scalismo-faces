@@ -18,7 +18,7 @@ package scalismo.faces.image
 import scalismo.faces.FacesTestSuite
 import scalismo.color.RGB
 
-class ImageOperationsTest  extends FacesTestSuite {
+class ImageOperationsTest extends FacesTestSuite {
 
   describe("ImageOperations support") {
 
@@ -27,7 +27,9 @@ class ImageOperationsTest  extends FacesTestSuite {
       val fg = PixelImage(PixelImageDomain(2, 2), (x, y) => RGB(0, 1, 0))
       val mask = PixelImage(PixelImageDomain(2, 2), (x, y) => (x + y) / 2.0)
 
-      val expected = PixelImage(PixelImageDomain(2, 2), Array(RGB(1, 0, 0), RGB(0.5, 0.5, 0.0), RGB(0.5, 0.5, 0.0), RGB(0.0, 1.0, 0.0)))
+      val expected = PixelImage(PixelImageDomain(2, 2),
+                                Array(RGB(1, 0, 0), RGB(0.5, 0.5, 0.0), RGB(0.5, 0.5, 0.0), RGB(0.0, 1.0, 0.0))
+      )
 
       val produced = PixelImageOperations.alphaBlending(bg, fg, mask)
 

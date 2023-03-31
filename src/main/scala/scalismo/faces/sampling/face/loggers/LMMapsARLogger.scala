@@ -24,13 +24,18 @@ import scalismo.sampling.loggers.{AcceptRejectLogger, ChainStateLogger}
 import scalismo.sampling.{DistributionEvaluator, ProposalGenerator}
 
 /** render landmarks positions into image for logging, AcceptReject version */
-case class LMMapsARLogger(landmarks: Set[String],
-    renderer: ParametricLandmarksRenderer,
-    target: PixelImage[RGBA]) extends AcceptRejectLogger[RenderParameter] {
-  val outMaps: Map[String, ImageBuffer[Double]] = landmarks.map(l => l -> ImageBuffer.makeInitializedBuffer[Double](target.domain.width, target.domain.height)(0f)).toMap
+case class LMMapsARLogger(landmarks: Set[String], renderer: ParametricLandmarksRenderer, target: PixelImage[RGBA])
+    extends AcceptRejectLogger[RenderParameter] {
+  val outMaps: Map[String, ImageBuffer[Double]] = landmarks
+    .map(l => l -> ImageBuffer.makeInitializedBuffer[Double](target.domain.width, target.domain.height)(0f))
+    .toMap
   private var incs: Long = 0
 
-  override def accept(current: RenderParameter, sample: RenderParameter, generator: ProposalGenerator[RenderParameter], evaluator: DistributionEvaluator[RenderParameter]): Unit = {
+  override def accept(current: RenderParameter,
+                      sample: RenderParameter,
+                      generator: ProposalGenerator[RenderParameter],
+                      evaluator: DistributionEvaluator[RenderParameter]
+  ): Unit = {
     landmarks.foreach { lm =>
       val pos = renderer.renderLandmark(lm, sample).get
       val x = pos.point.x.toInt
@@ -43,7 +48,11 @@ case class LMMapsARLogger(landmarks: Set[String],
     }
   }
 
-  override def reject(current: RenderParameter, sample: RenderParameter, generator: ProposalGenerator[RenderParameter], evaluator: DistributionEvaluator[RenderParameter]): Unit = {
+  override def reject(current: RenderParameter,
+                      sample: RenderParameter,
+                      generator: ProposalGenerator[RenderParameter],
+                      evaluator: DistributionEvaluator[RenderParameter]
+  ): Unit = {
     landmarks.foreach { lm =>
       val pos = renderer.renderLandmark(lm, current).get
       val x = pos.point.x.toInt
@@ -59,10 +68,11 @@ case class LMMapsARLogger(landmarks: Set[String],
 }
 
 /** render landmarks positions into image for logging, ChainState version */
-case class LMMapsStateLogger(landmarks: Set[String],
-    renderer: ParametricLandmarksRenderer,
-    target: PixelImage[RGBA]) extends ChainStateLogger[RenderParameter] {
-  val outMaps: Map[String, ImageBuffer[Double]] = landmarks.map(l => l -> ImageBuffer.makeInitializedBuffer[Double](target.domain.width, target.domain.height)(0f)).toMap
+case class LMMapsStateLogger(landmarks: Set[String], renderer: ParametricLandmarksRenderer, target: PixelImage[RGBA])
+    extends ChainStateLogger[RenderParameter] {
+  val outMaps: Map[String, ImageBuffer[Double]] = landmarks
+    .map(l => l -> ImageBuffer.makeInitializedBuffer[Double](target.domain.width, target.domain.height)(0f))
+    .toMap
   private var incs: Long = 0
 
   override def logState(sample: RenderParameter): Unit = {

@@ -16,10 +16,10 @@
 
 package scalismo.faces.render
 
-import breeze.linalg.{DenseMatrix, DenseVector, inv}
+import breeze.linalg.{inv, DenseMatrix, DenseVector}
 import scalismo.color.RGB
 import scalismo.color.ColorSpaceOperations.implicits._
-import scalismo.geometry.{SquareMatrix, _3D}
+import scalismo.geometry.{_3D, SquareMatrix}
 
 /** color transform: map color values */
 trait ColorTransform extends (RGB => RGB)
@@ -42,8 +42,12 @@ case class WhiteAndBlackPointColorTransform(white: RGB, black: RGB) extends Colo
   }
 }
 
-/** Color transform which adapts the white point (through scaling, "gain"), the color contrast (mixing with gray) and the black point (offset) */
-case class ColorTransformWithColorContrast(gain: RGB, colorContrast: Double, offset: RGB) extends ColorTransform { self =>
+/**
+ * Color transform which adapts the white point (through scaling, "gain"), the color contrast (mixing with gray) and the
+ * black point (offset)
+ */
+case class ColorTransformWithColorContrast(gain: RGB, colorContrast: Double, offset: RGB) extends ColorTransform {
+  self =>
   def apply(color: RGB): RGB = {
     val colorMixed = color * colorContrast + RGB(color.luminance * (1 - colorContrast))
     RGB(
@@ -56,10 +60,10 @@ case class ColorTransformWithColorContrast(gain: RGB, colorContrast: Double, off
   /** get the inverse transform, note: only exists if colorConstrast != 0 */
   def invert: ColorTransform = new ColorTransform {
     private val c = colorContrast
-    private val A = DenseMatrix(
-      (c * (1 - 0.3) + 0.3, 0.59 - 0.59 * c, 0.11 - 0.11 * c),
-      (0.3 - 0.3 * c, c * (1 - 0.59) + 0.59, 0.11 - 0.11 * c),
-      (0.3 - 0.3 * c, 0.59 - 0.59 * c, c * (1 - 0.11) + 0.11))
+    private val A = DenseMatrix((c * (1 - 0.3) + 0.3, 0.59 - 0.59 * c, 0.11 - 0.11 * c),
+                                (0.3 - 0.3 * c, c * (1 - 0.59) + 0.59, 0.11 - 0.11 * c),
+                                (0.3 - 0.3 * c, 0.59 - 0.59 * c, c * (1 - 0.11) + 0.11)
+    )
 
     private val Ainv = inv(A)
 
@@ -72,4 +76,3 @@ case class ColorTransformWithColorContrast(gain: RGB, colorContrast: Double, off
     def invert: ColorTransformWithColorContrast = self
   }
 }
-

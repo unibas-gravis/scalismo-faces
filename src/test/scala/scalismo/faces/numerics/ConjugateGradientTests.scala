@@ -16,7 +16,7 @@
 
 package scalismo.faces.numerics
 
-import breeze.linalg.{CSCMatrix, DenseVector, norm}
+import breeze.linalg.{norm, CSCMatrix, DenseVector}
 import scalismo.faces.FacesTestSuite
 
 class ConjugateGradientTests extends FacesTestSuite {

@@ -22,18 +22,20 @@ import scalismo.faces.numerics.{GenericMultigridPoissonSolver, ImageDomainPoisso
 
 import scala.reflect.ClassTag
 
-/** Methods to inpaint/blend two images using Poisson Image Editing [roughly Perez 2003 SIGGRAPH (different implementation)] */
+/**
+ * Methods to inpaint/blend two images using Poisson Image Editing [roughly Perez 2003 SIGGRAPH (different
+ * implementation)]
+ */
 class PoissonInpainting[A: ClassTag](solver: ImageDomainPoissonSolver[A])(implicit ops: ColorSpaceOperations[A]) {
   import scalismo.color.ColorSpaceOperations.implicits._
 
   /** inpainting with seamless cloning method: match gradients of inpainted part with overlay image */
-  def seamlessCloning(targetImage: PixelImage[A], overlayImage: PixelImage[Option[A]], left: Int = 0, top: Int = 0): PixelImage[A] = {
-    gradientMixedCloning(
-      targetImage,
-      overlayImage,
-      GradientMaps.selectInset,
-      left,
-      top)
+  def seamlessCloning(targetImage: PixelImage[A],
+                      overlayImage: PixelImage[Option[A]],
+                      left: Int = 0,
+                      top: Int = 0
+  ): PixelImage[A] = {
+    gradientMixedCloning(targetImage, overlayImage, GradientMaps.selectInset, left, top)
   }
 
   /** general Poisson image inpainting with arbitrary guidance field, constructed from the two gradient fields */
@@ -41,14 +43,17 @@ class PoissonInpainting[A: ClassTag](solver: ImageDomainPoissonSolver[A])(implic
                            overlayImage: PixelImage[Option[A]],
                            gradientMap: ((A, A), (A, A)) => (A, A),
                            left: Int = 0,
-                           top: Int = 0): PixelImage[A] = {
+                           top: Int = 0
+  ): PixelImage[A] = {
     // construct Poisson boundary mask (True on target)
     val localMask = overlayImage.map(p => p.isEmpty)
     val fullMask = PixelImageOperations.padImage(localMask, targetImage.width, targetImage.height, true, left, top)
 
     // convenience image resizers (lazy)
-    def pad(image: PixelImage[A]): PixelImage[A] = PixelImageOperations.padImage(image, targetImage.width, targetImage.height, ops.zero, left, top)
-    def crop(image: PixelImage[A]): PixelImage[A] = PixelImageOperations.subImage(image, left, top, overlayImage.width, overlayImage.height)
+    def pad(image: PixelImage[A]): PixelImage[A] =
+      PixelImageOperations.padImage(image, targetImage.width, targetImage.height, ops.zero, left, top)
+    def crop(image: PixelImage[A]): PixelImage[A] =
+      PixelImageOperations.subImage(image, left, top, overlayImage.width, overlayImage.height)
 
     // construct gradient images
     val dgdx = PixelImageDifferential.gradX(overlayImage).map(_.getOrElse(ops.zero))
@@ -61,24 +66,29 @@ class PoissonInpainting[A: ClassTag](solver: ImageDomainPoissonSolver[A])(implic
 
     // construct guidance field: use stronger gradient inside overlay region
     val gradImage = PixelImage(overlayImage.domain, (x, y) => gradientMap(dg(x, y), df(x, y)))
-    val fullGradImage = PixelImageOperations.padImage(gradImage, targetImage.width, targetImage.height, (ops.zero, ops.zero), left, top)
+    val fullGradImage =
+      PixelImageOperations.padImage(gradImage, targetImage.width, targetImage.height, (ops.zero, ops.zero), left, top)
 
     //    val guidanceField = fullGradImage.mapWithIndex(
     //      (x, y, g) => if (!fullMask(x, y)) Some(g) else None
     //    ).withAccessMode(AccessMode.Mirror())
     //      .buffer
 
-    val guidanceField = PixelImage(fullGradImage.domain, (x, y) => {
-      if (!fullMask(x, y))
-        Some(fullGradImage(x, y))
-      else
-        None
-    }).withAccessMode(Repeat()).buffer
+    val guidanceField = PixelImage(fullGradImage.domain,
+                                   (x, y) => {
+                                     if (!fullMask(x, y))
+                                       Some(fullGradImage(x, y))
+                                     else
+                                       None
+                                   }
+    ).withAccessMode(Repeat()).buffer
 
     blendPoissonGuided(targetImage, guidanceField)
   }
 
-  /** solve the Poisson problem with the given guidance field: Laplace(f) = div(guidance), targetImage is initial guess */
+  /**
+   * solve the Poisson problem with the given guidance field: Laplace(f) = div(guidance), targetImage is initial guess
+   */
   def blendPoissonGuided(targetImage: PixelImage[A], guidanceField: PixelImage[Option[(A, A)]]): PixelImage[A] = {
     // Poisson image inpainting: use gradient of inset as a "guidance field" ...
     // solve Laplace(f) = div(guidance), f|b = f*|b (Poisson equation) -- using MultigridPoissonSolver
@@ -97,28 +107,33 @@ class PoissonInpainting[A: ClassTag](solver: ImageDomainPoissonSolver[A])(implic
     solver.solvePoisson(targetImage, mask, divImage)
   }
 
-  /** inpainting with mixed seamless cloning method: select inpainted to be the stronger gradient of target and overlay */
+  /**
+   * inpainting with mixed seamless cloning method: select inpainted to be the stronger gradient of target and overlay
+   */
   def mixedSeamlessCloning(targetImage: PixelImage[A],
                            overlayImage: PixelImage[Option[A]],
                            left: Int = 0,
-                           top: Int = 0): PixelImage[A] = {
-    gradientMixedCloning(targetImage,
-      overlayImage,
-      GradientMaps.maxGradientMagnitude,
-      left,
-      top)
+                           top: Int = 0
+  ): PixelImage[A] = {
+    gradientMixedCloning(targetImage, overlayImage, GradientMaps.maxGradientMagnitude, left, top)
   }
 
   /** masked inpainting: hard selection of inpainted values within region */
-  def inpaintHard(targetImage: PixelImage[A], insetImage: PixelImage[Option[A]], left: Int = 0, top: Int = 0): PixelImage[A] = {
-    PixelImage.fromTemplate(targetImage, (x, y) => {
-      val x1 = x - left
-      val y1 = y - top
-      if (insetImage.domain.isDefinedAt(x1, y1))
-        insetImage(x1, y1).getOrElse(targetImage(x, y))
-      else
-        targetImage(x, y)
-    })
+  def inpaintHard(targetImage: PixelImage[A],
+                  insetImage: PixelImage[Option[A]],
+                  left: Int = 0,
+                  top: Int = 0
+  ): PixelImage[A] = {
+    PixelImage.fromTemplate(targetImage,
+                            (x, y) => {
+                              val x1 = x - left
+                              val y1 = y - top
+                              if (insetImage.domain.isDefinedAt(x1, y1))
+                                insetImage(x1, y1).getOrElse(targetImage(x, y))
+                              else
+                                targetImage(x, y)
+                            }
+    )
   }
 
   /** standard masked soft blending, linear mixing */
@@ -126,19 +141,23 @@ class PoissonInpainting[A: ClassTag](solver: ImageDomainPoissonSolver[A])(implic
                   insetImage: PixelImage[A],
                   mask: PixelImage[Double],
                   left: Int = 0,
-                  top: Int = 0): PixelImage[A] = {
+                  top: Int = 0
+  ): PixelImage[A] = {
     val fullMask = PixelImageOperations.padImage(mask, targetImage.width, targetImage.height, 0.0, left, top)
-    val fullInset = PixelImageOperations.padImage(insetImage, targetImage.width, targetImage.height, targetImage(0, 0), left, top)
-    PixelImage.fromTemplate(targetImage, (x, y) =>
-      fullInset(x, y) * fullMask(x, y) + targetImage(x, y) * (1.0 - fullMask(x, y)))
+    val fullInset =
+      PixelImageOperations.padImage(insetImage, targetImage.width, targetImage.height, targetImage(0, 0), left, top)
+    PixelImage.fromTemplate(targetImage,
+                            (x, y) => fullInset(x, y) * fullMask(x, y) + targetImage(x, y) * (1.0 - fullMask(x, y))
+    )
   }
 
-  private implicit val colorSpaceOpsForOptions = new ColorSpaceOperations[Option[A]] {
+  implicit private val colorSpaceOpsForOptions: ColorSpaceOperations[Option[A]] = new ColorSpaceOperations[Option[A]] {
     override def add(pix1: Option[A], pix2: Option[A]): Option[A] = for { p <- pix1; q <- pix2 } yield p + q
 
     override def multiply(pix1: Option[A], pix2: Option[A]): Option[A] = for { p <- pix1; q <- pix2 } yield p multiply q
 
-    override def dot(pix1: Option[A], pix2: Option[A]): Double = (for { p <- pix1; q <- pix2 } yield p dot q).getOrElse(0.0)
+    override def dot(pix1: Option[A], pix2: Option[A]): Double =
+      (for { p <- pix1; q <- pix2 } yield p dot q).getOrElse(0.0)
 
     override def scale(pix: Option[A], l: Double): Option[A] = pix.map(p => p * l)
 
@@ -148,10 +167,14 @@ class PoissonInpainting[A: ClassTag](solver: ImageDomainPoissonSolver[A])(implic
 
   /** module to gather different strategies to calculated the inpainting's target gradient */
   object GradientMaps {
+
     /** choose the inset gradient everywhere (seamless cloning) [inpainted part should match the inset's gradient] */
     def selectInset(gradInset: (A, A), gradTarget: (A, A)): (A, A) = gradInset
 
-    /** choose the target gradient everywhere (not very useful, reintegrate the image) [inpainted part should match the original's gradient] */
+    /**
+     * choose the target gradient everywhere (not very useful, reintegrate the image) [inpainted part should match the
+     * original's gradient]
+     */
     def selectTarget(gradInset: (A, A), gradTarget: (A, A)): (A, A) = gradTarget
 
     /** choose the gradient with the larger magnitude (mixed seamless cloning) */
@@ -181,8 +204,10 @@ class PoissonInpainting[A: ClassTag](solver: ImageDomainPoissonSolver[A])(implic
 }
 
 object PoissonInpainting {
+
   /** construct PoissonInpainting with specified Poisson solver */
-  def apply[A: ClassTag](solver: ImageDomainPoissonSolver[A])(implicit ops: ColorSpaceOperations[A]) = new PoissonInpainting[A](solver)
+  def apply[A: ClassTag](solver: ImageDomainPoissonSolver[A])(implicit ops: ColorSpaceOperations[A]) =
+    new PoissonInpainting[A](solver)
 
   /** construct PoissonInpainting with default solver (currently multigrid) */
   def apply[A: ClassTag](implicit ops: ColorSpaceOperations[A]): PoissonInpainting[A] = {

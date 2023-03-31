@@ -56,7 +56,11 @@ class PixelImageInterpolationTest extends FacesTestSuite with PrivateMethodTeste
     it("is consistent when resampled 100x (bilinear)") {
       @tailrec def resampleImage(img: PixelImage[RGB], n: Int): PixelImage[RGB] = n match {
         case 0 => img
-        case _ => resampleImage(img.withAccessMode(image.accessMode).resample(img.width, img.height, InterpolationKernel.BilinearKernel), n - 1)
+        case _ =>
+          resampleImage(
+            img.withAccessMode(image.accessMode).resample(img.width, img.height, InterpolationKernel.BilinearKernel),
+            n - 1
+          )
       }
 
       imageDiff(resampleImage(image, 100), image) should be < 0.001 * w * h
@@ -66,15 +70,19 @@ class PixelImageInterpolationTest extends FacesTestSuite with PrivateMethodTeste
       @tailrec def upDownSampleImage(img: PixelImage[RGB], n: Int): PixelImage[RGB] = n match {
         case 0 => img
         case _ =>
-          val doubleImage = img.withAccessMode(image.accessMode).resample(2 * img.width, 2 * img.height, LanczosKernel(3))
-          val doubleHalfImage = doubleImage.withAccessMode(image.accessMode).resample(img.width, img.height, LanczosKernel(3))
+          val doubleImage =
+            img.withAccessMode(image.accessMode).resample(2 * img.width, 2 * img.height, LanczosKernel(3))
+          val doubleHalfImage =
+            doubleImage.withAccessMode(image.accessMode).resample(img.width, img.height, LanczosKernel(3))
           upDownSampleImage(doubleHalfImage, n - 1)
       }
 
       imageDiff(upDownSampleImage(image, 2), image) should be < 0.01 * w * h
     }
 
-    it("has one example for which it yields the right result (cell-based interpolation: (x=0.5, y=0.5) -> (i=0, j=0))") {
+    it(
+      "has one example for which it yields the right result (cell-based interpolation: (x=0.5, y=0.5) -> (i=0, j=0))"
+    ) {
       val data = Array(1.0, 2.0, 2.0, 1.0)
       val pixImage = PixelImage(ColumnMajorImageDomain(2, 2), data).withAccessMode(AccessMode.Repeat())
       val contImage = InterpolatedPixelImage(pixImage, InterpolationKernel.BilinearKernel)
@@ -110,9 +118,9 @@ class PixelImageInterpolationTest extends FacesTestSuite with PrivateMethodTeste
     }
 
     it("yields a symmetric image (I==I.t) for a resampling (regression test for access modes in resampling)") {
-      val checkers = PixelImage(15, 15, (x,y) => if((x+y)%2==0) 1.0 else 0.0 )
+      val checkers = PixelImage(15, 15, (x, y) => if ((x + y) % 2 == 0) 1.0 else 0.0)
       val resampled = checkers.resample(11, 11, InterpolationKernel.BilinearKernel)
-      val diff = resampled.transposed.zip(resampled).map{case(b,c) => math.pow(b - c, 2)}
+      val diff = resampled.transposed.zip(resampled).map { case (b, c) => math.pow(b - c, 2) }
       diff.values.sum should be < 1e-10
     }
 

@@ -16,7 +16,6 @@
 
 package scalismo.faces.image
 
-
 import scalismo.color.ColorSpaceOperations
 import scalismo.faces.image.filter.ImageFilter
 
@@ -24,7 +23,8 @@ import scala.collection.parallel.immutable.ParVector
 import scala.reflect.ClassTag
 
 /** a basic pixel-based image, access through pixel coordinates (x, y) */
-class PixelImage[@specialized A](val domain: PixelImageDomain, val accessMode: AccessMode[A], val f: (Int, Int) => A) extends ((Int, Int) => A) {
+class PixelImage[@specialized A](val domain: PixelImageDomain, val accessMode: AccessMode[A], val f: (Int, Int) => A)
+    extends ((Int, Int) => A) {
 
   val width: Int = domain.width
   val height: Int = domain.height
@@ -37,46 +37,58 @@ class PixelImage[@specialized A](val domain: PixelImageDomain, val accessMode: A
   def valueAt(x: Int, y: Int): A = f(x, y)
 
   /** interpolate the image, use default kernel bilinear */
-  def interpolate(implicit ops: ColorSpaceOperations[A]): InterpolatedPixelImage[A] = interpolate(InterpolationKernel.BilinearKernel)
+  def interpolate(implicit ops: ColorSpaceOperations[A]): InterpolatedPixelImage[A] = interpolate(
+    InterpolationKernel.BilinearKernel
+  )
 
   /** interpolate the image, cell-based: origin at top left (0.0, 0.0), first pixel (0, 0) at (0.5, 0.5) */
-  def interpolate(kernel: InterpolationKernel)(implicit ops: ColorSpaceOperations[A]): InterpolatedPixelImage[A] = accessMode match {
-    case AccessMode.Strict() => InterpolatedPixelImage(withAccessMode(AccessMode.Repeat()), kernel)
-    case _ => InterpolatedPixelImage(this, kernel)
-  }
+  def interpolate(kernel: InterpolationKernel)(implicit ops: ColorSpaceOperations[A]): InterpolatedPixelImage[A] =
+    accessMode match {
+      case AccessMode.Strict() => InterpolatedPixelImage(withAccessMode(AccessMode.Repeat()), kernel)
+      case _                   => InterpolatedPixelImage(this, kernel)
+    }
 
   /**
-    * Nearest neighbouring cell value is chosen for interpolation.
-    * Interpolate the image, cell-based: origin at top left (0.0, 0.0), first pixel (0, 0) at (0.5, 0.5)
-    */
+   * Nearest neighbouring cell value is chosen for interpolation. Interpolate the image, cell-based: origin at top left
+   * (0.0, 0.0), first pixel (0, 0) at (0.5, 0.5)
+   */
   def interpolateNearestNeighbour: NearestNeighbourPixelImage[A] = NearestNeighbourPixelImage(this)
 
   /**
-    * resample the image with cols columns and rows, using an interpolation kernel
-    *
-    * @param cols Number of samples in x direction (new width)
-    * @param rows Number of samples in y direction (new height)
-    */
-  def resample(cols: Int, rows: Int, kernel: InterpolationKernel = InterpolationKernel.BilinearKernel)(implicit ops: ColorSpaceOperations[A], tag: ClassTag[A]): PixelImage[A] = interpolate(kernel).sample(cols, rows)
+   * resample the image with cols columns and rows, using an interpolation kernel
+   *
+   * @param cols
+   *   Number of samples in x direction (new width)
+   * @param rows
+   *   Number of samples in y direction (new height)
+   */
+  def resample(cols: Int, rows: Int, kernel: InterpolationKernel = InterpolationKernel.BilinearKernel)(implicit
+    ops: ColorSpaceOperations[A],
+    tag: ClassTag[A]
+  ): PixelImage[A] = interpolate(kernel).sample(cols, rows)
 
   /**
-    * resample the image with cols columns and rows, using the bilinear interpolation kernel
-    *
-    * @param cols Number of samples in x direction (new width)
-    * @param rows Number of samples in y direction (new height)
-    */
-  def resample(cols: Int, rows: Int)(implicit ops: ColorSpaceOperations[A], tag: ClassTag[A]): PixelImage[A] = resample(cols, rows, InterpolationKernel.BilinearKernel)
+   * resample the image with cols columns and rows, using the bilinear interpolation kernel
+   *
+   * @param cols
+   *   Number of samples in x direction (new width)
+   * @param rows
+   *   Number of samples in y direction (new height)
+   */
+  def resample(cols: Int, rows: Int)(implicit ops: ColorSpaceOperations[A], tag: ClassTag[A]): PixelImage[A] =
+    resample(cols, rows, InterpolationKernel.BilinearKernel)
 
   /**
-    * Resamples by taking the nearest neighbour cells for the interpolated value.
-    * ColorSpaceOperations are thus not necessary and not needed for this special case of resampling,
-    * because no new values have to be created.
-    *
-    * @param cols Number of samples in x direction (new width)
-    * @param rows Number of samples in y direction (new height)
-    */
-  def resampleNearestNeighbour(cols: Int, rows: Int)(implicit tag: ClassTag[A]): PixelImage[A] = NearestNeighbourPixelImage(this).sample(cols, rows)
-
+   * Resamples by taking the nearest neighbour cells for the interpolated value. ColorSpaceOperations are thus not
+   * necessary and not needed for this special case of resampling, because no new values have to be created.
+   *
+   * @param cols
+   *   Number of samples in x direction (new width)
+   * @param rows
+   *   Number of samples in y direction (new height)
+   */
+  def resampleNearestNeighbour(cols: Int, rows: Int)(implicit tag: ClassTag[A]): PixelImage[A] =
+    NearestNeighbourPixelImage(this).sample(cols, rows)
 
   /** change the access mode (boundary behaviour, outside access) of this image */
   def withAccessMode(accessMode: AccessMode[A]): PixelImage[A] = new PixelImage(domain, accessMode, f)
@@ -120,7 +132,8 @@ class PixelImage[@specialized A](val domain: PixelImageDomain, val accessMode: A
   def mapLazy[B](f: A => B): PixelImage[B] = PixelImage.view(domain, (x, y) => f(this.f(x, y)))
 
   /** apply a function to each pixel, has access to location of pixel */
-  def mapWithIndex[B](f: (A, Int, Int) => B)(implicit tag: ClassTag[B]): PixelImage[B] = PixelImage(domain, (x, y) => f(this(x, y), x, y))
+  def mapWithIndex[B](f: (A, Int, Int) => B)(implicit tag: ClassTag[B]): PixelImage[B] =
+    PixelImage(domain, (x, y) => f(this(x, y), x, y))
 
   /** zip two images together into a single tupled image */
   def zip[B](other: PixelImage[B]): PixelImage[(A, B)] = {
@@ -160,7 +173,7 @@ class PixelImage[@specialized A](val domain: PixelImageDomain, val accessMode: A
   // correct equality with respect to underlying data
   override def equals(other: Any): Boolean = other match {
     case pi: PixelImage[A] => domain == pi.domain && (values sameElements pi.values)
-    case _ => false
+    case _                 => false
   }
 
   // correct hashCode with respect to underlying data
@@ -168,6 +181,7 @@ class PixelImage[@specialized A](val domain: PixelImageDomain, val accessMode: A
 }
 
 object PixelImage {
+
   /** create a PixelImage from a function (creates buffered ArrayImage) */
   def apply[A: ClassTag](domain: PixelImageDomain, f: (Int, Int) => A): PixelImage[A] = {
     view(domain, f).buffer
@@ -209,7 +223,8 @@ object PixelImage {
   }
 
   /** create image view (lazy image) with domain */
-  def view[A](domain: PixelImageDomain, f: (Int, Int) => A): PixelImage[A] = new PixelImage(domain, AccessMode.Functional(f), f)
+  def view[A](domain: PixelImageDomain, f: (Int, Int) => A): PixelImage[A] =
+    new PixelImage(domain, AccessMode.Functional(f), f)
 
   /** create a PixelImage on the basis of an existing image, preserves domain and access mode */
   def fromTemplate[A: ClassTag](image: PixelImage[A], f: (Int, Int) => A): PixelImage[A] = {
@@ -221,7 +236,7 @@ object PixelImage {
     val accessMode = image.accessMode
     val domain = image.domain match {
       case _: ColumnMajorImageDomain => ColumnMajorImageDomain(width, height)
-      case _: RowMajorImageDomain => RowMajorImageDomain(width, height)
+      case _: RowMajorImageDomain    => RowMajorImageDomain(width, height)
     }
     view(domain, f).buffer.withAccessMode(accessMode)
   }
@@ -267,8 +282,8 @@ object PixelImage {
 
 private class ArrayImage[A: ClassTag](override val domain: PixelImageDomain,
                                       override val accessMode: AccessMode[A],
-                                      private val data: Array[A])
-  extends PixelImage[A](domain, accessMode, (x: Int, y: Int) => data(domain.index(x, y))) {
+                                      private val data: Array[A]
+) extends PixelImage[A](domain, accessMode, (x: Int, y: Int) => data(domain.index(x, y))) {
   require(data.length == domain.length, "domain and array differ in size")
 
   /** direct raw access of image value at (x, y) */
@@ -305,7 +320,7 @@ private class ArrayImage[A: ClassTag](override val domain: PixelImageDomain,
   override def equals(other: Any): Boolean = other match {
     case ai: ArrayImage[A] => domain == ai.domain && data.sameElements(ai.data)
     case pi: PixelImage[A] => super.equals(pi)
-    case _ => false
+    case _                 => false
   }
 
   // correct hashCode with respect to underlying data array

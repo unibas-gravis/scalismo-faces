@@ -27,9 +27,8 @@ import scalismo.faces.sampling.face.{ParametricImageRenderer, ParametricLandmark
 import scalismo.sampling.loggers.ChainStateLogger
 
 /** render images for logging */
-class ImageRenderLogger(renderer: ParametricImageRenderer[RGBA],
-                        path: File,
-                        fileNamePrefix: String) extends ChainStateLogger[RenderParameter] {
+class ImageRenderLogger(renderer: ParametricImageRenderer[RGBA], path: File, fileNamePrefix: String)
+    extends ChainStateLogger[RenderParameter] {
   private var counter = 0
 
   override def logState(sample: RenderParameter): Unit = {
@@ -57,12 +56,14 @@ class ImageRenderLogger(renderer: ParametricImageRenderer[RGBA],
   def withLandmarks(landmarks: Set[String],
                     lmRenderer: ParametricLandmarksRenderer,
                     color: RGBA,
-                    size: Int): ImageRenderLogger = {
+                    size: Int
+  ): ImageRenderLogger = {
 
     val lmImageRenderer = new ParametricImageRenderer[RGBA] {
       override def renderImage(sample: RenderParameter): PixelImage[RGBA] = {
         val image = renderer.renderImage(sample)
-        val renderedLM: Map[String, Option[TLMSLandmark2D]] = (for(lm <- landmarks) yield lm -> lmRenderer.renderLandmark(lm, sample)).toMap
+        val renderedLM: Map[String, Option[TLMSLandmark2D]] =
+          (for (lm <- landmarks) yield lm -> lmRenderer.renderLandmark(lm, sample)).toMap
         val lms: IndexedSeq[TLMSLandmark2D] = renderedLM.flatMap(_._2).toIndexedSeq
         LandmarksDrawer.drawLandmarks(image, lms, color, size)
       }
@@ -72,5 +73,6 @@ class ImageRenderLogger(renderer: ParametricImageRenderer[RGBA],
 }
 
 object ImageRenderLogger {
-  def apply(renderer: ParametricImageRenderer[RGBA], path: File, fileNamePrefix: String) = new ImageRenderLogger(renderer, path, fileNamePrefix)
+  def apply(renderer: ParametricImageRenderer[RGBA], path: File, fileNamePrefix: String) =
+    new ImageRenderLogger(renderer, path, fileNamePrefix)
 }

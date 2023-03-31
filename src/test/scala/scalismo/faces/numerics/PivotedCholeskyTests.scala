@@ -16,7 +16,7 @@
 
 package scalismo.faces.numerics
 
-import breeze.linalg.{CSCMatrix, DenseMatrix, DenseVector, trace}
+import breeze.linalg.{trace, CSCMatrix, DenseMatrix, DenseVector}
 import org.scalatest.PrivateMethodTester
 import scalismo.faces.FacesTestSuite
 import scalismo.numerics.PivotedCholesky.{AbsoluteTolerance, NumberOfEigenfunctions, RelativeTolerance}
@@ -32,7 +32,7 @@ class PivotedCholeskyTests extends FacesTestSuite with PrivateMethodTester {
 
   describe("PivotedCholeskyFactor data structure:") {
 
-    val fac = new PivotedCholeskyFactor(d, cols/5) // expect 3 reallocations
+    val fac = new PivotedCholeskyFactor(d, cols / 5) // expect 3 reallocations
 
     it("can be filled with random numbers columns") {
       for (c <- 0 until cols) {
@@ -132,4 +132,3 @@ class PivotedCholeskyTests extends FacesTestSuite with PrivateMethodTester {
 
   }
 }
-

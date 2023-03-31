@@ -19,15 +19,19 @@ package scalismo.faces.sampling.evaluators
 import scalismo.sampling.DistributionEvaluator
 import scalismo.utils.Memoize
 
-/** cache a distribution evaluator's logValue -- Warning: make sure your evaluator does not depend on any side-effects */
-class CachedDistributionEvaluator[A](evaluator: DistributionEvaluator[A], cacheSize: Int) extends DistributionEvaluator[A] {
+/**
+ * cache a distribution evaluator's logValue -- Warning: make sure your evaluator does not depend on any side-effects
+ */
+class CachedDistributionEvaluator[A](evaluator: DistributionEvaluator[A], cacheSize: Int)
+    extends DistributionEvaluator[A] {
   private val cachedLogValue = Memoize(evaluator.logValue, cacheSize)
 
   override def logValue(sample: A): Double = cachedLogValue(sample)
 }
 
 object CachedDistributionEvaluator {
-  def apply[A](evaluator: DistributionEvaluator[A], cacheSize: Int) = new CachedDistributionEvaluator[A](evaluator, cacheSize)
+  def apply[A](evaluator: DistributionEvaluator[A], cacheSize: Int) =
+    new CachedDistributionEvaluator[A](evaluator, cacheSize)
 
   /** implicit pimping */
   object implicits {

@@ -70,7 +70,9 @@ case object CuthillMcKee extends PermutationStrategy {
       // add to queue, in order of increasing degree
       newNodes.toIndexedSeq.sortBy(n => degree(n, A)).foreach(queue.enqueue(_))
       assert(newNodes.forall(n => !visited.contains(n)), "visited nodes added to queue")
-      assert(queue.forall { n => !visited.contains(n) }, s"visited nodes in queue, done=$done, q=$queue, visited=$visited")
+      assert(queue.forall { n => !visited.contains(n) },
+             s"visited nodes in queue, done=$done, q=$queue, visited=$visited"
+      )
     }
     new Permutation(ordering)
   }

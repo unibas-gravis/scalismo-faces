@@ -20,9 +20,8 @@ import scalismo.faces.parameters.RenderParameter
 import spray.json._
 
 /**
-  * default JSON reader and writer for RenderParameter
-  * versioned reader, writer uses default format
-  * */
+ * default JSON reader and writer for RenderParameter versioned reader, writer uses default format
+ */
 object RenderParameterJSONFormat extends RenderParameterJSONFormatV3 {
 
   val version1 = RenderParameterJSONFormatLegacy
@@ -37,7 +36,7 @@ object RenderParameterJSONFormat extends RenderParameterJSONFormatV3 {
 
     fields.get("version") match {
       case Some(JsString(v)) => Some(v)
-      case _ => None
+      case _                 => None
     }
   }
 
@@ -47,7 +46,7 @@ object RenderParameterJSONFormat extends RenderParameterJSONFormatV3 {
   /** construct JSON serialization of a RenderParameter, uses default format */
   def writeRenderParameter(param: RenderParameter): JsValue = param.toJson
 
-  override implicit val renderParameterFormat: RootJsonFormat[RenderParameter] = new RootJsonFormat[RenderParameter]{
+  implicit override val renderParameterFormat: RootJsonFormat[RenderParameter] = new RootJsonFormat[RenderParameter] {
     def readLegacy(json: JsValue): RenderParameter = {
       RenderParameterJSONFormatLegacy.renderParameterFormat.read(json)
     }
@@ -55,14 +54,14 @@ object RenderParameterJSONFormat extends RenderParameterJSONFormatV3 {
     override def read(json: JsValue): RenderParameter = {
       val version = versionString(json)
       version match {
-        case None => readLegacy(json)
-        case Some("") => readLegacy(json)
-        case Some("legacy") => readLegacy(json)
+        case None                                          => readLegacy(json)
+        case Some("")                                      => readLegacy(json)
+        case Some("legacy")                                => readLegacy(json)
         case Some(RenderParameterJSONFormatLegacy.version) => readLegacy(json)
         case Some(RenderParameterJSONFormatV2.version) => RenderParameterJSONFormatV2.renderParameterFormat.read(json)
         case Some(RenderParameterJSONFormatV3.version) => RenderParameterJSONFormatV3.renderParameterFormat.read(json)
         case Some(RenderParameterJSONFormatV4.version) => RenderParameterJSONFormatV4.renderParameterFormat.read(json)
-        case Some(vstr) => throw new DeserializationException("unknown version: " + vstr)
+        case Some(vstr)                                => throw new DeserializationException("unknown version: " + vstr)
       }
     }
 

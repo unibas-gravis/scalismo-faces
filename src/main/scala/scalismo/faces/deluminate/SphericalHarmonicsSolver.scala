@@ -19,7 +19,7 @@ package scalismo.faces.deluminate
 import breeze.linalg.{DenseMatrix, DenseVector}
 import scalismo.color.RGB
 import scalismo.faces.numerics.SphericalHarmonics
-import scalismo.geometry.{EuclideanVector, _3D}
+import scalismo.geometry.{_3D, EuclideanVector}
 
 /** provides functionality to solve the linear illumination equations for a given geometry and resulting radiance */
 object SphericalHarmonicsSolver {
@@ -27,8 +27,7 @@ object SphericalHarmonicsSolver {
   case class IlluminatedPoint(normal: EuclideanVector[_3D], radiance: RGB, albedo: RGB)
 
   /** solve linear illumination equations for an unknown light field L_l: radiance = albedo * sum_l Y_l(normal) * L_l */
-  def solveSHSystem(points: IndexedSeq[IlluminatedPoint],
-    nBands: Int): IndexedSeq[EuclideanVector[_3D]] = {
+  def solveSHSystem(points: IndexedSeq[IlluminatedPoint], nBands: Int): IndexedSeq[EuclideanVector[_3D]] = {
     // prepare SH basis
     val nSH = SphericalHarmonics.totalCoefficients(nBands)
     val kernel = IndexedSeq.fill(nSH)(1.0)
@@ -36,13 +35,17 @@ object SphericalHarmonicsSolver {
   }
 
   /**
-   * solve linear illumination equations for an unknown light field L_l, deconvolve a kernel k_l:
-   *  radiance = albedo * sum_l Y_l(normal) * L_l * k_l
-   *  @param points Illuminated points with normal, radiance and albedo
-   *  @param kernel Kernel on SH coefficients, usually Lambert kernel for diffuse reflectance, determines number of SH coefficients returned
+   * solve linear illumination equations for an unknown light field L_l, deconvolve a kernel k_l: radiance = albedo *
+   * sum_l Y_l(normal) * L_l * k_l
+   * @param points
+   *   Illuminated points with normal, radiance and albedo
+   * @param kernel
+   *   Kernel on SH coefficients, usually Lambert kernel for diffuse reflectance, determines number of SH coefficients
+   *   returned
    */
   def solveSHSystemDeconvolve(points: IndexedSeq[IlluminatedPoint],
-    kernel: IndexedSeq[Double]): IndexedSeq[EuclideanVector[_3D]] = {
+                              kernel: IndexedSeq[Double]
+  ): IndexedSeq[EuclideanVector[_3D]] = {
     require(points.nonEmpty)
     // direct access data
     val radiances = points.map(_.radiance)
@@ -66,7 +69,9 @@ object SphericalHarmonicsSolver {
       val shColorIndex = j % 3
       // matrix element: albedo[point, color] * Y[shCoeff](normal[point]) * kernel(shCoeff) * delta(pointColor, shColor)
       if (pointColorIndex == shColorIndex)
-        albedi(pointIndex).toVector.toArray(pointColorIndex) * shBasis(shCoeffIndex)(normals(pointIndex)) * kernel(shCoeffIndex)
+        albedi(pointIndex).toVector.toArray(pointColorIndex) * shBasis(shCoeffIndex)(normals(pointIndex)) * kernel(
+          shCoeffIndex
+        )
       else
         0.0
     }
@@ -75,7 +80,8 @@ object SphericalHarmonicsSolver {
     val lightField: DenseVector[Double] = A \ b
 
     // extract channeled coefficients
-    val shCoeffs: IndexedSeq[EuclideanVector[_3D]] = lightField.toArray.grouped(3).map(a => EuclideanVector[_3D](a)).toIndexedSeq
+    val shCoeffs: IndexedSeq[EuclideanVector[_3D]] =
+      lightField.toArray.grouped(3).map(a => EuclideanVector[_3D](a)).toIndexedSeq
 
     // finished
     shCoeffs

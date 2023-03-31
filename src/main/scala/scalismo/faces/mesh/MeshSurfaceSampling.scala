@@ -20,10 +20,14 @@ import scalismo.mesh.{BarycentricCoordinates, MeshSurfaceProperty, TriangleId, T
 import scalismo.utils.Random
 
 object MeshSurfaceSampling {
-  def sampleUniformlyOnSurface(expectedAmountOfPoints: Int)(mesh: TriangleMesh3D)(implicit rnd: Random): IndexedSeq[(TriangleId, BarycentricCoordinates)] = {
+  def sampleUniformlyOnSurface(
+    expectedAmountOfPoints: Int
+  )(mesh: TriangleMesh3D)(implicit rnd: Random): IndexedSeq[(TriangleId, BarycentricCoordinates)] = {
     val meshArea = mesh.area
     def drawTriangle(tid: TriangleId): Boolean = {
-      rnd.scalaRandom.nextDouble() < expectedAmountOfPoints * mesh.computeTriangleArea(mesh.triangulation.triangle(tid)) / meshArea
+      rnd.scalaRandom.nextDouble() < expectedAmountOfPoints * mesh.computeTriangleArea(
+        mesh.triangulation.triangle(tid)
+      ) / meshArea
     }
 
     val triangleSubset = mesh.triangulation.triangleIds.filter(tid => drawTriangle(tid))
@@ -32,8 +36,13 @@ object MeshSurfaceSampling {
     })
   }
 
-  /** Samples according to mask, a MeshSurfaceProperty. If it is 1 the point will be chosen uniformly on the surface if it is zero it will never be chosen. */
-  def sampleAccordingToMask(mask: MeshSurfaceProperty[Double], expectedAmountOfPoints: Int)(mesh: TriangleMesh3D)(implicit rnd: Random): IndexedSeq[(TriangleId, BarycentricCoordinates)] = {
+  /**
+   * Samples according to mask, a MeshSurfaceProperty. If it is 1 the point will be chosen uniformly on the surface if
+   * it is zero it will never be chosen.
+   */
+  def sampleAccordingToMask(mask: MeshSurfaceProperty[Double], expectedAmountOfPoints: Int)(
+    mesh: TriangleMesh3D
+  )(implicit rnd: Random): IndexedSeq[(TriangleId, BarycentricCoordinates)] = {
     val uniformSamples = sampleUniformlyOnSurface(expectedAmountOfPoints)(mesh)
     uniformSamples.filter { case (tid, bcc) => rnd.scalaRandom.nextDouble() < mask(tid, bcc) }
   }

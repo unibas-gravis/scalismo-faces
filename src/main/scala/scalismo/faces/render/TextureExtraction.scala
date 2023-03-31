@@ -19,23 +19,29 @@ package scalismo.faces.render
 import scalismo.color.ColorSpaceOperations
 import scalismo.faces.image.{InterpolatedPixelImage, PixelImage, PixelImageDomain}
 import scalismo.faces.mesh.TextureMappedProperty
-import scalismo.geometry.{Point, _2D, _3D}
+import scalismo.geometry.{_2D, _3D, Point}
 import scalismo.mesh._
 
 import scala.util.Try
 
 /** methods to extract texture from images when rendering a mesh */
 object TextureExtraction {
+
   /**
-    * Texture Extraction from Image.
-    * 1. Find correspondence between mesh and target image
-    * Render Points on image plane according to pointShader
-    * Put the 2D coordinates of the image onto the mesh. This is the texture mapping.
-    */
-  def imageAsSurfaceProperty[Pixel](mesh: TriangleMesh3D,
-                                    pointShader: PointShader,
-                                    targetImage: PixelImage[Pixel])(implicit ops: ColorSpaceOperations[Pixel]): MeshSurfaceProperty[Option[Pixel]] = {
-    val visible: MeshSurfaceProperty[Boolean] = TriangleRenderer.visibilityAsSurfaceProperty(mesh, pointShader, targetImage.domain, 1e-3, boundaryAlwaysVisible = false)
+   * Texture Extraction from Image.
+   *   1. Find correspondence between mesh and target image Render Points on image plane according to pointShader Put
+   *      the 2D coordinates of the image onto the mesh. This is the texture mapping.
+   */
+  def imageAsSurfaceProperty[Pixel](mesh: TriangleMesh3D, pointShader: PointShader, targetImage: PixelImage[Pixel])(
+    implicit ops: ColorSpaceOperations[Pixel]
+  ): MeshSurfaceProperty[Option[Pixel]] = {
+    val visible: MeshSurfaceProperty[Boolean] = TriangleRenderer.visibilityAsSurfaceProperty(mesh,
+                                                                                             pointShader,
+                                                                                             targetImage.domain,
+                                                                                             1e-3,
+                                                                                             boundaryAlwaysVisible =
+                                                                                               false
+    )
 
     new MeshSurfaceProperty[Option[Pixel]] {
       val target: InterpolatedPixelImage[Pixel] = targetImage.interpolate
@@ -43,8 +49,11 @@ object TextureExtraction {
       override def onSurface(triangleId: TriangleId, bcc: BarycentricCoordinates): Option[Pixel] = {
         val vis: Boolean = visible(triangleId, bcc)
         if (vis) {
-          val imagePoint: Point[_3D] = TriangleRenderer.transformPoint(mesh.position(triangleId, bcc), pointShader, targetImage.domain)
-          Try(target(imagePoint.x + 0.5, imagePoint.y + 0.5)).toOption // interpolated image access is shifted by 0.5/0.5
+          val imagePoint: Point[_3D] =
+            TriangleRenderer.transformPoint(mesh.position(triangleId, bcc), pointShader, targetImage.domain)
+          Try(
+            target(imagePoint.x + 0.5, imagePoint.y + 0.5)
+          ).toOption // interpolated image access is shifted by 0.5/0.5
         } else
           None
       }
@@ -54,34 +63,42 @@ object TextureExtraction {
   }
 
   /**
-    * Texture Extraction from Image.
-    * 1. Find correspondence between mesh and target image.
-    * Render Points on image plane according to pointShader.
-    * Put the 2D coordinates of the image onto the mesh. This is the texture mapping.
-    */
-  def imageAsTexture[Pixel](mesh: TriangleMesh3D,
-                            pointShader: PointShader,
-                            targetImage: PixelImage[Pixel])(implicit ops: ColorSpaceOperations[Pixel]): TextureMappedProperty[Pixel] = {
+   * Texture Extraction from Image.
+   *   1. Find correspondence between mesh and target image. Render Points on image plane according to pointShader. Put
+   *      the 2D coordinates of the image onto the mesh. This is the texture mapping.
+   */
+  def imageAsTexture[Pixel](mesh: TriangleMesh3D, pointShader: PointShader, targetImage: PixelImage[Pixel])(implicit
+    ops: ColorSpaceOperations[Pixel]
+  ): TextureMappedProperty[Pixel] = {
 
     // get canonical mapping: projected points in image (image itself becomes texture)
-    val projectedPoints: IndexedSeq[Point[_2D]] = mesh.pointSet.points.map(p => {
-      val p2d = TriangleRenderer.transformPoint(p, pointShader, targetImage.domain)
-      Point(p2d.x, p2d.y)
-    }).toIndexedSeq
+    val projectedPoints: IndexedSeq[Point[_2D]] = mesh.pointSet.points
+      .map(p => {
+        val p2d = TriangleRenderer.transformPoint(p, pointShader, targetImage.domain)
+        Point(p2d.x, p2d.y)
+      })
+      .toIndexedSeq
 
-    val projectedUVPoints = projectedPoints.map(p => TextureMappedProperty.imageCoordinatesToUV(p, targetImage.width, targetImage.height))
-    val imageTextureCoordinates: SurfacePointProperty[Point[_2D]] = SurfacePointProperty(mesh.triangulation, projectedUVPoints)
+    val projectedUVPoints =
+      projectedPoints.map(p => TextureMappedProperty.imageCoordinatesToUV(p, targetImage.width, targetImage.height))
+    val imageTextureCoordinates: SurfacePointProperty[Point[_2D]] =
+      SurfacePointProperty(mesh.triangulation, projectedUVPoints)
     TextureMappedProperty(mesh.triangulation, imageTextureCoordinates, targetImage)
   }
 
-  /** full texture extraction: texture image extracted through a mesh rendered to an image, image "pulled back" from image to texture domain using texture mapping */
+  /**
+   * full texture extraction: texture image extracted through a mesh rendered to an image, image "pulled back" from
+   * image to texture domain using texture mapping
+   */
   def extractTextureAsImage[A](mesh: TriangleMesh3D,
                                pointShader: PointShader,
                                targetImage: PixelImage[A],
                                textureDomain: PixelImageDomain,
-                               textureMap: MeshSurfaceProperty[Point[_2D]])(implicit ops: ColorSpaceOperations[A]): PixelImage[Option[A]] = {
+                               textureMap: MeshSurfaceProperty[Point[_2D]]
+  )(implicit ops: ColorSpaceOperations[A]): PixelImage[Option[A]] = {
     val imgOnSurface = imageAsSurfaceProperty(mesh, pointShader, targetImage)
-    val texturedSurface: TextureMappedProperty[Option[A]] = TextureMappedProperty.fromSurfaceProperty(imgOnSurface, textureMap, textureDomain, None)
+    val texturedSurface: TextureMappedProperty[Option[A]] =
+      TextureMappedProperty.fromSurfaceProperty(imgOnSurface, textureMap, textureDomain, None)
     texturedSurface.texture
   }
 }

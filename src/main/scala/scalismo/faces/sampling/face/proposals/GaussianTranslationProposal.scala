@@ -22,44 +22,46 @@ import scalismo.sampling.{ProposalGenerator, SymmetricTransitionRatio, Transitio
 import scalismo.sampling.evaluators.GaussianEvaluator
 import scalismo.utils.Random
 
+/**
+ * Trait for translation proposals.
+ */
+trait GaussianTranslationProposal
+    extends ProposalGenerator[Pose]
+    with SymmetricTransitionRatio[Pose]
+    with TransitionProbability[Pose]
 
 /**
-  * Trait for translation proposals.
-  */
-trait GaussianTranslationProposal extends ProposalGenerator[Pose] with SymmetricTransitionRatio[Pose] with TransitionProbability[Pose]
-
-/**
-  * Gaussian translation proposal for changing a Pose.
-  */
+ * Gaussian translation proposal for changing a Pose.
+ */
 object GaussianTranslationProposal {
 
   /**
-    * Constructs a translation proposal, which only shifts in the xy-plane and leaves the z-value constant.
-    */
-  def apply(sdev: EuclideanVector2D)(implicit rnd: Random) : GaussianTranslationProposal = {
+   * Constructs a translation proposal, which only shifts in the xy-plane and leaves the z-value constant.
+   */
+  def apply(sdev: EuclideanVector2D)(implicit rnd: Random): GaussianTranslationProposal = {
     Gaussian3DTranslationProposalConstantZ(sdev)
   }
 
   /**
-    * Constructs a full 3d translation proposal.
-    */
-  def apply(sdev: EuclideanVector3D)(implicit rnd: Random) : GaussianTranslationProposal = {
+   * Constructs a full 3d translation proposal.
+   */
+  def apply(sdev: EuclideanVector3D)(implicit rnd: Random): GaussianTranslationProposal = {
     Gaussian3DTranslationProposal(sdev)
   }
 
 }
 
 /**
-  * Random translation proposal in 3D which is parallel to the xy plane.
-  * The z-value, i.e. the  distance to the camera is constant.
-  */
+ * Random translation proposal in 3D which is parallel to the xy plane. The z-value, i.e. the distance to the camera is
+ * constant.
+ */
 private[proposals] case class Gaussian3DTranslationProposalConstantZ(sdev: EuclideanVector[_2D])(implicit rnd: Random)
     extends GaussianTranslationProposal {
   override def propose(current: Pose): Pose = current.copy(
-    translation = EuclideanVector(
-      current.translation.x + rnd.scalaRandom.nextGaussian() * sdev.x,
-      current.translation.y + rnd.scalaRandom.nextGaussian() * sdev.y,
-      current.translation.z)
+    translation = EuclideanVector(current.translation.x + rnd.scalaRandom.nextGaussian() * sdev.x,
+                                  current.translation.y + rnd.scalaRandom.nextGaussian() * sdev.y,
+                                  current.translation.z
+    )
   )
 
   /** rate of transition from to (log value) */
@@ -76,15 +78,16 @@ private[proposals] case class Gaussian3DTranslationProposalConstantZ(sdev: Eucli
 }
 
 /**
-  * Full random translation proposal in 3D.
-  */
+ * Full random translation proposal in 3D.
+ */
 private[proposals] case class Gaussian3DTranslationProposal(sdev: EuclideanVector[_3D])(implicit rnd: Random)
-  extends GaussianTranslationProposal {
+    extends GaussianTranslationProposal {
   override def propose(current: Pose): Pose = current.copy(
     translation = EuclideanVector(
       current.translation.x + rnd.scalaRandom.nextGaussian() * sdev.x,
       current.translation.y + rnd.scalaRandom.nextGaussian() * sdev.y,
-      current.translation.z + rnd.scalaRandom.nextGaussian() * sdev.z)
+      current.translation.z + rnd.scalaRandom.nextGaussian() * sdev.z
+    )
   )
 
   /** rate of transition from to (log value) */

@@ -44,5 +44,7 @@ class GUIFrame(title: String) extends JFrame(title) {
 
 object GUIFrame {
   def apply(title: String): GUIFrame = new GUIFrame(title)
-  def apply(title: String, component: JComponent): GUIFrame = withMutable(new GUIFrame(title)) { f => f.display(component) }
+  def apply(title: String, component: JComponent): GUIFrame = withMutable(new GUIFrame(title)) { f =>
+    f.display(component)
+  }
 }

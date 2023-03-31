@@ -56,7 +56,8 @@ class ArrayIOTest extends FacesTestSuite {
     }
 
     it("can write and read a random sequence for A=(Int, Int, Int)") {
-      val seq = IndexedSeq.fill(25)((randomInt(Integer.MAX_VALUE), randomInt(Integer.MAX_VALUE), randomInt(Integer.MAX_VALUE)))
+      val seq =
+        IndexedSeq.fill(25)((randomInt(Integer.MAX_VALUE), randomInt(Integer.MAX_VALUE), randomInt(Integer.MAX_VALUE)))
       writeReadSeq(seq) should contain theSameElementsInOrderAs seq
     }
 

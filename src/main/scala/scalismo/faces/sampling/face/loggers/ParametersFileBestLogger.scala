@@ -24,7 +24,8 @@ import scalismo.sampling.DistributionEvaluator
 import scalismo.sampling.loggers.{BestSampleLogger, ChainStateLogger}
 
 /** log best parameter file */
-class ParametersFileBestLogger(evaluator: DistributionEvaluator[RenderParameter], fileName: File) extends ChainStateLogger[RenderParameter] {
+class ParametersFileBestLogger(evaluator: DistributionEvaluator[RenderParameter], fileName: File)
+    extends ChainStateLogger[RenderParameter] {
   private val bestLogger = BestSampleLogger(evaluator)
 
   override def logState(sample: RenderParameter): Unit = {
@@ -41,6 +42,6 @@ class ParametersFileBestLogger(evaluator: DistributionEvaluator[RenderParameter]
 }
 
 object ParametersFileBestLogger {
-  def apply(evaluator: DistributionEvaluator[RenderParameter], fileName: File) = new ParametersFileBestLogger(evaluator, fileName)
+  def apply(evaluator: DistributionEvaluator[RenderParameter], fileName: File) =
+    new ParametersFileBestLogger(evaluator, fileName)
 }
-

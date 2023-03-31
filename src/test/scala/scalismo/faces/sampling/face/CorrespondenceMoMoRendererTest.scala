@@ -29,16 +29,17 @@ class CorrespondenceMoMoRendererTest extends FacesTestSuite {
     lazy val randomMomo = randomGridModel(10, 5, 0.1, 5, 5, orthogonalExpressions = false)
     val moMoRenderer = MoMoRenderer(randomMomo).cached(0)
     val corrMoMoRenderer = CorrespondenceMoMoRenderer(randomMomo).cached(0)
-    val param = RenderParameter.defaultSquare.
-      withMoMo(MoMoInstance.zero(randomMomo, new URI("randomModel"))).
-      withPose(Pose(1.0, EuclideanVector(0,0,-10), 0,0,0))
+    val param = RenderParameter.defaultSquare
+      .withMoMo(MoMoInstance.zero(randomMomo, new URI("randomModel")))
+      .withPose(Pose(1.0, EuclideanVector(0, 0, -10), 0, 0, 0))
 
-    def diffRGBA(a: RGBA, b: RGBA) = math.abs(a.r - b.r) + math.abs(a.g - b.g) + math.abs(a.b - b.b) + math.abs(a.a - b.a)
+    def diffRGBA(a: RGBA, b: RGBA) =
+      math.abs(a.r - b.r) + math.abs(a.g - b.g) + math.abs(a.b - b.b) + math.abs(a.a - b.a)
 
     it("renders the same as a MoMoRenderer") {
       val A = moMoRenderer.renderImage(param)
       val B = corrMoMoRenderer.renderImage(param)
-      val sum = A.zip(B).map{case(a,b)=>diffRGBA(a,b)}.values.toIndexedSeq.sum
+      val sum = A.zip(B).map { case (a, b) => diffRGBA(a, b) }.values.toIndexedSeq.sum
       sum should be <= 0.0
     }
   }

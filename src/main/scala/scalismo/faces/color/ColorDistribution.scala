@@ -13,7 +13,6 @@
  *  limitations under the License.
  */
 
-
 package scalismo.faces.color
 import scalismo.color.RGB
 import scalismo.utils.Random
@@ -39,9 +38,9 @@ case class GaussianColorDistribution(mean: RGB, sdev: RGB) extends ColorDistribu
     ((r x sdev) + mean)
   }
 
-  override val normalizer = 1.0/math.pow(2*math.Pi, 1.5)/math.sqrt(sdev.toVector.norm2)
+  override val normalizer = 1.0 / math.pow(2 * math.Pi, 1.5) / math.sqrt(sdev.toVector.norm2)
 
-  override val logNormalizer = -1.5*math.log(2*math.Pi) - 0.5*math.log(sdev.toVector.norm2)
+  override val logNormalizer = -1.5 * math.log(2 * math.Pi) - 0.5 * math.log(sdev.toVector.norm2)
 
   override def evaluate(color: RGB): Double = math.exp(evaluateLog(color)) * normalizer
 
@@ -54,7 +53,7 @@ case class GaussianColorDistribution(mean: RGB, sdev: RGB) extends ColorDistribu
 object GaussianColorDistribution {
   def apply(colors: IndexedSeq[RGB]): GaussianColorDistribution = {
     val n = colors.length
-    val sum = colors.reduce {_ + _}
+    val sum = colors.reduce { _ + _ }
     val sqSum = colors.reduce((sum, a) => sum + a.map { x => x * x })
     val mean = sum / n
     val variance = sqSum / n - (mean x mean)
@@ -64,7 +63,8 @@ object GaussianColorDistribution {
 }
 
 case object UniformColorDistribution extends ColorDistribution {
-  override def sample(implicit rnd: Random): RGB = RGB(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
+  override def sample(implicit rnd: Random): RGB =
+    RGB(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble())
 
   override def normalizer: Double = 1.0
 

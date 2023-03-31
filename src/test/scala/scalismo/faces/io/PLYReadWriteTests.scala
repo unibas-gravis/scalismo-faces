@@ -26,7 +26,9 @@ class PLYReadWriteTests extends FacesTestSuite {
 
   describe("Write-read cycles to string, big- and little endian") {
 
-    def testRWEndianCycle[A:StringWriter:StringReader:EndianWriter:EndianReader](toWrite: IndexedSeq[A], bo: ByteOrder): Unit = {
+    def testRWEndianCycle[A: StringWriter: StringReader: EndianWriter: EndianReader](toWrite: IndexedSeq[A],
+                                                                                     bo: ByteOrder
+    ): Unit = {
       val N = toWrite.size
       val os = new ByteArrayOutputStream()
       val writer = new SequenceWriter[A]
@@ -43,7 +45,7 @@ class PLYReadWriteTests extends FacesTestSuite {
       }
     }
 
-    def testRWStringCycle[A:StringWriter:StringReader:EndianWriter:EndianReader](toWrite: IndexedSeq[A]): Unit = {
+    def testRWStringCycle[A: StringWriter: StringReader: EndianWriter: EndianReader](toWrite: IndexedSeq[A]): Unit = {
       val N = toWrite.size
       val os = new ByteArrayOutputStream()
       val osw = new OutputStreamWriter(os)
@@ -61,7 +63,7 @@ class PLYReadWriteTests extends FacesTestSuite {
       }
     }
 
-    def testAllThreeCycles[A:StringWriter:StringReader:EndianWriter:EndianReader](toWrite: IndexedSeq[A]): Unit = {
+    def testAllThreeCycles[A: StringWriter: StringReader: EndianWriter: EndianReader](toWrite: IndexedSeq[A]): Unit = {
       testRWStringCycle(toWrite)
       testRWEndianCycle(toWrite, ByteOrder.BIG_ENDIAN)
       testRWEndianCycle(toWrite, ByteOrder.LITTLE_ENDIAN)

@@ -1,4 +1,3 @@
-
 /*
  * Copyright University of Basel, Graphics and Vision Research Group
  *
@@ -29,6 +28,7 @@ import scalismo.utils.Random
 
 /** 3D Morphable Model with shape, color and expressions */
 trait MoMo {
+
   /** reference of Morphable Model, defines registration and triangulation */
   def referenceMesh: TriangleMesh3D
 
@@ -44,80 +44,97 @@ trait MoMo {
   def expressionModel: Option[MoMoExpress]
 
   /**
-    * Returns the mean VertexColorMesh3D of the model.
-    *
-    * @return the mean
-    */
+   * Returns the mean VertexColorMesh3D of the model.
+   *
+   * @return
+   *   the mean
+   */
   def mean: VertexColorMesh3D
 
   /**
-    * Generate model instance described by coefficients.
-    *
-    * @param coefficients model coefficients
-    * @return model instance as mesh with per vertex color
-    */
+   * Generate model instance described by coefficients.
+   *
+   * @param coefficients
+   *   model coefficients
+   * @return
+   *   model instance as mesh with per vertex color
+   */
   def instance(coefficients: MoMoCoefficients): VertexColorMesh3D
 
   /**
-    * A fast method to evaluate a model instance at a specific point.
-    *
-    * @param coefficients model coefficients
-    * @param pid          point-id
-    * @return shape and color values at point-id
-    */
+   * A fast method to evaluate a model instance at a specific point.
+   *
+   * @param coefficients
+   *   model coefficients
+   * @param pid
+   *   point-id
+   * @return
+   *   shape and color values at point-id
+   */
   def instanceAtPoint(coefficients: MoMoCoefficients, pid: PointId): (Point[_3D], RGB)
 
   /**
-    * Calculates the parameters of the model representation of the sample.
-    *
-    * @param sample the sample (shape and color)
-    * @return the model coefficients
-    */
+   * Calculates the parameters of the model representation of the sample.
+   *
+   * @param sample
+   *   the sample (shape and color)
+   * @return
+   *   the model coefficients
+   */
   def coefficients(sample: VertexColorMesh3D): MoMoCoefficients
 
   /**
-    * Projection operator in model space.
-    *
-    * @param sample the sample (shape and color)
-    * @return the model reconstruction of the sample
-    */
+   * Projection operator in model space.
+   *
+   * @param sample
+   *   the sample (shape and color)
+   * @return
+   *   the model reconstruction of the sample
+   */
   def project(sample: VertexColorMesh3D): VertexColorMesh3D = instance(coefficients(sample))
 
   /**
-    * Draw a sample from the model.
-    *
-    * @return a sample (shape and color)
-    */
+   * Draw a sample from the model.
+   *
+   * @return
+   *   a sample (shape and color)
+   */
   def sample()(implicit rnd: Random): VertexColorMesh3D
 
   /**
-    * Draw a set of coefficients from the prior of the statistical model.
-    *
-    * @return a set of coefficients to generate a random sample.
-    */
+   * Draw a set of coefficients from the prior of the statistical model.
+   *
+   * @return
+   *   a set of coefficients to generate a random sample.
+   */
   def sampleCoefficients()(implicit rnd: Random): MoMoCoefficients
 
   /**
-    * Returns the same model but with exchanged or added landmarks.
-    *
-    * @param landmarksMap Map of named landmarks.
-    * @return Same model but with exchanged landmarks.
-    */
+   * Returns the same model but with exchanged or added landmarks.
+   *
+   * @param landmarksMap
+   *   Map of named landmarks.
+   * @return
+   *   Same model but with exchanged landmarks.
+   */
   def withLandmarks(landmarksMap: Map[String, Landmark[_3D]]): MoMo
 
   /**
-    * Test if the model has some landmarks.
-    *
-    * @return true if the model has at least one landmark, false otherwise
-    */
+   * Test if the model has some landmarks.
+   *
+   * @return
+   *   true if the model has at least one landmark, false otherwise
+   */
   def hasLandmarks: Boolean = landmarks.nonEmpty
 
   /**
-    * Returns the PointId for a given landmark name.
-    *
-    * @param id name ot the landmark
-    * @return return the PointId of the landmark
-    */
+   * Returns the PointId for a given landmark name.
+   *
+   * @param id
+   *   name ot the landmark
+   * @return
+   *   return the PointId of the landmark
+   */
   def landmarkPointId(id: String): Option[PointId] = {
     for {
       lm <- landmarks.get(id)
@@ -126,10 +143,14 @@ trait MoMo {
   }
 
   /** get all landmarks expressed thruogh PointIds */
-  def landmarksWithPointIds: Map[String, Option[PointId]] = landmarks.map{case (id, lm) => id -> referenceMesh.pointSet.pointId(lm.point) }
+  def landmarksWithPointIds: Map[String, Option[PointId]] = landmarks.map { case (id, lm) =>
+    id -> referenceMesh.pointSet.pointId(lm.point)
+  }
 
   /** get all landmarks expressed thruogh PointIds, use closest point for each landmarks (careful!) */
-  def landmarksWithClosestPointIds: Map[String, PointId] = landmarks.map{case (id, lm) => id -> referenceMesh.pointSet.findClosestPoint(lm.point).id}
+  def landmarksWithClosestPointIds: Map[String, PointId] = landmarks.map { case (id, lm) =>
+    id -> referenceMesh.pointSet.findClosestPoint(lm.point).id
+  }
 
   /** pad a coefficient vector if it is too short, basis with single vector */
   def padCoefficients(momoCoeff: MoMoCoefficients): MoMoCoefficients
@@ -139,12 +160,14 @@ trait MoMo {
 }
 
 object MoMo {
+
   /** create a Morphable Model */
   def apply(referenceMesh: TriangleMesh3D,
             shape: PancakeDLRGP[_3D, TriangleMesh, Point[_3D]],
             color: PancakeDLRGP[_3D, TriangleMesh, RGB],
             expression: PancakeDLRGP[_3D, TriangleMesh, EuclideanVector[_3D]],
-            landmarks: Map[String, Landmark[_3D]]): MoMoExpress = {
+            landmarks: Map[String, Landmark[_3D]]
+  ): MoMoExpress = {
     MoMoExpress(referenceMesh, shape, color, expression, landmarks)
   }
 
@@ -152,7 +175,8 @@ object MoMo {
   def apply(referenceMesh: TriangleMesh3D,
             shape: PancakeDLRGP[_3D, TriangleMesh, Point[_3D]],
             color: PancakeDLRGP[_3D, TriangleMesh, RGB],
-            landmarks: Map[String, Landmark[_3D]]): MoMoBasic = {
+            landmarks: Map[String, Landmark[_3D]]
+  ): MoMoBasic = {
     MoMoBasic(referenceMesh, shape, color, landmarks)
   }
 
@@ -160,132 +184,183 @@ object MoMo {
   def apply(referenceMesh: TriangleMesh3D,
             shape: PancakeDLRGP[_3D, TriangleMesh, Point[_3D]],
             color: PancakeDLRGP[_3D, TriangleMesh, RGB],
-            expression: PancakeDLRGP[_3D, TriangleMesh, EuclideanVector[_3D]]): MoMoExpress = {
+            expression: PancakeDLRGP[_3D, TriangleMesh, EuclideanVector[_3D]]
+  ): MoMoExpress = {
     MoMoExpress(referenceMesh, shape, color, expression, Map.empty)
   }
 
   /** create a Morphable Model without expressions */
   def apply(referenceMesh: TriangleMesh3D,
             shape: PancakeDLRGP[_3D, TriangleMesh, Point[_3D]],
-            color: PancakeDLRGP[_3D, TriangleMesh, RGB]): MoMoBasic = {
+            color: PancakeDLRGP[_3D, TriangleMesh, RGB]
+  ): MoMoBasic = {
     MoMoBasic(referenceMesh, shape, color, Map.empty)
   }
 
   /**
-    * Builds a MoMo from a scalismo StatisticalMeshModel and a color GP.
-    *
-    * @param shape scalismo.statisticalmodel.StatisticalMeshModel for the shape
-    * @param color DLRGP model for the color
-    * @return New MoMo with the statistics of the two model.
-    */
+   * Builds a MoMo from a scalismo StatisticalMeshModel and a color GP.
+   *
+   * @param shape
+   *   scalismo.statisticalmodel.StatisticalMeshModel for the shape
+   * @param color
+   *   DLRGP model for the color
+   * @return
+   *   New MoMo with the statistics of the two model.
+   */
   def fromStatisticalMeshModel(shape: StatisticalMeshModel,
                                color: PancakeDLRGP[_3D, TriangleMesh, RGB],
-                               shapeNoiseVariance: Double = 0.0): MoMoBasic = {
+                               shapeNoiseVariance: Double = 0.0
+  ): MoMoBasic = {
     val shapeModel = PancakeDLRGP(ModelHelpers.vectorToPointDLRGP(shape.gp, shape.referenceMesh), shapeNoiseVariance)
     MoMoBasic(shape.referenceMesh, shapeModel, color)
   }
 
   /**
-    * Build 3d Morphable Model from registered samples.
-    *
-    * @param reference          the reference mesh
-    * @param samplesShape       shape samples in dense correspondence with reference
-    * @param samplesColor       color samples in dense correspondence with reference
-    * @param shapeNoiseVariance spherical noise term in PPCA
-    * @param colorNoiseVariance spherical noise term in PPCA
-    * @return
-    */
+   * Build 3d Morphable Model from registered samples.
+   *
+   * @param reference
+   *   the reference mesh
+   * @param samplesShape
+   *   shape samples in dense correspondence with reference
+   * @param samplesColor
+   *   color samples in dense correspondence with reference
+   * @param shapeNoiseVariance
+   *   spherical noise term in PPCA
+   * @param colorNoiseVariance
+   *   spherical noise term in PPCA
+   * @return
+   */
   def buildFromRegisteredSamples(reference: TriangleMesh3D,
                                  samplesShape: IndexedSeq[VertexColorMesh3D],
                                  samplesColor: IndexedSeq[VertexColorMesh3D],
                                  shapeNoiseVariance: Double,
-                                 colorNoiseVariance: Double): MoMoBasic = {
+                                 colorNoiseVariance: Double
+  ): MoMoBasic = {
 
     require(samplesShape.nonEmpty, "MoMo needs shape samples (>0)")
     require(samplesColor.nonEmpty, "MoMo needs color samples (>0)")
-    require(samplesShape.forall(e => e.shape.pointSet.numberOfPoints == reference.pointSet.numberOfPoints), "MoMo samples must be compatible with reference")
-    require(samplesColor.forall(e => e.shape.pointSet.numberOfPoints == reference.pointSet.numberOfPoints), "MoMo samples must be compatible with reference")
+    require(samplesShape.forall(e => e.shape.pointSet.numberOfPoints == reference.pointSet.numberOfPoints),
+            "MoMo samples must be compatible with reference"
+    )
+    require(samplesColor.forall(e => e.shape.pointSet.numberOfPoints == reference.pointSet.numberOfPoints),
+            "MoMo samples must be compatible with reference"
+    )
 
     val domain = reference
 
-    val shapeSamples = samplesShape.map { sample: VertexColorMesh3D => DiscreteField[_3D, TriangleMesh, Point[_3D]](domain, sample.shape.pointSet.points.toIndexedSeq) }
-    val colorSamples = samplesColor.map { sample: VertexColorMesh3D => DiscreteField[_3D, TriangleMesh, RGB](domain, sample.color.pointData.map{_.toRGB}) }
+    val shapeSamples = samplesShape.map { (sample: VertexColorMesh3D) =>
+      DiscreteField[_3D, TriangleMesh, Point[_3D]](domain, sample.shape.pointSet.points.toIndexedSeq)
+    }
+    val colorSamples = samplesColor.map { (sample: VertexColorMesh3D) =>
+      DiscreteField[_3D, TriangleMesh, RGB](domain, sample.color.pointData.map { _.toRGB })
+    }
 
-    val shapeModel = ModelHelpers.createUsingPPCA[_3D, TriangleMesh, Point[_3D]](domain, shapeSamples, shapeNoiseVariance)
+    val shapeModel =
+      ModelHelpers.createUsingPPCA[_3D, TriangleMesh, Point[_3D]](domain, shapeSamples, shapeNoiseVariance)
     val colorModel = ModelHelpers.createUsingPPCA[_3D, TriangleMesh, RGB](domain, colorSamples, colorNoiseVariance)
 
     MoMo(reference, shapeModel, colorModel)
   }
 
   /**
-    * Keep an expression scan together with its corresponding neutral scan
-    **/
+   * Keep an expression scan together with its corresponding neutral scan
+   */
   case class NeutralWithExpression(neutral: VertexColorMesh3D, expression: VertexColorMesh3D)
 
   /**
-    * Build a 3D Morphable Model with expressions from registered samples.
-    *
-    * @param reference               the reference mesh
-    * @param samplesShape            shape samples in dense correspondence with reference
-    * @param samplesColor            color samples in dense correspondence with reference
-    * @param samplesExpression       expression model samples, consist of a neutral and an expression sample
-    * @param shapeNoiseVariance      spherical noise term in PPCA
-    * @param colorNoiseVariance      spherical noise term in PPCA
-    * @param expressionNoiseVariance spherical noise term in PPCA
-    * @return
-    */
+   * Build a 3D Morphable Model with expressions from registered samples.
+   *
+   * @param reference
+   *   the reference mesh
+   * @param samplesShape
+   *   shape samples in dense correspondence with reference
+   * @param samplesColor
+   *   color samples in dense correspondence with reference
+   * @param samplesExpression
+   *   expression model samples, consist of a neutral and an expression sample
+   * @param shapeNoiseVariance
+   *   spherical noise term in PPCA
+   * @param colorNoiseVariance
+   *   spherical noise term in PPCA
+   * @param expressionNoiseVariance
+   *   spherical noise term in PPCA
+   * @return
+   */
   def buildFromRegisteredSamples(reference: TriangleMesh3D,
                                  samplesShape: IndexedSeq[VertexColorMesh3D],
                                  samplesColor: IndexedSeq[VertexColorMesh3D],
                                  samplesExpression: IndexedSeq[NeutralWithExpression],
                                  shapeNoiseVariance: Double,
                                  colorNoiseVariance: Double,
-                                 expressionNoiseVariance: Double)
-  : MoMoExpress = {
+                                 expressionNoiseVariance: Double
+  ): MoMoExpress = {
 
     require(samplesShape.nonEmpty, "MoMo needs shape samples (>0)")
     require(samplesColor.nonEmpty, "MoMo needs color samples (>0)")
     require(samplesExpression.nonEmpty, "MoMo needs expression samples (>0)")
-    require(samplesShape.forall(e => e.shape.pointSet.numberOfPoints == reference.pointSet.numberOfPoints), "MoMo samples must be compatible with reference")
-    require(samplesColor.forall(e => e.shape.pointSet.numberOfPoints == reference.pointSet.numberOfPoints), "MoMo samples must be compatible with reference")
-    require(samplesExpression.forall(e => e.neutral.shape.pointSet.numberOfPoints == reference.pointSet.numberOfPoints), "Expression/Neutral samples must be compatible with reference")
-    require(samplesExpression.forall(e => e.expression.shape.pointSet.numberOfPoints == reference.pointSet.numberOfPoints), "Expression samples must be compatible with reference")
+    require(samplesShape.forall(e => e.shape.pointSet.numberOfPoints == reference.pointSet.numberOfPoints),
+            "MoMo samples must be compatible with reference"
+    )
+    require(samplesColor.forall(e => e.shape.pointSet.numberOfPoints == reference.pointSet.numberOfPoints),
+            "MoMo samples must be compatible with reference"
+    )
+    require(
+      samplesExpression.forall(e => e.neutral.shape.pointSet.numberOfPoints == reference.pointSet.numberOfPoints),
+      "Expression/Neutral samples must be compatible with reference"
+    )
+    require(
+      samplesExpression.forall(e => e.expression.shape.pointSet.numberOfPoints == reference.pointSet.numberOfPoints),
+      "Expression samples must be compatible with reference"
+    )
 
-    val shapeSamples = samplesShape.map { (sample: VertexColorMesh3D) => DiscreteField[_3D, TriangleMesh, Point[_3D]](reference, sample.shape.pointSet.points.toIndexedSeq) }
-    val colorSamples = samplesColor.map { (sample: VertexColorMesh3D) => DiscreteField[_3D, TriangleMesh, RGB](reference, sample.color.pointData.map{_.toRGB}) }
+    val shapeSamples = samplesShape.map { (sample: VertexColorMesh3D) =>
+      DiscreteField[_3D, TriangleMesh, Point[_3D]](reference, sample.shape.pointSet.points.toIndexedSeq)
+    }
+    val colorSamples = samplesColor.map { (sample: VertexColorMesh3D) =>
+      DiscreteField[_3D, TriangleMesh, RGB](reference, sample.color.pointData.map { _.toRGB })
+    }
     val expressionSamples = samplesExpression.map { case NeutralWithExpression(neutral, exp) =>
-      val difference = reference.pointSet.pointIds.map { pointId => exp.shape.pointSet.point(pointId) - neutral.shape.pointSet.point(pointId) }
+      val difference = reference.pointSet.pointIds.map { pointId =>
+        exp.shape.pointSet.point(pointId) - neutral.shape.pointSet.point(pointId)
+      }
       DiscreteField(reference, difference.toIndexedSeq)
     }
 
-    val shapeModel = ModelHelpers.createUsingPPCA[_3D, TriangleMesh, Point[_3D]](reference, shapeSamples, shapeNoiseVariance)
+    val shapeModel =
+      ModelHelpers.createUsingPPCA[_3D, TriangleMesh, Point[_3D]](reference, shapeSamples, shapeNoiseVariance)
     val colorModel = ModelHelpers.createUsingPPCA[_3D, TriangleMesh, RGB](reference, colorSamples, colorNoiseVariance)
 
     MoMo(
       reference,
       shapeModel,
       colorModel,
-      ModelHelpers.createUsingPPCA[_3D, TriangleMesh, EuclideanVector[_3D]](reference, expressionSamples, expressionNoiseVariance))
+      ModelHelpers.createUsingPPCA[_3D, TriangleMesh, EuclideanVector[_3D]](reference,
+                                                                            expressionSamples,
+                                                                            expressionNoiseVariance
+      )
+    )
   }
 }
 
 /**
-  * 3d Morphable Model implementation, includes facial expression
-  *
-  * The model consists of a shape and color model together with noise estimates.
-  * Both models are defined over points of the reference Mesh. The models are
-  * spherical PPCA models.
-  *
-  * @param referenceMesh      reference of the model
-  * @param shape              the shape model
-  * @param color              the color model
-  */
+ * 3d Morphable Model implementation, includes facial expression
+ *
+ * The model consists of a shape and color model together with noise estimates. Both models are defined over points of
+ * the reference Mesh. The models are spherical PPCA models.
+ *
+ * @param referenceMesh
+ *   reference of the model
+ * @param shape
+ *   the shape model
+ * @param color
+ *   the color model
+ */
 case class MoMoExpress(override val referenceMesh: TriangleMesh3D,
                        shape: PancakeDLRGP[_3D, TriangleMesh, Point[_3D]],
                        color: PancakeDLRGP[_3D, TriangleMesh, RGB],
                        expression: PancakeDLRGP[_3D, TriangleMesh, EuclideanVector[_3D]],
-                       override val landmarks: Map[String, Landmark[_3D]])
-  extends MoMo {
+                       override val landmarks: Map[String, Landmark[_3D]]
+) extends MoMo {
 
   require(shape.domain == color.domain, "shape and color model do not have a matching domain")
   require(referenceMesh == shape.domain, "reference domain does not match model domain")
@@ -298,10 +373,11 @@ case class MoMoExpress(override val referenceMesh: TriangleMesh3D,
   override def expressionModel: Option[MoMoExpress] = Some(this)
 
   /**
-    * Returns the mean VertexColorMesh3D of the model.
-    *
-    * @return the mean
-    */
+   * Returns the mean VertexColorMesh3D of the model.
+   *
+   * @return
+   *   the mean
+   */
   def mean: VertexColorMesh3D = {
     VertexColorMesh3D(
       discreteFieldToShape(shape.mean, expression.mean),
@@ -310,11 +386,13 @@ case class MoMoExpress(override val referenceMesh: TriangleMesh3D,
   }
 
   /**
-    * Generate model instance described by coefficients.
-    *
-    * @param coefficients model coefficients
-    * @return model instance as mesh with per vertex color
-    */
+   * Generate model instance described by coefficients.
+   *
+   * @param coefficients
+   *   model coefficients
+   * @return
+   *   model instance as mesh with per vertex color
+   */
   def instance(coefficients: MoMoCoefficients): VertexColorMesh3D = {
     val MoMoCoefficients(shapeCoefficients, colorCoefficients, expressCoefficients) = padCoefficients(coefficients)
     VertexColorMesh3D(
@@ -324,12 +402,15 @@ case class MoMoExpress(override val referenceMesh: TriangleMesh3D,
   }
 
   /**
-    * A fast method to evaluate a model instance at a specific point.
-    *
-    * @param coefficients model coefficients
-    * @param pid          point-id
-    * @return shape and color values at point-id
-    */
+   * A fast method to evaluate a model instance at a specific point.
+   *
+   * @param coefficients
+   *   model coefficients
+   * @param pid
+   *   point-id
+   * @return
+   *   shape and color values at point-id
+   */
   def instanceAtPoint(coefficients: MoMoCoefficients, pid: PointId): (Point[_3D], RGB) = {
     val MoMoCoefficients(shapeCoefficients, colorCoefficients, expressCoefficients) = padCoefficients(coefficients)
     val point = shape.instanceAtPoint(shapeCoefficients, pid) + expression.instanceAtPoint(expressCoefficients, pid)
@@ -338,13 +419,17 @@ case class MoMoExpress(override val referenceMesh: TriangleMesh3D,
   }
 
   /**
-    * Calculates the parameters of the model representation of the sample.
-    *
-    * @param sample the sample (shape and color)
-    * @return the model coefficients
-    */
+   * Calculates the parameters of the model representation of the sample.
+   *
+   * @param sample
+   *   the sample (shape and color)
+   * @return
+   *   the model coefficients
+   */
   override def coefficients(sample: VertexColorMesh3D): MoMoCoefficients = {
-    require(sample.shape.pointSet.numberOfPoints == referenceMesh.pointSet.numberOfPoints, "mesh to project does not have the same amount of points as model")
+    require(sample.shape.pointSet.numberOfPoints == referenceMesh.pointSet.numberOfPoints,
+            "mesh to project does not have the same amount of points as model"
+    )
 
     // color
     val colorCoeffs = color.coefficients(colorToDiscreteField(sample.color))
@@ -368,7 +453,7 @@ case class MoMoExpress(override val referenceMesh: TriangleMesh3D,
     val shapeMuVec = DenseVector.zeros[Double](shapeVectorLength)
     val expressMuVec = DenseVector.zeros[Double](shapeVectorLength)
 
-    //generates vectors from data (calls vectorizer for every point on reference.)
+    // generates vectors from data (calls vectorizer for every point on reference.)
     pointIds.map { pointId =>
       val value = sample.shape.pointSet.point(pointId)
       val range = pointId.id * vertexDim until (pointId.id + 1) * vertexDim
@@ -383,7 +468,8 @@ case class MoMoExpress(override val referenceMesh: TriangleMesh3D,
     val n_S = shape.rank
     val n_E = expression.rank
 
-    val coeffs_SE = coefficientsMatrices.wTildeNoiseInv * coefficientsMatrices.wT * (sampleVec - shapeMuVec - expressMuVec )
+    val coeffs_SE =
+      coefficientsMatrices.wTildeNoiseInv * coefficientsMatrices.wT * (sampleVec - shapeMuVec - expressMuVec)
 
     val shapeCoeffs = coeffs_SE(0 until n_S)
     val expressCoeffs = coeffs_SE(n_S until n_E + n_S)
@@ -418,7 +504,7 @@ case class MoMoExpress(override val referenceMesh: TriangleMesh3D,
     val shapeMuVec = DenseVector.zeros[Double](shapeVectorLength)
     val expressMuVec = DenseVector.zeros[Double](shapeVectorLength)
 
-    //generates vectors from data (calls vectorizer for every point on reference.)
+    // generates vectors from data (calls vectorizer for every point on reference.)
     pointIds.map { pointId =>
       val range = pointId.id * vertexDim until (pointId.id + 1) * vertexDim
       val sM: DenseVector[Double] = shape.vectorizer.vectorize(shapeMu(pointId.id))
@@ -463,12 +549,12 @@ case class MoMoExpress(override val referenceMesh: TriangleMesh3D,
     CoeffsMatrices(breeze.linalg.inv(w_tilde_noise), wt)
   }
 
-
   /**
-    * Draw a sample from the model.
-    *
-    * @return a sample (shape and color)
-    */
+   * Draw a sample from the model.
+   *
+   * @return
+   *   a sample (shape and color)
+   */
   override def sample()(implicit rnd: Random): VertexColorMesh3D = {
     VertexColorMesh3D(
       discreteFieldToShape(shape.gpModel.sample(), expression.gpModel.sample()),
@@ -476,26 +562,29 @@ case class MoMoExpress(override val referenceMesh: TriangleMesh3D,
     )
   }
 
-
   /**
-    * Draw a set of coefficients from the prior of the statistical model.
-    *
-    * @return a set of coefficients to generate a random sample.
-    */
+   * Draw a set of coefficients from the prior of the statistical model.
+   *
+   * @return
+   *   a set of coefficients to generate a random sample.
+   */
   override def sampleCoefficients()(implicit rnd: Random): MoMoCoefficients = {
-    MoMoCoefficients(
-      shape.coefficientsDistribution.sample(),
-      color.coefficientsDistribution.sample(),
-      expression.coefficientsDistribution.sample())
+    MoMoCoefficients(shape.coefficientsDistribution.sample(),
+                     color.coefficientsDistribution.sample(),
+                     expression.coefficientsDistribution.sample()
+    )
   }
 
   /**
-    * Returns the same model but with exchanged or added landmarks.
-    *
-    * @param landmarksMap Map of named landmarks.
-    * @return Same model but with exchanged landmarks.
-    */
-  override def withLandmarks(landmarksMap: Map[String, Landmark[_3D]]): MoMo = MoMoExpress(referenceMesh, shape, color, expression, landmarksMap)
+   * Returns the same model but with exchanged or added landmarks.
+   *
+   * @param landmarksMap
+   *   Map of named landmarks.
+   * @return
+   *   Same model but with exchanged landmarks.
+   */
+  override def withLandmarks(landmarksMap: Map[String, Landmark[_3D]]): MoMo =
+    MoMoExpress(referenceMesh, shape, color, expression, landmarksMap)
 
   /** pad a coefficient vector if it is too short, basis with single vector */
   override def padCoefficients(momoCoeff: MoMoCoefficients): MoMoCoefficients = {
@@ -522,44 +611,53 @@ case class MoMoExpress(override val referenceMesh: TriangleMesh3D,
   )
 
   /**
-    * Reduces the rank of the model. Drops components only (pure truncation, no noise recalculation)
-    *
-    * @param shapeComps   Number of shape components to keep.
-    * @param colorComps   Number of color components to keep.
-    * @param expressComps Number of expression components to keep.
-    * @return Reduced model.
-    */
+   * Reduces the rank of the model. Drops components only (pure truncation, no noise recalculation)
+   *
+   * @param shapeComps
+   *   Number of shape components to keep.
+   * @param colorComps
+   *   Number of color components to keep.
+   * @param expressComps
+   *   Number of expression components to keep.
+   * @return
+   *   Reduced model.
+   */
   def truncate(shapeComps: Int, colorComps: Int, expressComps: Int): MoMoExpress = {
     require(shapeComps >= 0 && shapeComps <= shape.rank, "illegal number of reduced shape components")
     require(colorComps >= 0 && colorComps <= color.rank, "illegal number of reduced color components")
     require(expressComps >= 0 && expressComps <= expression.rank, "illegal number of reduced expression components")
 
-    MoMoExpress(
-      referenceMesh,
-      shape.truncate(shapeComps),
-      color.truncate(colorComps),
-      expression.truncate(expressComps),
-      landmarks)
+    MoMoExpress(referenceMesh,
+                shape.truncate(shapeComps),
+                color.truncate(colorComps),
+                expression.truncate(expressComps),
+                landmarks
+    )
   }
 
   // converters to deal with discrete fields
-  private def discreteFieldToShape(shapeField: DiscreteField[_3D, TriangleMesh, Point[_3D]], expressionField: DiscreteField[_3D, TriangleMesh, EuclideanVector[_3D]]): TriangleMesh3D = {
-    val points = shapeField.data.zip(expressionField.data).map{case(s, e) => s + e}
+  private def discreteFieldToShape(shapeField: DiscreteField[_3D, TriangleMesh, Point[_3D]],
+                                   expressionField: DiscreteField[_3D, TriangleMesh, EuclideanVector[_3D]]
+  ): TriangleMesh3D = {
+    val points = shapeField.data.zip(expressionField.data).map { case (s, e) => s + e }
     TriangleMesh3D(points, referenceMesh.triangulation)
   }
 
-  private def discreteFieldToColor(colorField: DiscreteField[_3D, TriangleMesh, RGB]): SurfacePointProperty[RGBA] = SurfacePointProperty(referenceMesh.triangulation, colorField.data.map(_.toRGBA))
+  private def discreteFieldToColor(colorField: DiscreteField[_3D, TriangleMesh, RGB]): SurfacePointProperty[RGBA] =
+    SurfacePointProperty(referenceMesh.triangulation, colorField.data.map(_.toRGBA))
 
-  private def shapeToDiscreteField(shape: TriangleMesh[_3D]): DiscreteField[_3D, TriangleMesh, Point[_3D]] = DiscreteField(referenceMesh, shape.pointSet.points.toIndexedSeq)
+  private def shapeToDiscreteField(shape: TriangleMesh[_3D]): DiscreteField[_3D, TriangleMesh, Point[_3D]] =
+    DiscreteField(referenceMesh, shape.pointSet.points.toIndexedSeq)
 
-  private def colorToDiscreteField(color: SurfacePointProperty[RGBA]): DiscreteField[_3D, TriangleMesh, RGB] = DiscreteField(referenceMesh, color.pointData.map(_.toRGB))
+  private def colorToDiscreteField(color: SurfacePointProperty[RGBA]): DiscreteField[_3D, TriangleMesh, RGB] =
+    DiscreteField(referenceMesh, color.pointData.map(_.toRGB))
 }
 
 case class MoMoBasic(override val referenceMesh: TriangleMesh3D,
                      shape: PancakeDLRGP[_3D, TriangleMesh, Point[_3D]],
                      color: PancakeDLRGP[_3D, TriangleMesh, RGB],
-                     override val landmarks: Map[String, Landmark[_3D]] = Map.empty[String, Landmark[_3D]])
-  extends MoMo {
+                     override val landmarks: Map[String, Landmark[_3D]] = Map.empty[String, Landmark[_3D]]
+) extends MoMo {
 
   override def hasExpressions: Boolean = false
 
@@ -568,10 +666,11 @@ case class MoMoBasic(override val referenceMesh: TriangleMesh3D,
   override def expressionModel: Option[MoMoExpress] = None
 
   /**
-    * Returns the mean VertexColorMesh3D of the model.
-    *
-    * @return the mean
-    */
+   * Returns the mean VertexColorMesh3D of the model.
+   *
+   * @return
+   *   the mean
+   */
   override def mean: VertexColorMesh3D = {
     val shapeInstance = discreteFieldToShape(shape.mean)
     val colorInstance = discreteFieldToColor(color.mean)
@@ -579,11 +678,13 @@ case class MoMoBasic(override val referenceMesh: TriangleMesh3D,
   }
 
   /**
-    * Generate model instance described by coefficients.
-    *
-    * @param coefficients model coefficients
-    * @return model instance as mesh with per vertex color
-    */
+   * Generate model instance described by coefficients.
+   *
+   * @param coefficients
+   *   model coefficients
+   * @return
+   *   model instance as mesh with per vertex color
+   */
   override def instance(coefficients: MoMoCoefficients): VertexColorMesh3D = {
     val MoMoCoefficients(shapeCoefficients, colorCoefficients, _) = padCoefficients(coefficients)
     val shapeInstance = discreteFieldToShape(shape.instance(shapeCoefficients))
@@ -592,12 +693,15 @@ case class MoMoBasic(override val referenceMesh: TriangleMesh3D,
   }
 
   /**
-    * A fast method to evaluate a model instance at a specific point.
-    *
-    * @param coefficients model coefficients
-    * @param pid          point-id
-    * @return shape and color values at point-id
-    */
+   * A fast method to evaluate a model instance at a specific point.
+   *
+   * @param coefficients
+   *   model coefficients
+   * @param pid
+   *   point-id
+   * @return
+   *   shape and color values at point-id
+   */
   override def instanceAtPoint(coefficients: MoMoCoefficients, pid: PointId): (Point[_3D], RGB) = {
     val MoMoCoefficients(shapeCoefficients, colorCoefficients, _) = padCoefficients(coefficients)
     val point = shape.instanceAtPoint(shapeCoefficients, pid)
@@ -606,11 +710,13 @@ case class MoMoBasic(override val referenceMesh: TriangleMesh3D,
   }
 
   /**
-    * Calculates the parameters of the model representation of the sample.
-    *
-    * @param sample the sample (shape and color)
-    * @return the model coefficients
-    */
+   * Calculates the parameters of the model representation of the sample.
+   *
+   * @param sample
+   *   the sample (shape and color)
+   * @return
+   *   the model coefficients
+   */
   override def coefficients(sample: VertexColorMesh3D): MoMoCoefficients = {
     val shapeCoeffs = shape.coefficients(shapeToDiscreteField(sample.shape))
     val colorCoeffs = color.coefficients(colorToDiscreteField(sample.color))
@@ -619,10 +725,11 @@ case class MoMoBasic(override val referenceMesh: TriangleMesh3D,
   }
 
   /**
-    * Draw a sample from the model.
-    *
-    * @return a sample (shape and color)
-    */
+   * Draw a sample from the model.
+   *
+   * @return
+   *   a sample (shape and color)
+   */
   override def sample()(implicit rnd: Random): VertexColorMesh3D = {
     VertexColorMesh3D(
       discreteFieldToShape(shape.gpModel.sample()),
@@ -630,12 +737,12 @@ case class MoMoBasic(override val referenceMesh: TriangleMesh3D,
     )
   }
 
-
   /**
-    * Draw a set of coefficients from the prior of the statistical model.
-    *
-    * @return a set of coefficients to generate a random sample.
-    */
+   * Draw a set of coefficients from the prior of the statistical model.
+   *
+   * @return
+   *   a set of coefficients to generate a random sample.
+   */
   override def sampleCoefficients()(implicit rnd: Random): MoMoCoefficients = {
     MoMoCoefficients(
       shape.coefficientsDistribution.sample(),
@@ -644,12 +751,15 @@ case class MoMoBasic(override val referenceMesh: TriangleMesh3D,
   }
 
   /**
-    * Returns the same model but with exchanged or added landmarks.
-    *
-    * @param landmarksMap Map of named landmarks.
-    * @return Same model but with exchanged landmarks.
-    */
-  override def withLandmarks(landmarksMap: Map[String, Landmark[_3D]]): MoMo = MoMoBasic(referenceMesh, shape, color, landmarksMap)
+   * Returns the same model but with exchanged or added landmarks.
+   *
+   * @param landmarksMap
+   *   Map of named landmarks.
+   * @return
+   *   Same model but with exchanged landmarks.
+   */
+  override def withLandmarks(landmarksMap: Map[String, Landmark[_3D]]): MoMo =
+    MoMoBasic(referenceMesh, shape, color, landmarksMap)
 
   /** pad a coefficient vector if it is too short, basis with single vector */
   override def padCoefficients(momoCoeff: MoMoCoefficients): MoMoCoefficients = {
@@ -676,31 +786,34 @@ case class MoMoBasic(override val referenceMesh: TriangleMesh3D,
   )
 
   /**
-    * Reduces the rank of the model. Drops components only (pure truncation)
-    *
-    * @param shapeComps   Number of shape components to keep.
-    * @param colorComps   Number of color components to keep.
-    * @return Reduced model.
-    */
+   * Reduces the rank of the model. Drops components only (pure truncation)
+   *
+   * @param shapeComps
+   *   Number of shape components to keep.
+   * @param colorComps
+   *   Number of color components to keep.
+   * @return
+   *   Reduced model.
+   */
   def truncate(shapeComps: Int, colorComps: Int): MoMoBasic = {
     require(shapeComps >= 0 && shapeComps <= shape.rank, "illegal number of reduced shape components")
     require(colorComps >= 0 && colorComps <= color.rank, "illegal number of reduced color components")
 
     // @todo allow reduction with increasing noise to capture removed components
-    MoMoBasic(
-      referenceMesh,
-      shape.truncate(shapeComps),
-      color.truncate(colorComps),
-      landmarks)
+    MoMoBasic(referenceMesh, shape.truncate(shapeComps), color.truncate(colorComps), landmarks)
   }
 
   // converters to deal with discrete fields
-  private def discreteFieldToShape(shapeField: DiscreteField[_3D, TriangleMesh, Point[_3D]]): TriangleMesh3D = TriangleMesh3D(shapeField.data, referenceMesh.triangulation)
+  private def discreteFieldToShape(shapeField: DiscreteField[_3D, TriangleMesh, Point[_3D]]): TriangleMesh3D =
+    TriangleMesh3D(shapeField.data, referenceMesh.triangulation)
 
-  private def discreteFieldToColor(colorField: DiscreteField[_3D, TriangleMesh, RGB]): SurfacePointProperty[RGBA] = SurfacePointProperty(referenceMesh.triangulation, colorField.data.map(_.toRGBA))
+  private def discreteFieldToColor(colorField: DiscreteField[_3D, TriangleMesh, RGB]): SurfacePointProperty[RGBA] =
+    SurfacePointProperty(referenceMesh.triangulation, colorField.data.map(_.toRGBA))
 
-  private def shapeToDiscreteField(shape: TriangleMesh[_3D]): DiscreteField[_3D, TriangleMesh, Point[_3D]] = DiscreteField(referenceMesh, shape.pointSet.points.toIndexedSeq)
+  private def shapeToDiscreteField(shape: TriangleMesh[_3D]): DiscreteField[_3D, TriangleMesh, Point[_3D]] =
+    DiscreteField(referenceMesh, shape.pointSet.points.toIndexedSeq)
 
-  private def colorToDiscreteField(color: SurfacePointProperty[RGBA]): DiscreteField[_3D, TriangleMesh, RGB] = DiscreteField(referenceMesh, color.pointData.map(_.toRGB))
+  private def colorToDiscreteField(color: SurfacePointProperty[RGBA]): DiscreteField[_3D, TriangleMesh, RGB] =
+    DiscreteField(referenceMesh, color.pointData.map(_.toRGB))
 
 }

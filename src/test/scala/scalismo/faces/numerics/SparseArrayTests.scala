@@ -74,6 +74,6 @@ class SparseArrayTests extends FacesTestSuite {
   }
 
   describe("A SparseAccumulator") {
-    //@todo
+    // @todo
   }
 }

@@ -25,12 +25,12 @@ import scalismo.geometry._
 import scalismo.mesh.{BarycentricCoordinates, SurfacePointProperty, TriangleId, TriangleProperty}
 
 /**
-  * The object PLYPropertyWriters is a collection of helpers to write a property to a file.
-  *
-  * The base class is IndexedProperty.
-  * On next more concrete level we have the SurfacePointPropertyWriter, TrianglePropertyWriter and VertexPerTrianglePropertyWriter.
-  * Finally the different properties occurring in a mesh are written using the remaining classes in this file.
-  */
+ * The object PLYPropertyWriters is a collection of helpers to write a property to a file.
+ *
+ * The base class is IndexedProperty. On next more concrete level we have the SurfacePointPropertyWriter,
+ * TrianglePropertyWriter and VertexPerTrianglePropertyWriter. Finally the different properties occurring in a mesh are
+ * written using the remaining classes in this file.
+ */
 object PlyMeshPropertyWriters {
 
   import PlyHelpers.PlyHeader._
@@ -38,28 +38,27 @@ object PlyMeshPropertyWriters {
   import PlyMeshHelper._
 
   trait IndexedProperty {
-    def writeHeader(osw:OutputStreamWriter) : Unit
-    def write(fIdx: Int, osw: OutputStreamWriter) : Unit
-    def write(fIdx: Int, os: OutputStream, bo: ByteOrder) : Unit
+    def writeHeader(osw: OutputStreamWriter): Unit
+    def write(fIdx: Int, osw: OutputStreamWriter): Unit
+    def write(fIdx: Int, os: OutputStream, bo: ByteOrder): Unit
   }
 
-  abstract class SurfacePointPropertyWriter[A] extends IndexedProperty{
+  abstract class SurfacePointPropertyWriter[A] extends IndexedProperty {
     def property: SurfacePointProperty[A]
 
-    def write(a: A, osw: OutputStreamWriter) : Unit
-    def write(a: A, os: OutputStream, bo: ByteOrder) : Unit
+    def write(a: A, osw: OutputStreamWriter): Unit
+    def write(a: A, os: OutputStream, bo: ByteOrder): Unit
 
     override def write(idx: Int, osw: OutputStreamWriter): Unit = {
-      write(property.atPoint(PointId(idx)),osw)
+      write(property.atPoint(PointId(idx)), osw)
     }
     override def write(idx: Int, os: OutputStream, bo: ByteOrder): Unit = {
-      write(property.atPoint(PointId(idx)),os,bo)
+      write(property.atPoint(PointId(idx)), os, bo)
     }
   }
 
-  abstract class VertexPoint[D <: Dim](override val property: SurfacePointProperty[Point[D]] )
-    extends SurfacePointPropertyWriter[Point[D]]
-  {
+  abstract class VertexPoint[D <: Dim](override val property: SurfacePointProperty[Point[D]])
+      extends SurfacePointPropertyWriter[Point[D]] {
     val numberFormat: PlyHelpers.PlyTypes.Value = PlyTypes.float
     private val writer = new SequenceWriter[Float]()
 
@@ -72,61 +71,63 @@ object PlyMeshPropertyWriters {
     }
   }
 
-  abstract class VertexVector[D <: Dim](override val property: SurfacePointProperty[EuclideanVector[D]] ) extends SurfacePointPropertyWriter[EuclideanVector[D]] {
+  abstract class VertexVector[D <: Dim](override val property: SurfacePointProperty[EuclideanVector[D]])
+      extends SurfacePointPropertyWriter[EuclideanVector[D]] {
     val numberFormat: PlyHelpers.PlyTypes.Value = PlyTypes.float
     private val writer = new SequenceWriter[Float]()
 
-    override def write(vec:EuclideanVector[D], osw: OutputStreamWriter): Unit = {
+    override def write(vec: EuclideanVector[D], osw: OutputStreamWriter): Unit = {
       writer.write(vec.toArray.map(_.toFloat), osw)
     }
 
-    override def write(vec:EuclideanVector[D], os: OutputStream, bo: ByteOrder): Unit = {
+    override def write(vec: EuclideanVector[D], os: OutputStream, bo: ByteOrder): Unit = {
       writer.write(vec.toArray.map(_.toFloat), os, bo)
     }
   }
 
-  abstract class TrianglePropertyWriter[A] extends IndexedProperty{
+  abstract class TrianglePropertyWriter[A] extends IndexedProperty {
     def property: TriangleProperty[A]
-    def write(a: A, osw: OutputStreamWriter) : Unit
-    def write(a: A, os: OutputStream, bo: ByteOrder) : Unit
+    def write(a: A, osw: OutputStreamWriter): Unit
+    def write(a: A, os: OutputStream, bo: ByteOrder): Unit
     override def write(idx: Int, osw: OutputStreamWriter): Unit = {
-      write(property(TriangleId(idx)),osw)
+      write(property(TriangleId(idx)), osw)
     }
     override def write(idx: Int, os: OutputStream, bo: ByteOrder): Unit = {
-      write(property(TriangleId(idx)),os,bo)
+      write(property(TriangleId(idx)), os, bo)
     }
   }
 
   abstract class VertexPerTrianglePropertyWriter[A] extends IndexedProperty {
     def property: VertexPropertyPerTriangle[A]
-    def write(a: Seq[A], osw: OutputStreamWriter) : Unit
-    def write(a: Seq[A], os: OutputStream, bo: ByteOrder) : Unit
-    override def write( idx: Int, osw: OutputStreamWriter): Unit = {
-      val a = property(TriangleId(idx),BarycentricCoordinates.v0)
-      val b = property(TriangleId(idx),BarycentricCoordinates.v1)
-      val c = property(TriangleId(idx),BarycentricCoordinates.v2)
-      write(IndexedSeq(a,b,c),osw)
+    def write(a: Seq[A], osw: OutputStreamWriter): Unit
+    def write(a: Seq[A], os: OutputStream, bo: ByteOrder): Unit
+    override def write(idx: Int, osw: OutputStreamWriter): Unit = {
+      val a = property(TriangleId(idx), BarycentricCoordinates.v0)
+      val b = property(TriangleId(idx), BarycentricCoordinates.v1)
+      val c = property(TriangleId(idx), BarycentricCoordinates.v2)
+      write(IndexedSeq(a, b, c), osw)
     }
-    override def write( idx: Int, os: OutputStream, bo: ByteOrder): Unit = {
-      val a = property(TriangleId(idx),BarycentricCoordinates.v0)
-      val b = property(TriangleId(idx),BarycentricCoordinates.v1)
-      val c = property(TriangleId(idx),BarycentricCoordinates.v2)
-      write(IndexedSeq(a,b,c),os,bo)
+    override def write(idx: Int, os: OutputStream, bo: ByteOrder): Unit = {
+      val a = property(TriangleId(idx), BarycentricCoordinates.v0)
+      val b = property(TriangleId(idx), BarycentricCoordinates.v1)
+      val c = property(TriangleId(idx), BarycentricCoordinates.v2)
+      write(IndexedSeq(a, b, c), os, bo)
     }
   }
 
-  abstract class FaceVertexVectors[D<:Dim]( override val property: VertexPropertyPerTriangle[EuclideanVector[D]]) extends VertexPerTrianglePropertyWriter[EuclideanVector[D]] {
+  abstract class FaceVertexVectors[D <: Dim](override val property: VertexPropertyPerTriangle[EuclideanVector[D]])
+      extends VertexPerTrianglePropertyWriter[EuclideanVector[D]] {
     val numberFormat: PlyHelpers.PlyTypes.Value = PlyTypes.float
     private val writer = new ListWriter[Float]
 
     override def write(seq: Seq[EuclideanVector[D]], osw: OutputStreamWriter): Unit = {
       val s = seq.flatMap(_.toArray).map(_.toFloat)
-      writer.write(s,osw)
+      writer.write(s, osw)
     }
 
     override def write(seq: Seq[EuclideanVector[D]], os: OutputStream, bo: ByteOrder): Unit = {
       val s = seq.flatMap(_.toArray).map(_.toFloat)
-      writer.write(s,os,bo)
+      writer.write(s, os, bo)
     }
 
   }
@@ -136,112 +137,108 @@ object PlyMeshPropertyWriters {
     private val writer = new SequenceWriter[Float]
 
     override def write(idx: Int, osw: OutputStreamWriter): Unit = {
-      writer.write(vertices(idx).toArray.map(_.toFloat),osw)
+      writer.write(vertices(idx).toArray.map(_.toFloat), osw)
     }
 
     override def write(idx: Int, os: OutputStream, bo: ByteOrder): Unit = {
-      writer.write(vertices(idx).toArray.map(_.toFloat),os,bo)
+      writer.write(vertices(idx).toArray.map(_.toFloat), os, bo)
     }
 
     override def writeHeader(osw: OutputStreamWriter): Unit = {
-      osw.write("%s %s %s\n".format(PLY.property,numberFormat,PLY.xCoordinate))
-      osw.write("%s %s %s\n".format(PLY.property,numberFormat,PLY.yCoordinate))
-      osw.write("%s %s %s\n".format(PLY.property,numberFormat,PLY.zCoordinate))
+      osw.write("%s %s %s\n".format(PLY.property, numberFormat, PLY.xCoordinate))
+      osw.write("%s %s %s\n".format(PLY.property, numberFormat, PLY.yCoordinate))
+      osw.write("%s %s %s\n".format(PLY.property, numberFormat, PLY.zCoordinate))
     }
   }
 
-  class VertexColor(override val property: SurfacePointProperty[RGBA] ) extends SurfacePointPropertyWriter[RGBA] {
+  class VertexColor(override val property: SurfacePointProperty[RGBA]) extends SurfacePointPropertyWriter[RGBA] {
     val numberFormat: PlyHelpers.PlyTypes.Value = PlyTypes.uchar
     private val writer = new SequenceWriter[Byte]
 
     override def write(color: RGBA, osw: OutputStreamWriter): Unit = {
       val clamped = color.clamped
-      val seq = IndexedSeq(clamped.r,clamped.g,clamped.b,clamped.a).map(zeroOne2Byte)
-      writer.write(seq,osw)
+      val seq = IndexedSeq(clamped.r, clamped.g, clamped.b, clamped.a).map(zeroOne2Byte)
+      writer.write(seq, osw)
     }
 
     override def write(color: RGBA, os: OutputStream, bo: ByteOrder): Unit = {
       val clamped = color.clamped
-      val seq = IndexedSeq(clamped.r,clamped.g,clamped.b,clamped.a).map(zeroOne2Byte)
-      writer.write(seq,os,bo)
+      val seq = IndexedSeq(clamped.r, clamped.g, clamped.b, clamped.a).map(zeroOne2Byte)
+      writer.write(seq, os, bo)
     }
 
     override def writeHeader(osw: OutputStreamWriter): Unit = {
-      osw.write("%s %s %s\n".format(PLY.property,numberFormat,PLY.red))
-      osw.write("%s %s %s\n".format(PLY.property,numberFormat,PLY.green))
-      osw.write("%s %s %s\n".format(PLY.property,numberFormat,PLY.blue))
-      osw.write("%s %s %s\n".format(PLY.property,numberFormat,PLY.alpha))
+      osw.write("%s %s %s\n".format(PLY.property, numberFormat, PLY.red))
+      osw.write("%s %s %s\n".format(PLY.property, numberFormat, PLY.green))
+      osw.write("%s %s %s\n".format(PLY.property, numberFormat, PLY.blue))
+      osw.write("%s %s %s\n".format(PLY.property, numberFormat, PLY.alpha))
     }
   }
 
-  class VertexNormal(property: SurfacePointProperty[EuclideanVector[_3D]])
-    extends VertexVector[_3D](property)
-  {
+  class VertexNormal(property: SurfacePointProperty[EuclideanVector[_3D]]) extends VertexVector[_3D](property) {
     override def writeHeader(osw: OutputStreamWriter): Unit = {
-      osw.write("%s %s %s\n".format(PLY.property,numberFormat,PLY.nx))
-      osw.write("%s %s %s\n".format(PLY.property,numberFormat,PLY.ny))
-      osw.write("%s %s %s\n".format(PLY.property,numberFormat,PLY.nz))
+      osw.write("%s %s %s\n".format(PLY.property, numberFormat, PLY.nx))
+      osw.write("%s %s %s\n".format(PLY.property, numberFormat, PLY.ny))
+      osw.write("%s %s %s\n".format(PLY.property, numberFormat, PLY.nz))
     }
   }
 
-  class VertexTextureCoordinates(property: SurfacePointProperty[Point[_2D]], format : PlyHeader = PlyHeader.meshlab)
-    extends VertexPoint[_2D](property)
-  {
+  class VertexTextureCoordinates(property: SurfacePointProperty[Point[_2D]], format: PlyHeader = PlyHeader.meshlab)
+      extends VertexPoint[_2D](property) {
     val headerFormat: PlyHeader = format
     override def writeHeader(osw: OutputStreamWriter): Unit = {
       headerFormat match {
         case PlyHeader.meshlab =>
-          osw.write("%s %s %s\n".format(PLY.property,numberFormat,PLY.meshlabU))
-          osw.write("%s %s %s\n".format(PLY.property,numberFormat,PLY.meshlabV))
+          osw.write("%s %s %s\n".format(PLY.property, numberFormat, PLY.meshlabU))
+          osw.write("%s %s %s\n".format(PLY.property, numberFormat, PLY.meshlabV))
         case PlyHeader.blender =>
-          osw.write("%s %s %s\n".format(PLY.property,numberFormat,PLY.blenderU))
-          osw.write("%s %s %s\n".format(PLY.property,numberFormat,PLY.blenderV))
+          osw.write("%s %s %s\n".format(PLY.property, numberFormat, PLY.blenderU))
+          osw.write("%s %s %s\n".format(PLY.property, numberFormat, PLY.blenderV))
       }
     }
   }
 
-  class Faces(val faces: IndexedSeq[IntVector[_3D]])
-    extends IndexedProperty
-  {
+  class Faces(val faces: IndexedSeq[IntVector[_3D]]) extends IndexedProperty {
     val numberFormat: PlyHelpers.PlyTypes.Value = PlyTypes.int
     private val writer = new ListWriter[Int]
 
     override def writeHeader(osw: OutputStreamWriter): Unit = {
-      osw.write("%s %s %s %s %s\n".format(PLY.property,PLY.list,PlyTypes.uchar,numberFormat,PLY.vertexIndices))
+      osw.write("%s %s %s %s %s\n".format(PLY.property, PLY.list, PlyTypes.uchar, numberFormat, PLY.vertexIndices))
     }
 
     override def write(idx: Int, osw: OutputStreamWriter): Unit = {
-      writer.write(faces(idx).toArray.toIndexedSeq,osw)
+      writer.write(faces(idx).toArray.toIndexedSeq, osw)
     }
 
     override def write(idx: Int, os: OutputStream, bo: ByteOrder): Unit = {
-      writer.write(faces(idx).toArray.toIndexedSeq,os,bo)
+      writer.write(faces(idx).toArray.toIndexedSeq, os, bo)
     }
   }
 
-  class FaceColor( override val property: TriangleProperty[RGBA]) extends TrianglePropertyWriter[RGBA] {
+  class FaceColor(override val property: TriangleProperty[RGBA]) extends TrianglePropertyWriter[RGBA] {
     val numberFormat: PlyHelpers.PlyTypes.Value = PlyTypes.uchar
     private val writer = new SequenceWriter[Byte]()
 
     override def write(color: RGBA, osw: OutputStreamWriter): Unit = {
-      val seq = IndexedSeq(color.r,color.g,color.b,color.a).map(zeroOne2Byte)
-      writer.write(seq,osw)
+      val seq = IndexedSeq(color.r, color.g, color.b, color.a).map(zeroOne2Byte)
+      writer.write(seq, osw)
     }
 
     override def write(color: RGBA, os: OutputStream, bo: ByteOrder): Unit = {
-      val seq = IndexedSeq(color.r,color.g,color.b,color.a).map(zeroOne2Byte)
-      writer.write(seq,os,bo)
+      val seq = IndexedSeq(color.r, color.g, color.b, color.a).map(zeroOne2Byte)
+      writer.write(seq, os, bo)
     }
 
     override def writeHeader(osw: OutputStreamWriter): Unit = {
-      osw.write("%s %s %s\n".format(PLY.property,numberFormat,PLY.red))
-      osw.write("%s %s %s\n".format(PLY.property,numberFormat,PLY.green))
-      osw.write("%s %s %s\n".format(PLY.property,numberFormat,PLY.blue))
-      osw.write("%s %s %s\n".format(PLY.property,numberFormat,PLY.alpha))
+      osw.write("%s %s %s\n".format(PLY.property, numberFormat, PLY.red))
+      osw.write("%s %s %s\n".format(PLY.property, numberFormat, PLY.green))
+      osw.write("%s %s %s\n".format(PLY.property, numberFormat, PLY.blue))
+      osw.write("%s %s %s\n".format(PLY.property, numberFormat, PLY.alpha))
     }
   }
 
-  class FaceNormal( override val property: TriangleProperty[EuclideanVector[_3D]]) extends TrianglePropertyWriter[EuclideanVector[_3D]] {
+  class FaceNormal(override val property: TriangleProperty[EuclideanVector[_3D]])
+      extends TrianglePropertyWriter[EuclideanVector[_3D]] {
     val numberFormat: PlyHelpers.PlyTypes.Value = PlyTypes.float
     private val writer = new SequenceWriter[Float]()
 
@@ -254,62 +251,59 @@ object PlyMeshPropertyWriters {
     }
 
     override def writeHeader(osw: OutputStreamWriter): Unit = {
-      osw.write("%s %s %s\n".format(PLY.property,numberFormat,PLY.nx))
-      osw.write("%s %s %s\n".format(PLY.property,numberFormat,PLY.ny))
-      osw.write("%s %s %s\n".format(PLY.property,numberFormat,PLY.nz))
+      osw.write("%s %s %s\n".format(PLY.property, numberFormat, PLY.nx))
+      osw.write("%s %s %s\n".format(PLY.property, numberFormat, PLY.ny))
+      osw.write("%s %s %s\n".format(PLY.property, numberFormat, PLY.nz))
     }
   }
 
-  class FaceVertexTextureCoordinates( override val property: VertexPropertyPerTriangle[Point[_2D]]) extends VertexPerTrianglePropertyWriter[Point[_2D]] {
+  class FaceVertexTextureCoordinates(override val property: VertexPropertyPerTriangle[Point[_2D]])
+      extends VertexPerTrianglePropertyWriter[Point[_2D]] {
     val numberFormat: PlyHelpers.PlyTypes.Value = PlyTypes.float
     private val writer = new ListWriter[Float]
 
     override def write(seq: Seq[Point[_2D]], osw: OutputStreamWriter): Unit = {
       val s = seq.flatMap(_.toArray).map(_.toFloat)
-      writer.write(s,osw)
+      writer.write(s, osw)
     }
 
     override def write(seq: Seq[Point[_2D]], os: OutputStream, bo: ByteOrder): Unit = {
       val s = seq.flatMap(_.toArray).map(_.toFloat)
-      writer.write(s,os,bo)
+      writer.write(s, os, bo)
     }
 
     override def writeHeader(osw: OutputStreamWriter): Unit = {
-      osw.write("%s %s %s %s %s\n".format(PLY.property,PLY.list,PlyTypes.uchar,numberFormat,PLY.textureCoordinates))
+      osw.write("%s %s %s %s %s\n".format(PLY.property, PLY.list, PlyTypes.uchar, numberFormat, PLY.textureCoordinates))
     }
 
   }
 
-  class FaceVertexColors( override val property: VertexPropertyPerTriangle[RGBA]) extends VertexPerTrianglePropertyWriter[RGBA] {
+  class FaceVertexColors(override val property: VertexPropertyPerTriangle[RGBA])
+      extends VertexPerTrianglePropertyWriter[RGBA] {
     val numberFormat: PlyHelpers.PlyTypes.Value = PlyTypes.uchar
     private val writer = new ListWriter[Byte]
 
     override def write(seq: Seq[RGBA], osw: OutputStreamWriter): Unit = {
-      val s = seq.flatMap(c => Seq(c.r,c.g,c.b,c.a)).map(zeroOne2Byte)
-      writer.write(s,osw)
+      val s = seq.flatMap(c => Seq(c.r, c.g, c.b, c.a)).map(zeroOne2Byte)
+      writer.write(s, osw)
     }
 
     override def write(seq: Seq[RGBA], os: OutputStream, bo: ByteOrder): Unit = {
-      val s = seq.flatMap(c => Seq(c.r,c.g,c.b,c.a)).map(zeroOne2Byte)
-      writer.write(s,os,bo)
+      val s = seq.flatMap(c => Seq(c.r, c.g, c.b, c.a)).map(zeroOne2Byte)
+      writer.write(s, os, bo)
     }
 
     override def writeHeader(osw: OutputStreamWriter): Unit = {
-      osw.write("%s %s %s %s %s\n".format(PLY.property,PLY.list,PlyTypes.uchar,numberFormat,PLY.vertexColor))
+      osw.write("%s %s %s %s %s\n".format(PLY.property, PLY.list, PlyTypes.uchar, numberFormat, PLY.vertexColor))
     }
   }
 
-  class FaceVertexNormals(override val property: VertexPropertyPerTriangle[EuclideanVector[_3D]]) extends FaceVertexVectors[_3D](property) {
+  class FaceVertexNormals(override val property: VertexPropertyPerTriangle[EuclideanVector[_3D]])
+      extends FaceVertexVectors[_3D](property) {
     override def writeHeader(osw: OutputStreamWriter): Unit = {
-      osw.write("%s %s %s %s %s\n".format(PLY.property,PLY.list,PlyTypes.uchar,numberFormat,PLY.normals))
+      osw.write("%s %s %s %s %s\n".format(PLY.property, PLY.list, PlyTypes.uchar, numberFormat, PLY.normals))
     }
   }
-
-
-
-
-
-
 
   def groupByKey[K: scala.reflect.ClassTag, V: scala.reflect.ClassTag](arr: Array[(K, V)]): Array[(K, Array[V])] = {
     val list = new scala.collection.mutable.ArrayBuffer[(K, Array[V])]()
@@ -345,6 +339,5 @@ object PlyMeshPropertyWriters {
       flatIndices.map(testIndex).toSet.size == 1
     }
   }
-
 
 }

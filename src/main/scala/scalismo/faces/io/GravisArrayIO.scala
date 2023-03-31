@@ -35,25 +35,37 @@ object GravisArrayIO {
   }
 
   /** read default human readable array format from Source */
-  def readFromSource[A: ClassTag](source: Source, sizeHint: Int = 100)(implicit reader: GravisTypeIO[A]): Try[IndexedSeq[A]] = {
+  def readFromSource[A: ClassTag](source: Source, sizeHint: Int = 100)(implicit
+    reader: GravisTypeIO[A]
+  ): Try[IndexedSeq[A]] = {
     readHumanReadableFromSource(source, sizeHint)
   }
 
-  /** read array in standard human readable format from legacy gravis: "[index]=value" or plain list format with a value per line */
-  def readHumanReadable[A: ClassTag](file: File, sizeHint: Int = 100)(implicit reader: GravisTypeIO[A]): Try[IndexedSeq[A]] = {
+  /**
+   * read array in standard human readable format from legacy gravis: "[index]=value" or plain list format with a value
+   * per line
+   */
+  def readHumanReadable[A: ClassTag](file: File, sizeHint: Int = 100)(implicit
+    reader: GravisTypeIO[A]
+  ): Try[IndexedSeq[A]] = {
     readHumanReadableFromSource(Source.fromFile(file), sizeHint)
   }
 
-  /** read array in standard human readable format from legacy gravis: [index]=value or plain list format with a value per line */
-  def readHumanReadableFromSource[A: ClassTag](source: Source, sizeHint: Int = 100)(implicit reader: GravisTypeIO[A]): Try[IndexedSeq[A]] = {
-    val buffer = new ArrayBuffer[A](/*source.getLines().size*/ sizeHint)
+  /**
+   * read array in standard human readable format from legacy gravis: [index]=value or plain list format with a value
+   * per line
+   */
+  def readHumanReadableFromSource[A: ClassTag](source: Source, sizeHint: Int = 100)(implicit
+    reader: GravisTypeIO[A]
+  ): Try[IndexedSeq[A]] = {
+    val buffer = new ArrayBuffer[A]( /*source.getLines().size*/ sizeHint)
     val lines = source.getLines().map(_.trim)
-    val indexRE = """^\[([0-9]+)\]=(.*)$""".r("index", "value")
+    val indexRE = """^\[(?<index>[0-9]+)\]=(?<value>.*)$""".r
     var index: Int = 0
     for (l <- lines if l.nonEmpty) {
       val (ind, valString) = l.trim match {
         case indexRE(i, value) => (i.toInt, value)
-        case value: String => (index, value)
+        case value: String     => (index, value)
       }
       // fill empty indices
       while (index < ind) {
@@ -80,7 +92,7 @@ object GravisArrayIO {
 
   /** write human readable legacy gravis format: [index]=value (Sandro) */
   def writeLegacyHumanReadable[A](data: Iterable[A], file: File)(implicit io: GravisTypeIO[A]): Try[Unit] = {
-    val lines = data.iterator.zipWithIndex.map{ case (d, i) => s"[$i]=${io.toString(d)}"}
+    val lines = data.iterator.zipWithIndex.map { case (d, i) => s"[$i]=${io.toString(d)}" }
     ResourceManagement.using(new PrintWriter(new FileOutputStream(file))) { w =>
       lines.foreach(w.println)
     }
@@ -89,6 +101,7 @@ object GravisArrayIO {
 
   /** typed gravis reader/writer, String parser and binary - for legacy gravis formats */
   trait GravisTypeIO[A] {
+
     /** parse value from String */
     def parse(string: String): A
 
@@ -156,7 +169,8 @@ object GravisArrayIO {
       RGB(values(0), values(1), values(2))
     }
 
-    override def toString(data: RGB): String = Seq( data.r, data.g, data.b).map(v => "%.20f".formatLocal(java.util.Locale.US,v)).mkString(", ")
+    override def toString(data: RGB): String =
+      Seq(data.r, data.g, data.b).map(v => "%.20f".formatLocal(java.util.Locale.US, v)).mkString(", ")
   }
 
   /** read and write RGBA in gravis-compatible format */
@@ -168,7 +182,8 @@ object GravisArrayIO {
       RGBA(values(0), values(1), values(2), values(3))
     }
 
-    override def toString(data: RGBA): String = Seq( data.r, data.g, data.b, data.a).map(v => "%.20f".formatLocal(java.util.Locale.US,v)).mkString(", ")
+    override def toString(data: RGBA): String =
+      Seq(data.r, data.g, data.b, data.a).map(v => "%.20f".formatLocal(java.util.Locale.US, v)).mkString(", ")
   }
 
 }

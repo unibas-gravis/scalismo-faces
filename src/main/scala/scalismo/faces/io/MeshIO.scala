@@ -22,7 +22,7 @@ import scalismo.color.RGBA
 import scalismo.faces.io.msh.MSHMeshIO
 import scalismo.faces.io.ply.PLYMesh
 import scalismo.faces.mesh.{ColorNormalMesh3D, OptionalColorNormalMesh3D, TextureMappedProperty}
-import scalismo.geometry.{EuclideanVector, _3D}
+import scalismo.geometry.{_3D, EuclideanVector}
 import scalismo.mesh.{MeshSurfaceProperty, SurfacePointProperty, TriangleMesh3D, VertexColorMesh3D}
 
 import scala.util.{Failure, Try}
@@ -30,27 +30,29 @@ import scala.util.{Failure, Try}
 /** provides general read and write functionality for various mesh formats with color information */
 object MeshIO {
 
-  /** general mesh reading in all supported file formats
-    * read a mesh as flexible container type OptionalColorNormalMesh3D
-    * if more detailed information is required use format-specific readers */
+  /**
+   * general mesh reading in all supported file formats read a mesh as flexible container type OptionalColorNormalMesh3D
+   * if more detailed information is required use format-specific readers
+   */
   def read(file: File): Try[OptionalColorNormalMesh3D] = {
     val filename = file.getAbsolutePath
     filename match {
       case f if f.toLowerCase.endsWith(".msh.gz") || f.toLowerCase.endsWith(".msh") =>
-        for (msh <- MSHMeshIO.read(file)) yield
-          OptionalColorNormalMesh3D(msh.triangleMesh, msh.getColor, msh.getNormal)
+        for (msh <- MSHMeshIO.read(file)) yield OptionalColorNormalMesh3D(msh.triangleMesh, msh.getColor, msh.getNormal)
       case f if f.toLowerCase.endsWith(".ply") =>
-        PLYMesh.readColorNormalMesh3D(filename).map(OptionalColorNormalMesh3D.fromColorNormalMesh)
-          .orElse(
-            PLYMesh.readVertexColorMesh3D(filename).map(OptionalColorNormalMesh3D.fromVertexColorMesh))
-          .orElse(
-            PLYMesh.readTriangleMesh3D(filename).map(OptionalColorNormalMesh3D.fromTriangleMesh))
+        PLYMesh
+          .readColorNormalMesh3D(filename)
+          .map(OptionalColorNormalMesh3D.fromColorNormalMesh)
+          .orElse(PLYMesh.readVertexColorMesh3D(filename).map(OptionalColorNormalMesh3D.fromVertexColorMesh))
+          .orElse(PLYMesh.readTriangleMesh3D(filename).map(OptionalColorNormalMesh3D.fromTriangleMesh))
       case _ => Failure(new IOException("Reading mesh: Unknown file type " + filename))
     }
   }
 
-  /** write a mesh, optionally with color and normals, automatically chooses format based on filename
-    * supports only basic color and normal types, for more control use format-specific writers */
+  /**
+   * write a mesh, optionally with color and normals, automatically chooses format based on filename supports only basic
+   * color and normal types, for more control use format-specific writers
+   */
   def write(mesh: OptionalColorNormalMesh3D, file: File): Try[Unit] = {
     val filename = file.getAbsolutePath
     filename match {
@@ -75,7 +77,11 @@ object MeshIO {
   }
 
   /** write a mesh, optionally with color and normals, automatically chooses format based on filename */
-  def write(mesh: TriangleMesh3D, color: Option[MeshSurfaceProperty[RGBA]], normals: Option[MeshSurfaceProperty[EuclideanVector[_3D]]], file: File): Try[Unit] = {
+  def write(mesh: TriangleMesh3D,
+            color: Option[MeshSurfaceProperty[RGBA]],
+            normals: Option[MeshSurfaceProperty[EuclideanVector[_3D]]],
+            file: File
+  ): Try[Unit] = {
     write(OptionalColorNormalMesh3D(mesh, color, normals), file)
   }
 

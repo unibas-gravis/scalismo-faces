@@ -21,9 +21,10 @@ import java.nio.channels._
 import java.util.Scanner
 
 /**
-  * General trait to handle different sequence/list readers
-  */
+ * General trait to handle different sequence/list readers
+ */
 trait SequenceReader[@specialized(Byte, Char, Short, Int, Long, Float, Double) A] {
+
   /** read ascii text format */
   def read(scanner: Scanner): Seq[A]
 
@@ -32,17 +33,21 @@ trait SequenceReader[@specialized(Byte, Char, Short, Int, Long, Float, Double) A
 }
 
 /**
-  * The SequenceReader reads a predefined number of elements of type `A`.
-  * The number of elements can be passed when constructing the reader or in the read call.
-  *
-  * ASCII/String example for A:Double
-  * "1.0 2.0 3.0 4.0 5.0 ..." => read(2,scanner) reads 2 elements of type A and returns then Seq(1.0,2.0)
-  *
-  * @param n Number of elements to be read.
-  * @tparam A ElementType of the sequence to be read.
-  */
-class FixedLengthSequenceReader[@specialized(Byte, Char, Short, Int, Long, Float, Double) A: StringReader : EndianReader](private val n: Int = 1)
-  extends SequenceReader[A] {
+ * The SequenceReader reads a predefined number of elements of type `A`. The number of elements can be passed when
+ * constructing the reader or in the read call.
+ *
+ * ASCII/String example for A:Double "1.0 2.0 3.0 4.0 5.0 ..." => read(2,scanner) reads 2 elements of type A and returns
+ * then Seq(1.0,2.0)
+ *
+ * @param n
+ *   Number of elements to be read.
+ * @tparam A
+ *   ElementType of the sequence to be read.
+ */
+class FixedLengthSequenceReader[
+  @specialized(Byte, Char, Short, Int, Long, Float, Double) A: StringReader: EndianReader
+](private val n: Int = 1)
+    extends SequenceReader[A] {
 
   override def read(scanner: Scanner): Seq[A] = {
     read(n, scanner)
@@ -62,17 +67,20 @@ class FixedLengthSequenceReader[@specialized(Byte, Char, Short, Int, Long, Float
 }
 
 /**
-  * The ListReader reads first the number of element to read and then the sequence of `A`s.
-  * The class uses a `SequenceReader` once the number of elements to read is determined.
-  *
-  * @note The number of elements is limited to be of type `Byte`.
-  *
-  *       ASCII/String example for A:Double
-  *       "3 1.0 1.0 1.0 2.0 4.0 6.0 ....." => reads n=3 then reads and returns Seq(1.0,1.0,1.0)
-  * @tparam A ElementType of the sequence to be read.
-  */
-class VariableLengthSequenceReader[@specialized(Byte, Char, Short, Int, Long, Float, Double) A: StringReader : EndianReader]
-  extends SequenceReader[A] {
+ * The ListReader reads first the number of element to read and then the sequence of `A`s. The class uses a
+ * `SequenceReader` once the number of elements to read is determined.
+ *
+ * @note
+ *   The number of elements is limited to be of type `Byte`.
+ *
+ * ASCII/String example for A:Double "3 1.0 1.0 1.0 2.0 4.0 6.0 ....." => reads n=3 then reads and returns
+ * Seq(1.0,1.0,1.0)
+ * @tparam A
+ *   ElementType of the sequence to be read.
+ */
+class VariableLengthSequenceReader[
+  @specialized(Byte, Char, Short, Int, Long, Float, Double) A: StringReader: EndianReader
+] extends SequenceReader[A] {
 
   val fixedReader = new FixedLengthSequenceReader[A]()
 
@@ -92,7 +100,6 @@ class VariableLengthSequenceReader[@specialized(Byte, Char, Short, Int, Long, Fl
     fixedReader.read(N, is, bo)
   }
 }
-
 
 trait StringReader[@specialized(Byte, Char, Short, Int, Long, Float, Double) A] {
   def read(N: Int, scanner: Scanner): Seq[A]

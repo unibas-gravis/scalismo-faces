@@ -71,7 +71,6 @@ class CachedDistributionEvaluatorTest extends FacesTestSuite {
 
       val cachedEval = CachedDistributionEvaluator(evalWithSideEffect, 2)
 
-
       def shouldBeCached(value: Double): Unit = {
         sideEffectCounter = 0
         cachedEval.logValue(value) shouldBe evalWithSideEffect.logValue(value)
@@ -99,7 +98,7 @@ class CachedDistributionEvaluatorTest extends FacesTestSuite {
 
     it("can be constructed using implicit notation") {
       import CachedDistributionEvaluator.implicits._
-      underlyingEval.cached(2) shouldBe a [CachedDistributionEvaluator[_]]
+      underlyingEval.cached(2) shouldBe a[CachedDistributionEvaluator[_]]
     }
   }
 }

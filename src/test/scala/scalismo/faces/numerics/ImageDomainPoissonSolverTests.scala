@@ -35,12 +35,13 @@ class ImageDomainPoissonSolverTests extends FacesTestSuite {
 
   val boxX = 33
   val boxY = 74
-  val mask = PixelImage(target.domain, (x, y) =>
-    x >= boxX && x < target.width - boxX && y >= boxY && y < target.height - boxY
+  val mask = PixelImage(target.domain,
+                        (x, y) => x >= boxX && x < target.width - boxX && y >= boxY && y < target.height - boxY
   ).withAccessMode(AccessMode.Repeat())
 
   // initial values: constant black, boundary values are fixed to target
-  val initialWithBoundary = PixelImage(target.domain, (x, y) => if (mask(x, y)) 0.0 else target(x, y)).withAccessMode(AccessMode.Repeat())
+  val initialWithBoundary =
+    PixelImage(target.domain, (x, y) => if (mask(x, y)) 0.0 else target(x, y)).withAccessMode(AccessMode.Repeat())
 
   // right-hand-side: laplace of donor (zero actually)
   val lapDonor = PixelImageDifferential.laplace4NN(donor)
@@ -53,7 +54,7 @@ class ImageDomainPoissonSolverTests extends FacesTestSuite {
   val maxReconstructionError = 1.0e-10 * w * h
 
   // double vectorizer
-  implicit val doubleVectorizer = new ComponentRepresentation[Double] {
+  implicit val doubleVectorizer: ComponentRepresentation[Double] = new ComponentRepresentation[Double] {
     override def fromArray(arr: Array[Double]): Double = arr(0)
     override def component(color: Double, index: Int): Double = color.toDouble
     override def fromComponents(comp: (Int) => Double): Double = comp(0)

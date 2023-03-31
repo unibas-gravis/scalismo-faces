@@ -17,11 +17,12 @@
 package scalismo.faces.render
 
 import breeze.linalg.DenseMatrix
-import scalismo.geometry.{Point, _3D}
+import scalismo.geometry.{_3D, Point}
 import scalismo.mesh.BarycentricCoordinates
 
 /** geometric projection to create an image of a 3D scene */
 trait Projection {
+
   /** apply the projection, returns normalized device coordinates [-1,1]x[-1,1]x[-1,1] */
   def apply(p: Point[_3D]): Point[_3D]
 
@@ -48,10 +49,10 @@ case class FrustumPinholeProjection(override val frustum: Frustum) extends Frust
   /** apply transform to a 3d point */
   override def apply(p: Point[_3D]): Point[_3D] = {
     val d = -p.z
-    Point(
-      (p.x * 2 * n / (r - l) + (r + l) / (r - l) * p.z) / d,
-      (p.y * 2 * n / (t - b) + (t + b) / (t - b) * p.z) / d,
-      (-(f + n) / (f - n) * p.z - 2 * f * n / (f - n)) / d)
+    Point((p.x * 2 * n / (r - l) + (r + l) / (r - l) * p.z) / d,
+          (p.y * 2 * n / (t - b) + (t + b) / (t - b) * p.z) / d,
+          (-(f + n) / (f - n) * p.z - 2 * f * n / (f - n)) / d
+    )
   }
 
   override val matrix4: DenseMatrix[Double] = DenseMatrix(
@@ -69,11 +70,19 @@ case class FrustumPinholeProjection(override val frustum: Frustum) extends Frust
 
       override def apply(p: Point[_3D]): Point[_3D] = self(modelView(p))
 
-      override def bccScreenToWorld(screenBCC: BarycentricCoordinates, a: Point[_3D], b: Point[_3D], c: Point[_3D]): BarycentricCoordinates = {
+      override def bccScreenToWorld(screenBCC: BarycentricCoordinates,
+                                    a: Point[_3D],
+                                    b: Point[_3D],
+                                    c: Point[_3D]
+      ): BarycentricCoordinates = {
         FrustumPinholeProjection.bccScreenToWorldCorrection(screenBCC, invZ(a), invZ(b), invZ(c))
       }
 
-      override def bccWorldToScreen(worldBCC: BarycentricCoordinates, a: Point[_3D], b: Point[_3D], c: Point[_3D]): BarycentricCoordinates = {
+      override def bccWorldToScreen(worldBCC: BarycentricCoordinates,
+                                    a: Point[_3D],
+                                    b: Point[_3D],
+                                    c: Point[_3D]
+      ): BarycentricCoordinates = {
         FrustumPinholeProjection.bccWorldToScreenCorrection(worldBCC, invZ(a), invZ(b), invZ(c))
       }
     }
@@ -82,26 +91,31 @@ case class FrustumPinholeProjection(override val frustum: Frustum) extends Frust
   /** inverse projection into eye space */
   override def inverse(p: Point[_3D]): Point[_3D] = {
     val z = 1.0 / ((p.z - (f + n) / (f - n)) * (f - n) / (2 * f * n))
-    Point(
-      -z * (r - l) / (2 * n) * (p.x + (r + l) / (r - l)),
-      -z * (t - b) / (2 * n) * (p.y + (t + b) / (t - b)),
-      z)
+    Point(-z * (r - l) / (2 * n) * (p.x + (r + l) / (r - l)), -z * (t - b) / (2 * n) * (p.y + (t + b) / (t - b)), z)
   }
 }
 
 object FrustumPinholeProjection {
-  def bccScreenToWorldCorrection(bccScreen: BarycentricCoordinates, z1: Double, z2: Double, z3: Double): BarycentricCoordinates = {
+  def bccScreenToWorldCorrection(bccScreen: BarycentricCoordinates,
+                                 z1: Double,
+                                 z2: Double,
+                                 z3: Double
+  ): BarycentricCoordinates = {
     val d = z2 * z3 + z3 * bccScreen.b * (z1 - z2) + z2 * bccScreen.c * (z1 - z3)
     if (d == 0.0) {
       bccScreen
     } else {
       val b = z1 * z3 * bccScreen.b / d
       val c = z1 * z2 * bccScreen.c / d
-      BarycentricCoordinates(1.0 - b - c, b, c) //lambda world
+      BarycentricCoordinates(1.0 - b - c, b, c) // lambda world
     }
   }
 
-  def bccWorldToScreenCorrection(bccWorld: BarycentricCoordinates, z1: Double, z2: Double, z3: Double): BarycentricCoordinates = {
+  def bccWorldToScreenCorrection(bccWorld: BarycentricCoordinates,
+                                 z1: Double,
+                                 z2: Double,
+                                 z3: Double
+  ): BarycentricCoordinates = {
     val d = z1 - (z1 - z2) * bccWorld.b - (z1 - z3) * bccWorld.c
     if (d == 0.0)
       bccWorld
@@ -120,10 +134,10 @@ case class FrustumOrthographicProjection(override val frustum: Frustum) extends 
   private val Frustum(l, r, b, t, n, f) = frustum
 
   /** apply transform to a 3d point */
-  override def apply(p: Point[_3D]): Point[_3D] = Point(
-    p.x * 2 / (r - l) - (r + l) / (r - l),
-    p.y * 2 / (t - b) - (t + b) / (t - b),
-    -2 / (f - n) * p.z - (f + n) / (f - n))
+  override def apply(p: Point[_3D]): Point[_3D] = Point(p.x * 2 / (r - l) - (r + l) / (r - l),
+                                                        p.y * 2 / (t - b) - (t + b) / (t - b),
+                                                        -2 / (f - n) * p.z - (f + n) / (f - n)
+  )
 
   override val matrix4: DenseMatrix[Double] = DenseMatrix(
     (2 / (r - l), 0.0, 0.0, -(r + l) / (r - l)),

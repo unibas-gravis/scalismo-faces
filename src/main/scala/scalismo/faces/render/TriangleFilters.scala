@@ -16,11 +16,12 @@
 
 package scalismo.faces.render
 
-import scalismo.geometry.{Point, EuclideanVector, _3D}
+import scalismo.geometry.{_3D, EuclideanVector, Point}
 import scalismo.mesh.{TriangleId, TriangleMesh}
 
 /** methods to create useful triangle filters to use in TriangleRenderer, e.g. culling and clipping */
 object TriangleFilters {
+
   /** remove triangles which face backwards, use as triangleFilter in renderMesh */
   def backfaceCullingFilter(worldMesh: TriangleMesh[_3D], eyePosition: Point[_3D]): TriangleId => Boolean = {
     triangleId =>
@@ -30,24 +31,28 @@ object TriangleFilters {
   }
 
   /** remove triangles *partially* behind clipping plane, use as triangleFilter in renderMesh */
-  def clippingFilter(worldMesh: TriangleMesh[_3D], point: Point[_3D], normal: EuclideanVector[_3D]): TriangleId => Boolean = {
-    triangleId =>
-      val triangle = worldMesh.triangulation.triangle(triangleId)
-      val a = worldMesh.pointSet.point(triangle.ptId1)
-      val b = worldMesh.pointSet.point(triangle.ptId2)
-      val c = worldMesh.pointSet.point(triangle.ptId3)
-      def inFront(pt: Point[_3D]): Boolean = (pt - point).dot(normal) >= 0.0
-      inFront(a) && inFront(b) && inFront(c)
+  def clippingFilter(worldMesh: TriangleMesh[_3D],
+                     point: Point[_3D],
+                     normal: EuclideanVector[_3D]
+  ): TriangleId => Boolean = { triangleId =>
+    val triangle = worldMesh.triangulation.triangle(triangleId)
+    val a = worldMesh.pointSet.point(triangle.ptId1)
+    val b = worldMesh.pointSet.point(triangle.ptId2)
+    val c = worldMesh.pointSet.point(triangle.ptId3)
+    def inFront(pt: Point[_3D]): Boolean = (pt - point).dot(normal) >= 0.0
+    inFront(a) && inFront(b) && inFront(c)
   }
 
   /** remove triangles *completely* behind clipping plane, use as triangleFilter in renderMesh */
-  def completeClippingFilter(worldMesh: TriangleMesh[_3D], point: Point[_3D], normal: EuclideanVector[_3D]): TriangleId => Boolean = {
-    triangleId =>
-      val triangle = worldMesh.triangulation.triangle(triangleId)
-      val a = worldMesh.pointSet.point(triangle.ptId1)
-      val b = worldMesh.pointSet.point(triangle.ptId2)
-      val c = worldMesh.pointSet.point(triangle.ptId3)
-      def inFront(pt: Point[_3D]): Boolean = (pt - point).dot(normal) >= 0.0
-      inFront(a) || inFront(b) || inFront(c)
+  def completeClippingFilter(worldMesh: TriangleMesh[_3D],
+                             point: Point[_3D],
+                             normal: EuclideanVector[_3D]
+  ): TriangleId => Boolean = { triangleId =>
+    val triangle = worldMesh.triangulation.triangle(triangleId)
+    val a = worldMesh.pointSet.point(triangle.ptId1)
+    val b = worldMesh.pointSet.point(triangle.ptId2)
+    val c = worldMesh.pointSet.point(triangle.ptId3)
+    def inFront(pt: Point[_3D]): Boolean = (pt - point).dot(normal) >= 0.0
+    inFront(a) || inFront(b) || inFront(c)
   }
 }

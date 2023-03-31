@@ -19,7 +19,7 @@ package scalismo.faces.parameters
 import scalismo.color.RGBA
 import scalismo.faces.mesh.ColorNormalMesh3D
 import scalismo.faces.render.{Affine3D, PixelShader, PointShader}
-import scalismo.geometry.{Point, Point2D, EuclideanVector, _3D}
+import scalismo.geometry.{_3D, EuclideanVector, Point, Point2D}
 import scalismo.mesh.VertexColorMesh3D
 
 /** main parameter to describe a 3D scene setup with a face for rendering and fitting */
@@ -30,7 +30,8 @@ case class RenderParameter(pose: Pose,
                            directionalLight: DirectionalLight,
                            momo: MoMoInstance,
                            imageSize: ImageSize,
-                           colorTransform: ColorTransform) {
+                           colorTransform: ColorTransform
+) {
 
   /** change illumination to specified illumination */
   def withDirectionalLight(light: DirectionalLight): RenderParameter = copy(directionalLight = light)
@@ -76,7 +77,7 @@ case class RenderParameter(pose: Pose,
   def modelViewTransform: Affine3D = view.viewTransform compose pose.transform
 
   /** complete render transform, transforms from object to buffer coordinates (includes y inversion in image) */
-  def renderTransform: Point[_3D] => Point[_3D] = {p => imageSize.screenTransform(pointShader(p))}
+  def renderTransform: Point[_3D] => Point[_3D] = { p => imageSize.screenTransform(pointShader(p)) }
 
   /** complete shader of this scene, includes point and pixel shaders (ParametricShader) */
   def pixelShader(mesh: ColorNormalMesh3D): PixelShader[RGBA] = {
@@ -92,7 +93,10 @@ case class RenderParameter(pose: Pose,
       directionalLight.shader(worldMesh, view.eyePosition).map(ct)
   }
 
-  /** complete shader of this scene for a vertex color mesh with vertex normals, includes point and pixel shaders (ParametricShader) */
+  /**
+   * complete shader of this scene for a vertex color mesh with vertex normals, includes point and pixel shaders
+   * (ParametricShader)
+   */
   def pixelShader(mesh: VertexColorMesh3D): PixelShader[RGBA] = pixelShader(ColorNormalMesh3D(mesh))
 
   /** point shader: transform from object to canonical viewing volume/NDC */
@@ -120,6 +124,7 @@ case class RenderParameter(pose: Pose,
 }
 
 object RenderParameter {
+
   /** default setting, corresponds to a full format (35mm, aspect 3/2) DSL camera with 50mm lens, object distance 1m */
   val default: RenderParameter = RenderParameter(
     pose = Pose.away1m,
@@ -129,26 +134,24 @@ object RenderParameter {
     directionalLight = DirectionalLight.off,
     momo = MoMoInstance.empty,
     imageSize = ImageSize(720, 480),
-    colorTransform = ColorTransform.neutral)
+    colorTransform = ColorTransform.neutral
+  )
 
   /** old square rendering default, 1m distance */
   val defaultSquare = RenderParameter(
     pose = Pose.away1m,
     view = ViewParameter.neutral,
-    camera = Camera(
-      focalLength = 7.5,
-      principalPoint = Point2D.origin,
-      sensorSize = EuclideanVector(2.0, 2.0),
-      near = 10,
-      far = 1000e3,
-      orthographic = false),
+    camera = Camera(focalLength = 7.5,
+                    principalPoint = Point2D.origin,
+                    sensorSize = EuclideanVector(2.0, 2.0),
+                    near = 10,
+                    far = 1000e3,
+                    orthographic = false
+    ),
     environmentMap = SphericalHarmonicsLight.frontal.withNumberOfBands(2),
     directionalLight = DirectionalLight.off,
     momo = MoMoInstance.empty,
     imageSize = ImageSize(512, 512),
-    colorTransform = ColorTransform.neutral)
+    colorTransform = ColorTransform.neutral
+  )
 }
-
-
-
-

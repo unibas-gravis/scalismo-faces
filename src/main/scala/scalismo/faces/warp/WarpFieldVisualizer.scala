@@ -19,7 +19,7 @@ package scalismo.faces.warp
 import scalismo.color.RGB
 import scalismo.faces.color.HSV
 import scalismo.faces.image.PixelImage
-import scalismo.geometry.{EuclideanVector, _2D}
+import scalismo.geometry.{_2D, EuclideanVector}
 
 object WarpFieldVisualizer {
 
@@ -36,7 +36,7 @@ object WarpFieldVisualizer {
       val saturation = 1.0
 
       // since HSV to RGB conversion expects a number between 0 and 2 Pi, we need to sanitize dir (atan2 can return negative numbers)
-      val hue = if(dir < 0){
+      val hue = if (dir < 0) {
         dir % (2 * Math.PI) + (2 * Math.PI)
       } else {
         dir % (2 * Math.PI)

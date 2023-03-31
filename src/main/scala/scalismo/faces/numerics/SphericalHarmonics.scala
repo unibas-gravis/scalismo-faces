@@ -16,7 +16,7 @@
 
 package scalismo.faces.numerics
 
-import scalismo.geometry.{EuclideanVector, _3D}
+import scalismo.geometry.{_3D, EuclideanVector}
 
 import scala.annotation.switch
 import scala.math._
@@ -59,20 +59,17 @@ object SphericalHarmonics {
   val N4_1: Double = sqrt(5.0 / 2.0 / Pi) * 3.0 / 4.0
   val N4_0: Double = sqrt(1.0 / Pi) * 3.0 / 16.0
 
-  //https://en.wikipedia.org/wiki/Table_of_spherical_harmonics#Real_spherical_harmonics
+  // https://en.wikipedia.org/wiki/Table_of_spherical_harmonics#Real_spherical_harmonics
   private val shBasisPredefined = Map[SHIndex, SHBasisFunction](
     SHIndex(0, 0) -> ((v: EuclideanVector[_3D]) => N0),
-
     SHIndex(1, -1) -> ((v: EuclideanVector[_3D]) => N1 * v.y),
     SHIndex(1, 0) -> ((v: EuclideanVector[_3D]) => N1 * v.z),
     SHIndex(1, 1) -> ((v: EuclideanVector[_3D]) => N1 * v.x),
-
     SHIndex(2, -2) -> ((v: EuclideanVector[_3D]) => N2_1 * v.x * v.y),
     SHIndex(2, -1) -> ((v: EuclideanVector[_3D]) => N2_1 * v.y * v.z),
     SHIndex(2, 0) -> ((v: EuclideanVector[_3D]) => N2_0 * (2 * v.z * v.z - v.x * v.x - v.y * v.y)),
     SHIndex(2, 1) -> ((v: EuclideanVector[_3D]) => N2_1 * v.z * v.x),
     SHIndex(2, 2) -> ((v: EuclideanVector[_3D]) => N2_2 * (v.x * v.x - v.y * v.y)),
-
     SHIndex(3, -3) -> ((v: EuclideanVector[_3D]) => N3_3 * (3 * v.x * v.x - v.y * v.y) * v.y),
     SHIndex(3, -2) -> ((v: EuclideanVector[_3D]) => N3_2 * 2 * (v.x * v.y * v.z)),
     SHIndex(3, -1) -> ((v: EuclideanVector[_3D]) => N3_1 * (4 * v.z * v.z - v.x * v.x - v.y * v.y) * v.y),
@@ -80,7 +77,6 @@ object SphericalHarmonics {
     SHIndex(3, 1) -> ((v: EuclideanVector[_3D]) => N3_1 * (4 * v.z * v.z - v.x * v.x - v.y * v.y) * v.x),
     SHIndex(3, 2) -> ((v: EuclideanVector[_3D]) => N3_2 * (v.x * v.x - v.y * v.y) * v.z),
     SHIndex(3, 3) -> ((v: EuclideanVector[_3D]) => N3_3 * (v.x * v.x - 3 * v.y * v.y) * v.x),
-
     SHIndex(4, -4) -> ((v: EuclideanVector[_3D]) => N4_4 * 4 * v.x * v.y * (v.x * v.x - v.y * v.y)),
     SHIndex(4, -3) -> ((v: EuclideanVector[_3D]) => N4_3 * (3 * v.x * v.x - v.y * v.y) * v.y * v.z),
     SHIndex(4, -2) -> ((v: EuclideanVector[_3D]) => N4_2 * 2 * v.x * v.y * (7 * v.z * v.z - 1.0)),
@@ -89,7 +85,9 @@ object SphericalHarmonics {
     SHIndex(4, 1) -> ((v: EuclideanVector[_3D]) => N4_1 * v.x * v.z * (7 * v.z * v.z - 3.0)),
     SHIndex(4, 2) -> ((v: EuclideanVector[_3D]) => N4_2 * (v.x * v.x - v.y * v.y) * (7 * v.z * v.z - 1.0)),
     SHIndex(4, 3) -> ((v: EuclideanVector[_3D]) => N4_3 * v.x * v.z * (v.x * v.x - 3 * v.y * v.y)),
-    SHIndex(4, 4) -> ((v: EuclideanVector[_3D]) => N4_4 * (v.x * v.x * (v.x * v.x - 3 * v.y * v.y) - v.y * v.y * (3 * v.x * v.x - v.y * v.y)))
+    SHIndex(4, 4) -> ((v: EuclideanVector[_3D]) =>
+      N4_4 * (v.x * v.x * (v.x * v.x - 3 * v.y * v.y) - v.y * v.y * (3 * v.x * v.x - v.y * v.y))
+    )
   )
 
   /** analytic fall-back to get an arbitrary SH basis function ... slow! */
@@ -153,7 +151,7 @@ object SphericalHarmonics {
 
   /** direct calculation of SH basis function, only for l < 5 (c++ nostalgia version) */
   def shBasisFunctionDirect(l: Int, m: Int, direction: EuclideanVector[_3D]): Double = {
-    //https://en.wikipedia.org/wiki/Table_of_spherical_harmonics#Real_spherical_harmonics
+    // https://en.wikipedia.org/wiki/Table_of_spherical_harmonics#Real_spherical_harmonics
     val v: EuclideanVector[_3D] = direction.normalize
 
     val x = v.x
@@ -166,38 +164,42 @@ object SphericalHarmonics {
 
     (l: @switch) match {
       case 0 => N0
-      case 1 => m match {
-        case -1 => N1 * y
-        case 0 => N1 * z
-        case 1 => N1 * x
-      }
-      case 2 => m match {
-        case -2 => N2_1 * x * y
-        case -1 => N2_1 * y * z
-        case 0 => N2_0 * (2 * zz - xx - yy)
-        case 1 => N2_1 * z * x
-        case 2 => N2_2 * (xx - yy)
-      }
-      case 3 => m match {
-        case -3 => N3_3 * (3 * xx - yy) * y
-        case -2 => N3_2 * 2 * (x * y * z)
-        case -1 => N3_1 * (4 * zz - xx - yy) * y
-        case 0 => N3_0 * (2 * zz - 3 * xx - 3 * yy) * z
-        case 1 => N3_1 * (4 * zz - xx - yy) * x
-        case 2 => N3_2 * (xx - yy) * z
-        case 3 => N3_3 * (xx - 3 * yy) * x
-      }
-      case 4 => m match {
-        case -4 => N4_4 * 4 * x * y * (xx - yy)
-        case -3 => N4_3 * (3 * xx - yy) * y * z
-        case -2 => N4_2 * 2 * x * y * (7 * zz - 1.0)
-        case -1 => N4_1 * y * z * (7 * zz - 3.0)
-        case 0 => N4_0 * (35 * zz * zz - 30 * zz + 3.0)
-        case 1 => N4_1 * x * z * (7 * zz - 3.0)
-        case 2 => N4_2 * (xx - yy) * (7 * zz - 1.0)
-        case 3 => N4_3 * x * z * (xx - 3 * yy)
-        case 4 => N4_4 * (xx * (xx - 3 * yy) - yy * (3 * xx - yy))
-      }
+      case 1 =>
+        m match {
+          case -1 => N1 * y
+          case 0  => N1 * z
+          case 1  => N1 * x
+        }
+      case 2 =>
+        m match {
+          case -2 => N2_1 * x * y
+          case -1 => N2_1 * y * z
+          case 0  => N2_0 * (2 * zz - xx - yy)
+          case 1  => N2_1 * z * x
+          case 2  => N2_2 * (xx - yy)
+        }
+      case 3 =>
+        m match {
+          case -3 => N3_3 * (3 * xx - yy) * y
+          case -2 => N3_2 * 2 * (x * y * z)
+          case -1 => N3_1 * (4 * zz - xx - yy) * y
+          case 0  => N3_0 * (2 * zz - 3 * xx - 3 * yy) * z
+          case 1  => N3_1 * (4 * zz - xx - yy) * x
+          case 2  => N3_2 * (xx - yy) * z
+          case 3  => N3_3 * (xx - 3 * yy) * x
+        }
+      case 4 =>
+        m match {
+          case -4 => N4_4 * 4 * x * y * (xx - yy)
+          case -3 => N4_3 * (3 * xx - yy) * y * z
+          case -2 => N4_2 * 2 * x * y * (7 * zz - 1.0)
+          case -1 => N4_1 * y * z * (7 * zz - 3.0)
+          case 0  => N4_0 * (35 * zz * zz - 30 * zz + 3.0)
+          case 1  => N4_1 * x * z * (7 * zz - 3.0)
+          case 2  => N4_2 * (xx - yy) * (7 * zz - 1.0)
+          case 3  => N4_3 * x * z * (xx - 3 * yy)
+          case 4  => N4_4 * (xx * (xx - 3 * yy) - yy * (3 * xx - yy))
+        }
     }
   }
 }

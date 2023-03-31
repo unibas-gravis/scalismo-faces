@@ -21,7 +21,11 @@ import scalismo.common.ComponentRepresentation
 import scala.reflect.ClassTag
 
 /** fast raw image with multiple Double channels */
-class MultiChannelImageBuffer private (val width: Int, val height: Int, val channels: Int, private val data: Array[Double]) {
+class MultiChannelImageBuffer private (val width: Int,
+                                       val height: Int,
+                                       val channels: Int,
+                                       private val data: Array[Double]
+) {
 
   val length: Int = width * height * channels
 
@@ -61,12 +65,14 @@ class MultiChannelImageBuffer private (val width: Int, val height: Int, val chan
 
   /** content-aware equality */
   override def equals(other: Any): Boolean = other match {
-    case mcb: MultiChannelImageBuffer => width == mcb.width && height == mcb.height && channels == mcb.channels && data.sameElements(mcb.data)
+    case mcb: MultiChannelImageBuffer =>
+      width == mcb.width && height == mcb.height && channels == mcb.channels && data.sameElements(mcb.data)
     case _ => false
   }
 }
 
 object MultiChannelImageBuffer {
+
   /** generate empty buffer of given size */
   def apply(width: Int, height: Int, channels: Int): MultiChannelImageBuffer = {
     MultiChannelImageBuffer(width, height, channels, new Array[Double](width * height * channels))

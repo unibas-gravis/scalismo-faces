@@ -22,7 +22,7 @@ import scalismo.faces.mesh.ColorNormalMesh3D
 import scalismo.faces.numerics.SphericalHarmonics
 import scalismo.faces.render.PixelShaders.SphericalHarmonicsLambertShader
 import scalismo.faces.render.{PixelShader, PixelShaders}
-import scalismo.geometry.{Point, EuclideanVector, EuclideanVector3D, _3D}
+import scalismo.geometry.{_3D, EuclideanVector, EuclideanVector3D, Point}
 
 /** Illumination to shade meshes */
 sealed trait Illumination {
@@ -34,16 +34,25 @@ case class DirectionalLight(ambient: RGB,
                             diffuse: RGB,
                             direction: EuclideanVector[_3D],
                             specular: RGB,
-                            shininess: Double = 10.0) extends Illumination {
+                            shininess: Double = 10.0
+) extends Illumination {
 
   override def shader(worldMesh: ColorNormalMesh3D, eyePosition: Point[_3D]): PixelShader[RGBA] = {
-    val diffuseShader = PixelShaders.LambertShader(worldMesh.color, ambient, diffuse, direction.normalize, worldMesh.normals)
-    val specularShader = PixelShaders.BlinnPhongSpecularShader(specular, direction, worldMesh.shape.position, worldMesh.normals, eyePosition, shininess)
+    val diffuseShader =
+      PixelShaders.LambertShader(worldMesh.color, ambient, diffuse, direction.normalize, worldMesh.normals)
+    val specularShader = PixelShaders.BlinnPhongSpecularShader(specular,
+                                                               direction,
+                                                               worldMesh.shape.position,
+                                                               worldMesh.normals,
+                                                               eyePosition,
+                                                               shininess
+    )
     diffuseShader + specularShader
   }
 }
 
 object DirectionalLight {
+
   /** default ambient-only light, direct reproduction of color values, no shading */
   val ambient = DirectionalLight(RGB.White, RGB.Black, EuclideanVector3D.unitZ, RGB.Black, 10.0)
 
@@ -52,11 +61,16 @@ object DirectionalLight {
 
 /** Spherical Harmonics illumination parameters, environment map */
 case class SphericalHarmonicsLight(coefficients: IndexedSeq[EuclideanVector[_3D]]) extends Illumination {
-  require(coefficients.isEmpty || SphericalHarmonics.totalCoefficients(bands) == coefficients.length, "invalid length of coefficients to build SphericalHarmonicsLight")
+  require(
+    coefficients.isEmpty || SphericalHarmonics.totalCoefficients(bands) == coefficients.length,
+    "invalid length of coefficients to build SphericalHarmonicsLight"
+  )
 
   val nonEmpty: Boolean = coefficients.nonEmpty
 
-  override def shader(worldMesh: ColorNormalMesh3D, eyePosition: Point[_3D]): SphericalHarmonicsLambertShader = shader(worldMesh)
+  override def shader(worldMesh: ColorNormalMesh3D, eyePosition: Point[_3D]): SphericalHarmonicsLambertShader = shader(
+    worldMesh
+  )
 
   /** SH shader for a given mesh and this environment map */
   def shader(worldMesh: ColorNormalMesh3D): SphericalHarmonicsLambertShader = {
@@ -81,7 +95,8 @@ case class SphericalHarmonicsLight(coefficients: IndexedSeq[EuclideanVector[_3D]
     else if (numberOfBands > bands)
       SphericalHarmonicsLight(
         coefficients ++
-          IndexedSeq.fill(SphericalHarmonics.totalCoefficients(numberOfBands) - coefficients.length)(EuclideanVector3D.zero)
+          IndexedSeq
+            .fill(SphericalHarmonics.totalCoefficients(numberOfBands) - coefficients.length)(EuclideanVector3D.zero)
       )
     else
       this
@@ -94,23 +109,19 @@ object SphericalHarmonicsLight {
 
   /** values of the Lambertian reflectance kernel expressed in SH */
   val lambertKernel = Array(
-    3.141593,
-    2.094395,
-    2.094395,
-    2.094395,
-    0.785398,
-    0.785398,
-    0.785398,
-    0.785398,
-    0.785398
+    3.141593, 2.094395, 2.094395, 2.094395, 0.785398, 0.785398, 0.785398, 0.785398, 0.785398
   )
 
   /** neutral ambient white light (renders pure albedo) */
-  val ambientWhite = SphericalHarmonicsLight(IndexedSeq(EuclideanVector(
-    1.0 / lambertKernel(0) / SphericalHarmonics.N0,
-    1.0 / lambertKernel(0) / SphericalHarmonics.N0,
-    1.0 / lambertKernel(0) / SphericalHarmonics.N0
-  )))
+  val ambientWhite = SphericalHarmonicsLight(
+    IndexedSeq(
+      EuclideanVector(
+        1.0 / lambertKernel(0) / SphericalHarmonics.N0,
+        1.0 / lambertKernel(0) / SphericalHarmonics.N0,
+        1.0 / lambertKernel(0) / SphericalHarmonics.N0
+      )
+    )
+  )
 
   /** default frontal illumination */
   val frontal: SphericalHarmonicsLight = fromAmbientDiffuse(RGB(0.8), RGB(0.2), EuclideanVector3D.unitZ)
@@ -124,12 +135,14 @@ object SphericalHarmonicsLight {
     val amb = EuclideanVector(ambient.r, ambient.g, ambient.b)
     val diff = EuclideanVector(diffuse.r, diffuse.g, diffuse.b)
 
-    SphericalHarmonicsLight(IndexedSeq(
-      (1f / n0 / lambertKernel(0)) *: amb,
-      (dir.y / n1 / lambertKernel(1)) *: diff,
-      (dir.z / n1 / lambertKernel(2)) *: diff,
-      (dir.x / n1 / lambertKernel(3)) *: diff
-    ))
+    SphericalHarmonicsLight(
+      IndexedSeq(
+        (1f / n0 / lambertKernel(0)) *: amb,
+        (dir.y / n1 / lambertKernel(1)) *: diff,
+        (dir.z / n1 / lambertKernel(2)) *: diff,
+        (dir.x / n1 / lambertKernel(3)) *: diff
+      )
+    )
   }
 
   def fromBreezeVector(dv: DenseVector[Double]): SphericalHarmonicsLight = {
@@ -138,11 +151,13 @@ object SphericalHarmonicsLight {
     SphericalHarmonicsLight(grouped)
   }
 
-  /** Finds the principal light direction in the spherical harmonics with respect to light intensity.
-    * lightIntensity(n) = \sum_{i=0} Y_i(n) * lambertKernel_i * ( shl_r(i) + shl_g(i) + shl_b(i) ) */
+  /**
+   * Finds the principal light direction in the spherical harmonics with respect to light intensity. lightIntensity(n) =
+   * \sum_{i=0} Y_i(n) * lambertKernel_i * ( shl_r(i) + shl_g(i) + shl_b(i) )
+   */
   def directionFromSHLightIntensity(shl: SphericalHarmonicsLight): Option[EuclideanVector[_3D]] = {
     if (shl.coefficients.length >= 4) {
-      //Need shl with first band for a directional part
+      // Need shl with first band for a directional part
       val c1 = shl.coefficients(1).x + shl.coefficients(1).y + shl.coefficients(1).z
       val c2 = shl.coefficients(2).x + shl.coefficients(2).y + shl.coefficients(2).z
       val c3 = shl.coefficients(3).x + shl.coefficients(3).y + shl.coefficients(3).z
@@ -150,13 +165,13 @@ object SphericalHarmonicsLight {
       val z = c2 * SphericalHarmonics.N1 / SphericalHarmonicsLight.lambertKernel(2)
       val x = c3 * SphericalHarmonics.N1 / SphericalHarmonicsLight.lambertKernel(3)
       val v = EuclideanVector(x, y, z)
-      val len = v.norm //directedness
+      val len = v.norm // directedness
       val eps = 1e-12
-      if(len > eps)
+      if (len > eps)
         Some(v.normalize)
       else
         None
-    }else{
+    } else {
       None
     }
   }
@@ -168,5 +183,7 @@ object SphericalHarmonicsLight {
   val empty = SphericalHarmonicsLight(IndexedSeq.empty[EuclideanVector[_3D]])
 
   /** empty coefficients vector */
-  def zero(numberOfBands: Int) = SphericalHarmonicsLight(IndexedSeq.fill(SphericalHarmonics.totalCoefficients(numberOfBands))(EuclideanVector3D.zero))
+  def zero(numberOfBands: Int) = SphericalHarmonicsLight(
+    IndexedSeq.fill(SphericalHarmonics.totalCoefficients(numberOfBands))(EuclideanVector3D.zero)
+  )
 }

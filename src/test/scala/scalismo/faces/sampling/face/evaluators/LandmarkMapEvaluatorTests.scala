@@ -26,14 +26,18 @@ import scalismo.geometry._
 
 class LandmarkMapEvaluatorTests extends FacesTestSuite {
 
-  private val rawDetectionMap = PixelImage(20, 20, (x, y) => {
-    -0.5 * (Point(x, y) - Point(5, 5)).norm2
-  })
+  private val rawDetectionMap = PixelImage(20,
+                                           20,
+                                           (x, y) => {
+                                             -0.5 * (Point(x, y) - Point(5, 5)).norm2
+                                           }
+  )
 
   private val detectionMap = LandmarkDetectionMap("testLM", rawDetectionMap)
 
   private val initParam = RenderParameter.default
   private def lmRenderer(point: Point[_2D]) = new ParametricLandmarksRenderer {
+
     /** list of all known landmarks */
     override def allLandmarkIds: IndexedSeq[String] = IndexedSeq("testLM")
 
@@ -65,7 +69,9 @@ class LandmarkMapEvaluatorTests extends FacesTestSuite {
     val fn = 0.07
     val corrected = detectionMap.correctCertaintyForErrorRates(fp, fn)
 
-    val randomPoints = Seq.fill(5){Point(rnd.scalaRandom.nextInt(rawDetectionMap.width), rnd.scalaRandom.nextInt(rawDetectionMap.height))}
+    val randomPoints = Seq.fill(5) {
+      Point(rnd.scalaRandom.nextInt(rawDetectionMap.width), rnd.scalaRandom.nextInt(rawDetectionMap.height))
+    }
 
     it("provides a constructor for isotropic Gaussian noise models with proper value on strongest detection") {
       val lmNoise = IsotropicGaussianPointEvaluator[_2D](5.0).toDistributionEvaluator(Point2D.origin)
@@ -80,9 +86,12 @@ class LandmarkMapEvaluatorTests extends FacesTestSuite {
         val renderer = lmRenderer(point)
         val lmEval = LandmarkMapEvaluator.withIsotropicGaussianNoise(Seq(corrected), renderer, 2.0)
         val explicitValue = { // brute force maximum finder
-          corrected.logValues.mapWithIndex{ (v, x, y) =>
-            v + lmNoise.logValue(Point(x, y), point)
-          }.values.max
+          corrected.logValues
+            .mapWithIndex { (v, x, y) =>
+              v + lmNoise.logValue(Point(x, y), point)
+            }
+            .values
+            .max
         }
         lmEval.logValue(initParam) shouldBe explicitValue +- 1e-10
       }
@@ -99,9 +108,12 @@ class LandmarkMapEvaluatorTests extends FacesTestSuite {
         val renderer = lmRenderer(point)
         val lmEvalExplicit = LandmarkMapEvaluator.withLandmarksLikelihood(Seq(corrected), renderer, lmNoise)
         val explicitValue = { // brute force maximum finder
-          corrected.logValues.mapWithIndex{ (v, x, y) =>
-            v + lmNoise.logValue(Point(x, y), point)
-          }.values.max
+          corrected.logValues
+            .mapWithIndex { (v, x, y) =>
+              v + lmNoise.logValue(Point(x, y), point)
+            }
+            .values
+            .max
         }
         lmEvalExplicit.logValue(initParam) shouldBe explicitValue +- 1e-10
       }

@@ -27,12 +27,20 @@ import scalismo.sampling.{DistributionEvaluator, ProposalGenerator}
 class ParametersFileLogger(path: File, fileNamePrefix: String) extends AcceptRejectLogger[RenderParameter] {
   private var counter = 0
 
-  override def accept(current: RenderParameter, sample: RenderParameter, generator: ProposalGenerator[RenderParameter], evaluator: DistributionEvaluator[RenderParameter]): Unit = {
+  override def accept(current: RenderParameter,
+                      sample: RenderParameter,
+                      generator: ProposalGenerator[RenderParameter],
+                      evaluator: DistributionEvaluator[RenderParameter]
+  ): Unit = {
     RenderParameterIO.write(sample, new File(path, f"$fileNamePrefix$counter%08d.rps"))
     counter += 1
   }
 
-  override def reject(current: RenderParameter, sample: RenderParameter, generator: ProposalGenerator[RenderParameter], evaluator: DistributionEvaluator[RenderParameter]): Unit = {
+  override def reject(current: RenderParameter,
+                      sample: RenderParameter,
+                      generator: ProposalGenerator[RenderParameter],
+                      evaluator: DistributionEvaluator[RenderParameter]
+  ): Unit = {
     counter += 1
   }
 }
@@ -40,4 +48,3 @@ class ParametersFileLogger(path: File, fileNamePrefix: String) extends AcceptRej
 object ParametersFileLogger {
   def apply(path: File, fileNamePrefix: String) = new ParametersFileLogger(path, fileNamePrefix)
 }
-

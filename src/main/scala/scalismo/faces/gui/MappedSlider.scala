@@ -20,31 +20,34 @@ import javax.swing.event.{ChangeEvent, ChangeListener}
 import javax.swing.{JSlider, SwingConstants}
 
 /** slider which works on a continuous range, uses 100 ticks */
-class MappedSlider(orientation: Int,
-                   min: Double,
-                   max: Double,
-                   value: Double,
-                   changeListener: Double => Unit) extends JSlider {
+class MappedSlider(orientation: Int, min: Double, max: Double, value: Double, changeListener: Double => Unit)
+    extends JSlider {
 
   addChangeListener(new ChangeListener {
     override def stateChanged(e: ChangeEvent): Unit = changeListener(sliderToRange(getValue))
   })
 
   /** map the continuous value to the slider range 0,1,...,100 */
-  private def rangeToSlider(value: Double): Int = ((value - min)/(max - min) * 100).toInt
+  private def rangeToSlider(value: Double): Int = ((value - min) / (max - min) * 100).toInt
 
   /** map the slider value to the continuous range [min, max] */
-  private def sliderToRange(value: Int): Double = value.toDouble/100.0 * (max - min) + min
+  private def sliderToRange(value: Int): Double = value.toDouble / 100.0 * (max - min) + min
 
   /** update the slider value */
   def updateValue(value: Double): Unit = setValue(rangeToSlider(value))
 }
 
 object MappedSlider {
+
   /** create a MappedSlider */
-  def apply(orientation: Int, min: Double, max: Double, value: Double, changeListener: Double => Unit) = new MappedSlider(orientation, min, max, value, changeListener)
+  def apply(orientation: Int, min: Double, max: Double, value: Double, changeListener: Double => Unit) =
+    new MappedSlider(orientation, min, max, value, changeListener)
+
   /** create a vertical MappedSlider */
-  def apply(min: Double, max: Double, value: Double, changeListener: Double => Unit) = new MappedSlider(SwingConstants.VERTICAL, min, max, value, changeListener)
+  def apply(min: Double, max: Double, value: Double, changeListener: Double => Unit) =
+    new MappedSlider(SwingConstants.VERTICAL, min, max, value, changeListener)
+
   /** create a MappedSlider */
-  def apply(min: Double, max: Double, value: Double, changeListener: Double => Unit, orientation: Int) = new MappedSlider(orientation, min, max, value, changeListener)
+  def apply(min: Double, max: Double, value: Double, changeListener: Double => Unit, orientation: Int) =
+    new MappedSlider(orientation, min, max, value, changeListener)
 }

@@ -28,11 +28,20 @@ import scala.io.Source
 class LandmarksTest extends FacesTestSuite {
 
   def createRandom2DLandmarks(n: Int): IndexedSeq[TLMSLandmark2D] = {
-    for (i <- 0 until n) yield TLMSLandmark2D(randomString(rnd.scalaRandom.nextInt(10) + 1), new Point2D(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble()), rnd.scalaRandom.nextBoolean())
+    for (i <- 0 until n)
+      yield TLMSLandmark2D(randomString(rnd.scalaRandom.nextInt(10) + 1),
+                           new Point2D(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble()),
+                           rnd.scalaRandom.nextBoolean()
+      )
   }
 
   def createRandom3DLandmarks(n: Int): IndexedSeq[TLMSLandmark3D] = {
-    for (i <- 0 until n) yield TLMSLandmark3D(randomString(rnd.scalaRandom.nextInt(10) + 1), new Point3D(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble()), rnd.scalaRandom.nextBoolean())
+    for (i <- 0 until n)
+      yield TLMSLandmark3D(
+        randomString(rnd.scalaRandom.nextInt(10) + 1),
+        new Point3D(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble()),
+        rnd.scalaRandom.nextBoolean()
+      )
   }
 
   describe("Landmarks 2D") {
@@ -44,7 +53,7 @@ class LandmarksTest extends FacesTestSuite {
       TLMSLandmarksIO.write2D(lms, tmpFile).get
       val readLM = TLMSLandmarksIO.read2D(tmpFile).get
       // cast landmarks to float
-      val floatLM = lms.map{lm => lm.copy(point = Point(lm.point.x.toFloat, lm.point.y.toFloat))}
+      val floatLM = lms.map { lm => lm.copy(point = Point(lm.point.x.toFloat, lm.point.y.toFloat)) }
       // should not write/read as double
       readLM should not be lms
       // but as float
@@ -59,12 +68,12 @@ class LandmarksTest extends FacesTestSuite {
       ResourceManagement.using(new PrintWriter(oStream)) { writer =>
         writer.println("stream should still accept more text")
       }
-      Source.fromFile(f).getLines().length should be (lms.length + 1)
+      Source.fromFile(f).getLines().length should be(lms.length + 1)
     }
 
     it("can be converted to Landmarks") {
       val scLMs = lms.map(lm => lm.toLandmark)
-      lms.zip(scLMs).foreach{ case(tlm, scLM) =>
+      lms.zip(scLMs).foreach { case (tlm, scLM) =>
         scLM.id shouldBe tlm.id
         scLM.point shouldBe tlm.point
       }
@@ -75,11 +84,11 @@ class LandmarksTest extends FacesTestSuite {
     val lms = createRandom3DLandmarks(25)
 
     it("can write / read from file (and properly convert to Float thereby, TLMS is float)") {
-      val tmpFile = File.createTempFile("tlms3d",".tlms")
+      val tmpFile = File.createTempFile("tlms3d", ".tlms")
       tmpFile.deleteOnExit()
       TLMSLandmarksIO.write3D(lms, tmpFile).get
       val readLM = TLMSLandmarksIO.read3D(tmpFile).get
-      val floatLM = lms.map{lm => lm.copy(point = Point(lm.point.x.toFloat, lm.point.y.toFloat, lm.point.z.toFloat))}
+      val floatLM = lms.map { lm => lm.copy(point = Point(lm.point.x.toFloat, lm.point.y.toFloat, lm.point.z.toFloat)) }
       // should not write/read as double
       readLM should not be lms
       // but as float
@@ -94,12 +103,12 @@ class LandmarksTest extends FacesTestSuite {
       ResourceManagement.using(new PrintWriter(oStream)) { writer =>
         writer.println("stream should still accept more text")
       }
-      Source.fromFile(f).getLines().length should be (lms.length + 1)
+      Source.fromFile(f).getLines().length should be(lms.length + 1)
     }
 
     it("can be converted to Landmarks") {
       val scLMs = lms.map(lm => lm.toLandmark)
-      lms.zip(scLMs).foreach{ case(tlm, scLM) =>
+      lms.zip(scLMs).foreach { case (tlm, scLM) =>
         scLM.id shouldBe tlm.id
         scLM.point shouldBe tlm.point
       }

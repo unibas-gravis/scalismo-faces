@@ -21,6 +21,7 @@ import scalismo.faces.parameters.RenderParameter
 
 /** landmarks renderer, controlled by RenderParameter, used for fitting */
 trait ParametricLandmarksRenderer {
+
   /** render landmark given by lmId */
   def renderLandmark(lmId: String, parameter: RenderParameter): Option[TLMSLandmark2D]
 

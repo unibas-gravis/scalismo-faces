@@ -16,39 +16,40 @@
 
 package scalismo.faces.deluminate
 
-
 import scalismo.color.RGBA
 import scalismo.faces.deluminate.SphericalHarmonicsSolver.IlluminatedPoint
 import scalismo.faces.image.PixelImage
 import scalismo.faces.parameters.{RenderParameter, SphericalHarmonicsLight}
 import scalismo.faces.render.{ColorTransform, TextureExtraction}
 import scalismo.faces.sampling.face.ParametricModel
-import scalismo.geometry.{EuclideanVector, _3D}
+import scalismo.geometry.{_3D, EuclideanVector}
 import scalismo.mesh._
 import scalismo.utils.Random
 
 /** wrap Spherical Harmonics illumination solver in parametric rendering framework */
-class SphericalHarmonicsOptimizer(val renderer: ParametricModel,
-                                  val targetImage: PixelImage[RGBA])(implicit val rnd: Random) {
+class SphericalHarmonicsOptimizer(val renderer: ParametricModel, val targetImage: PixelImage[RGBA])(implicit
+  val rnd: Random
+) {
 
   private def targetAsSurfaceProperty(rps: RenderParameter): MeshSurfaceProperty[Option[RGBA]] = {
     TextureExtraction.imageAsSurfaceProperty(renderer.instance(rps).shape, rps.pointShader, targetImage)
   }
 
   /**
-    * We solve for the environment map given the target radiance, Albedo and Normals.
-    * We go after a subset of surface points only.
-    */
+   * We solve for the environment map given the target radiance, Albedo and Normals. We go after a subset of surface
+   * points only.
+   */
   def optimize(rps: RenderParameter,
-               surfacePointsSampler: TriangleMesh3D => IndexedSeq[(TriangleId, BarycentricCoordinates)]): SphericalHarmonicsLight = {
+               surfacePointsSampler: TriangleMesh3D => IndexedSeq[(TriangleId, BarycentricCoordinates)]
+  ): SphericalHarmonicsLight = {
     val mesh: VertexColorMesh3D = renderer.instance(rps)
     val surfacePoints: IndexedSeq[(TriangleId, BarycentricCoordinates)] = surfacePointsSampler(mesh.shape)
-    optimize(rps,surfacePoints)
+    optimize(rps, surfacePoints)
   }
 
-
   def optimize(rps: RenderParameter,
-               surfacePoints: IndexedSeq[(TriangleId, BarycentricCoordinates)]): SphericalHarmonicsLight = {
+               surfacePoints: IndexedSeq[(TriangleId, BarycentricCoordinates)]
+  ): SphericalHarmonicsLight = {
     val mesh: VertexColorMesh3D = renderer.instance(rps)
     val albedo = mesh.color
     val normals = mesh.shape.vertexNormals
@@ -59,22 +60,21 @@ class SphericalHarmonicsOptimizer(val renderer: ParametricModel,
 
     // get surface points to evaluate from sampler
 
-
-    //illuminated point set of sample points, note, there are invisible points which are automatically removed (via Option/None)
-    val points: IndexedSeq[IlluminatedPoint] = surfacePoints.flatMap {
-      case (tid, bcc) =>
-        val r = imageAsProperty(tid, bcc).map(imageColor => {
-          // Option because we could sample from invisible point
-          val albedoLocal = albedo(tid, bcc)
-          val normal = rps.pose.transform(normals(tid, bcc)).normalize
-          IlluminatedPoint(normal, inverseColorTransform(imageColor.toRGB), albedoLocal.toRGB)
-        })
-        r
+    // illuminated point set of sample points, note, there are invisible points which are automatically removed (via Option/None)
+    val points: IndexedSeq[IlluminatedPoint] = surfacePoints.flatMap { case (tid, bcc) =>
+      val r = imageAsProperty(tid, bcc).map(imageColor => {
+        // Option because we could sample from invisible point
+        val albedoLocal = albedo(tid, bcc)
+        val normal = rps.pose.transform(normals(tid, bcc)).normalize
+        IlluminatedPoint(normal, inverseColorTransform(imageColor.toRGB), albedoLocal.toRGB)
+      })
+      r
     }
-    if(points.nonEmpty) { //If the face is outside the face This is cannot be done outside the function, because number of points depends on visibility.
-      val lightField: IndexedSeq[EuclideanVector[_3D]] = SphericalHarmonicsSolver.solveSHSystemDeconvolve(points, SphericalHarmonicsLight.lambertKernel.toIndexedSeq)
+    if (points.nonEmpty) { // If the face is outside the face This is cannot be done outside the function, because number of points depends on visibility.
+      val lightField: IndexedSeq[EuclideanVector[_3D]] =
+        SphericalHarmonicsSolver.solveSHSystemDeconvolve(points, SphericalHarmonicsLight.lambertKernel.toIndexedSeq)
       SphericalHarmonicsLight(lightField)
-    }else {
+    } else {
       rps.environmentMap
 
     }
@@ -84,5 +84,6 @@ class SphericalHarmonicsOptimizer(val renderer: ParametricModel,
 }
 
 object SphericalHarmonicsOptimizer {
-  def apply(renderer: ParametricModel, targetImage: PixelImage[RGBA])(implicit rnd: Random) = new SphericalHarmonicsOptimizer(renderer, targetImage)
+  def apply(renderer: ParametricModel, targetImage: PixelImage[RGBA])(implicit rnd: Random) =
+    new SphericalHarmonicsOptimizer(renderer, targetImage)
 }

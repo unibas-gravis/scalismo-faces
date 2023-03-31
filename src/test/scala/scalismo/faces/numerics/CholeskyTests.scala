@@ -16,7 +16,7 @@
 
 package scalismo.faces.numerics
 
-import breeze.linalg.{CSCMatrix, DenseMatrix, DenseVector, norm}
+import breeze.linalg.{norm, CSCMatrix, DenseMatrix, DenseVector}
 import scalismo.faces.FacesTestSuite
 
 import scala.collection.mutable

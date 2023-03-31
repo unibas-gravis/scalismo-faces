@@ -27,8 +27,13 @@ object SparseCholesky {
   /** calculate sparse Cholesky decompositon, return factor L for A = LL^T ^ */
   def apply(A: CSCMatrix[Double]): CSCMatrix[Double] = sparseCholesky(A)
 
-  /** solve the linear system Ax = b for a sparse positive definite and symmetric matrix A using a Cholesky decomposition */
-  def solve(A: CSCMatrix[Double], b: DenseVector[Double], fillInReduction: PermutationStrategy = PermutationStrategy.default): DenseVector[Double] = {
+  /**
+   * solve the linear system Ax = b for a sparse positive definite and symmetric matrix A using a Cholesky decomposition
+   */
+  def solve(A: CSCMatrix[Double],
+            b: DenseVector[Double],
+            fillInReduction: PermutationStrategy = PermutationStrategy.default
+  ): DenseVector[Double] = {
     val P = fillInReduction.findPermutation(A)
     val pA = Permutation.permuteSparseMatrix(A, P)
     val L = sparseCholesky(pA)
@@ -89,7 +94,9 @@ object SparseCholesky {
       val S = columnBuilder.toSparseVector
       // sqrt and division of acc
       assert(S.activeSize > 0 && S.index(0) == j, "first element is not diagonal entry") // first element on diagonal
-      assert(S.data(0) > -tolerance, s"Cholesky decomposition needs positive definite matrix! Negative value encountered: v=${S.data(0)}")
+      assert(S.data(0) > -tolerance,
+             s"Cholesky decomposition needs positive definite matrix! Negative value encountered: v=${S.data(0)}"
+      )
       // negative number within numerical tolerance, set to zero to make sqrt work
       if (S.data(0) < 0.0) S.data(0) = 0.0
       // sqrt of first element
@@ -114,7 +121,8 @@ object SparseCholesky {
   /**
    * solves LL.t * x = b, for L sparse lower triangular matrix,
    *
-   * @param choleskyFactor Cholesky factor of A
+   * @param choleskyFactor
+   *   Cholesky factor of A
    */
   def substitutionSolver(choleskyFactor: CSCMatrix[Double], b: DenseVector[Double]): DenseVector[Double] = {
     require(choleskyFactor.rows == b.length, "dimensions disagree")
@@ -127,9 +135,13 @@ object SparseCholesky {
   /**
    * solves PLL.tP.t * x = b, for L sparse lower triangular matrix, P permutation
    *
-   * @param choleskyFactor Cholesky factor of A
+   * @param choleskyFactor
+   *   Cholesky factor of A
    */
-  def substitutionSolver(choleskyFactor: CSCMatrix[Double], b: DenseVector[Double], P: Permutation): DenseVector[Double] = {
+  def substitutionSolver(choleskyFactor: CSCMatrix[Double],
+                         b: DenseVector[Double],
+                         P: Permutation
+  ): DenseVector[Double] = {
     require(choleskyFactor.rows == b.length, "dimensions disagree")
     require(choleskyFactor.rows == choleskyFactor.cols, "L must be square")
 
@@ -167,7 +179,9 @@ object SparseCholesky {
           i += 1
         }
       } else {
-        throw new Exception("fwd substitution solver: diagonal element is not first in column! L needs to be lower triangular with non-zero diagonal")
+        throw new Exception(
+          "fwd substitution solver: diagonal element is not first in column! L needs to be lower triangular with non-zero diagonal"
+        )
       }
       col += 1
     }
@@ -199,7 +213,9 @@ object SparseCholesky {
         x(col) -= sum
         x(col) /= L.data(colStart)
       } else {
-        throw new Exception("bwd substitution solver: diagonal element is not first in column! L needs to be lower triangular with non-zero diagonal")
+        throw new Exception(
+          "bwd substitution solver: diagonal element is not first in column! L needs to be lower triangular with non-zero diagonal"
+        )
       }
       col -= 1
     }
@@ -207,7 +223,10 @@ object SparseCholesky {
     x
   }
 
-  /** calculate the incomplete Cholesky factorization, useful as a preconditioner for CG (only approximate, as sparse as A, fast) */
+  /**
+   * calculate the incomplete Cholesky factorization, useful as a preconditioner for CG (only approximate, as sparse as
+   * A, fast)
+   */
   def incompleteSparseCholesky(A: CSCMatrix[Double], tolerance: Double = 1e-15): CSCMatrix[Double] = {
     // assume A is positive definite and symmetric
     require(A.rows == A.cols, "A is not square")
@@ -249,7 +268,10 @@ object SparseCholesky {
       val S = currentColumn
       // sqrt and division of acc
       assert(S.activeSize > 0 && S.index(0) == j, "first element is not diagonal entry") // first element on diagonal
-      assert(S.data(0) > -tolerance, s"(incomplete) Cholesky decomposition needs positive definite matrix! Negative value encountered: v=${S.data(0)}")
+      assert(
+        S.data(0) > -tolerance,
+        s"(incomplete) Cholesky decomposition needs positive definite matrix! Negative value encountered: v=${S.data(0)}"
+      )
       // negative number within numerical tolerance, set to zero to make sqrt work
       if (S.data(0) < 0.0) S.data(0) = 0.0
       // sqrt of first element
@@ -286,12 +308,12 @@ object SparseCholesky {
   }
 
   /**
-   * structure to build a sparse cholesky factor, efficient columns and rows, ~ CSC & CSR matrix,
-   * internal use only, no safe bookkeeping
+   * structure to build a sparse cholesky factor, efficient columns and rows, ~ CSC & CSR matrix, internal use only, no
+   * safe bookkeeping
    */
   private class SparseCholeskyFactor(val length: Int) {
     val cols = new Array[SparseVector[Double]](length)
-    //val rows = new Array[SparseVector[Double]](length)
+    // val rows = new Array[SparseVector[Double]](length)
     val rows = new Array[SparseArray](length)
 
     // active row cursors for faster lookup
@@ -314,7 +336,7 @@ object SparseCholesky {
           rows(row)(col) = vector.data(e)
         else
           rows(row) = new SparseArray(Array(col, 0, 0, 0), Array(vector.data(e), 0.0, 0.0, 0.0), 1, length)
-        //rows(row) = new SparseVector[Double](Array(col, 0, 0, 0), Array(vector.data(e), 0.0, 0.0, 0.0), 1, length)
+        // rows(row) = new SparseVector[Double](Array(col, 0, 0, 0), Array(vector.data(e), 0.0, 0.0, 0.0), 1, length)
         // next element
         e += 1
       }
@@ -380,8 +402,8 @@ object SparseCholesky {
     }
 
     def add(i: Int, v: Double): Unit = {
-      //require(i >= 0 && i < length, s"row is out of bounds, r=$i")
-      //assert(nnz <= length, "too many nnz elements")
+      // require(i >= 0 && i < length, s"row is out of bounds, r=$i")
+      // assert(nnz <= length, "too many nnz elements")
       if (exists(i)) {
         data(i) += v
       } else {

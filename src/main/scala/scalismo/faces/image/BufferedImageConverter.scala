@@ -31,12 +31,16 @@ trait BufferedImageConverter[Pixel] {
 object BufferedImageConverter {
 
   /** convert a PixelImage[A] to a BufferedImage */
-  def toBufferedImage[A](pixelImage: PixelImage[A])(implicit bufferedImageConverter: BufferedImageConverter[A]): BufferedImage = {
+  def toBufferedImage[A](
+    pixelImage: PixelImage[A]
+  )(implicit bufferedImageConverter: BufferedImageConverter[A]): BufferedImage = {
     bufferedImageConverter.toBufferedImage(pixelImage)
   }
 
   /** convert a PixelImage[A] to a BufferedImage */
-  def toPixelImage[A](bufferedImage: BufferedImage)(implicit bufferedImageConverter: BufferedImageConverter[A]): PixelImage[A] = {
+  def toPixelImage[A](
+    bufferedImage: BufferedImage
+  )(implicit bufferedImageConverter: BufferedImageConverter[A]): PixelImage[A] = {
     bufferedImageConverter.toPixelImage(bufferedImage)
   }
 

@@ -20,6 +20,7 @@ import breeze.linalg.{DenseMatrix, DenseVector}
 
 /** Cholesky decomposition */
 object DenseCholesky {
+
   /** perform a dense Cholesky factorization of matrix A, can only deal with 10k+ elements */
   def apply(A: DenseMatrix[Double]): DenseMatrix[Double] = cholesky(A)
 
@@ -35,7 +36,10 @@ object DenseCholesky {
     val L = DenseMatrix.zeros[Double](A.rows, A.cols)
     // column 0
     val S = A(::, 0)
-    if (S(0) < -tolerance) throw new Exception(s"Cholesky factorization only works with positive definite matrices, negative value encountered: ${S(0)}")
+    if (S(0) < -tolerance)
+      throw new Exception(
+        s"Cholesky factorization only works with positive definite matrices, negative value encountered: ${S(0)}"
+      )
     val d = math.sqrt(S(0))
     L(0, 0) = d
     L(1 until n, 0) := S(1 to -1) / d
@@ -66,7 +70,8 @@ object DenseCholesky {
   /**
    * solves LL.t * x = b, for L dense lower triangular matrix,
    *
-   * @param choleskyFactor Cholesky factor of A
+   * @param choleskyFactor
+   *   Cholesky factor of A
    */
   def substitutionSolver(choleskyFactor: DenseMatrix[Double], b: DenseVector[Double]): DenseVector[Double] = {
     require(choleskyFactor.rows == b.length, "dimensions disagree")

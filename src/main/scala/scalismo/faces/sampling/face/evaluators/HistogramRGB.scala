@@ -21,11 +21,13 @@ import scalismo.faces.image.PixelImage
 import scalismo.sampling.DistributionEvaluator
 
 /**
- * Provides specific implementation of a Histogram for a sequence/image of RGB values
- * for RGBA images alpha value is used as mask
+ * Provides specific implementation of a Histogram for a sequence/image of RGB values for RGBA images alpha value is
+ * used as mask
  */
 case class HistogramRGB private (counts: Array[Int], binsPerChannel: Int) extends DistributionEvaluator[RGB] {
-  require(binsPerChannel * binsPerChannel * binsPerChannel == counts.length, "bin size does not match length of sequence")
+  require(binsPerChannel * binsPerChannel * binsPerChannel == counts.length,
+          "bin size does not match length of sequence"
+  )
   private val total: Int = counts.sum
   private val logNorm = 3 * Math.log(binsPerChannel)
   private val logTot = Math.log(total)
@@ -41,9 +43,12 @@ case class HistogramRGB private (counts: Array[Int], binsPerChannel: Int) extend
 }
 
 object HistogramRGB {
-  def apply(image: Seq[RGB], binsPerChannel: Int, init: Int = 0 ) = new HistogramRGB(calculateCounts(image, binsPerChannel, init ), binsPerChannel)
-  def fromImageRGB(image: PixelImage[RGB], binsPerChannel: Int, init: Int = 0) = HistogramRGB(image.values.toIndexedSeq, binsPerChannel, init)
-  def fromImageRGBA(image: PixelImage[RGBA], binsPerChannel: Int, init: Int = 0) = HistogramRGB(image.values.filter(p => p.a > 1e-4).map(p => p.toRGB).toIndexedSeq, binsPerChannel, init)
+  def apply(image: Seq[RGB], binsPerChannel: Int, init: Int = 0) =
+    new HistogramRGB(calculateCounts(image, binsPerChannel, init), binsPerChannel)
+  def fromImageRGB(image: PixelImage[RGB], binsPerChannel: Int, init: Int = 0) =
+    HistogramRGB(image.values.toIndexedSeq, binsPerChannel, init)
+  def fromImageRGBA(image: PixelImage[RGBA], binsPerChannel: Int, init: Int = 0) =
+    HistogramRGB(image.values.filter(p => p.a > 1e-4).map(p => p.toRGB).toIndexedSeq, binsPerChannel, init)
 
   private def RGBtoIndex(color: RGB, binsPerChannel: Int): Int = {
     require(color.isInBounds, "color is invalid (not in bounds between 0 and 1)")
@@ -53,7 +58,7 @@ object HistogramRGB {
     rIndex * binsPerChannel * binsPerChannel + gIndex * binsPerChannel + bIndex
   }
 
-  private def calculateCounts(image: Seq[RGB], binsPerChannel: Int, init:Int): Array[Int] = {
+  private def calculateCounts(image: Seq[RGB], binsPerChannel: Int, init: Int): Array[Int] = {
     val counter = Array.fill(binsPerChannel * binsPerChannel * binsPerChannel) { init }
     image.foreach { p => counter(RGBtoIndex(p, binsPerChannel)) += 1 }
     counter

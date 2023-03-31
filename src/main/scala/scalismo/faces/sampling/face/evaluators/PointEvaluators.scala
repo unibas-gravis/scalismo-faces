@@ -23,7 +23,8 @@ import scalismo.geometry._
 import scala.math._
 
 object PointEvaluators {
-  case class IsotropicGaussianPointEvaluator[D <: Dim](sdev: Double)(implicit ndSpace: NDSpace[D]) extends PairEvaluator[Point[D]] {
+  case class IsotropicGaussianPointEvaluator[D <: Dim](sdev: Double)(implicit ndSpace: NDSpace[D])
+      extends PairEvaluator[Point[D]] {
 
     private val d = ndSpace.dimensionality
     val normalizer: Double = -0.5 * d * log(2 * Pi) - d * log(sdev)

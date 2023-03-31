@@ -23,8 +23,9 @@ import scalismo.faces.sampling.face.ParametricImageRenderer
 import scalismo.sampling.DistributionEvaluator
 
 /** evaluate the rendered image with given image evaluator */
-class ImageRendererEvaluator(val renderer: ParametricImageRenderer[RGBA], val imageEvaluator: DistributionEvaluator[PixelImage[RGBA]])
-    extends DistributionEvaluator[RenderParameter] {
+class ImageRendererEvaluator(val renderer: ParametricImageRenderer[RGBA],
+                             val imageEvaluator: DistributionEvaluator[PixelImage[RGBA]]
+) extends DistributionEvaluator[RenderParameter] {
 
   override def logValue(rps: RenderParameter): Double = {
     val rendered = renderer.renderImage(rps)
@@ -35,27 +36,32 @@ class ImageRendererEvaluator(val renderer: ParametricImageRenderer[RGBA], val im
 }
 
 object ImageRendererEvaluator {
-  def apply(renderer: ParametricImageRenderer[RGBA], imageEvaluator: DistributionEvaluator[PixelImage[RGBA]]) = new ImageRendererEvaluator(renderer, imageEvaluator)
+  def apply(renderer: ParametricImageRenderer[RGBA], imageEvaluator: DistributionEvaluator[PixelImage[RGBA]]) =
+    new ImageRendererEvaluator(renderer, imageEvaluator)
 }
 
 /** evaluate the rendered image with given image evaluator and a segmentation label */
-class LabeledImageRendererEvaluator(val renderer: ParametricImageRenderer[RGBA], val imageEvaluator: DistributionEvaluator[LabeledPixelImage[RGBA]])
-  extends DistributionEvaluator[(RenderParameter, PixelImage[Int])] {
+class LabeledImageRendererEvaluator(val renderer: ParametricImageRenderer[RGBA],
+                                    val imageEvaluator: DistributionEvaluator[LabeledPixelImage[RGBA]]
+) extends DistributionEvaluator[(RenderParameter, PixelImage[Int])] {
 
   def logValue(masked: (RenderParameter, PixelImage[Int])): Double = {
     val rendered = renderer.renderImage(masked._1)
-    imageEvaluator.logValue(LabeledPixelImage(rendered,masked._2))
+    imageEvaluator.logValue(LabeledPixelImage(rendered, masked._2))
   }
   override def toString = "LabeledImageRendererEvaluator(" + imageEvaluator.toString + ")"
 }
 
 object LabeledImageRendererEvaluator {
-  def apply(renderer: ParametricImageRenderer[RGBA], imageEvaluator: DistributionEvaluator[LabeledPixelImage[RGBA]]) = new LabeledImageRendererEvaluator(renderer, imageEvaluator)
+  def apply(renderer: ParametricImageRenderer[RGBA], imageEvaluator: DistributionEvaluator[LabeledPixelImage[RGBA]]) =
+    new LabeledImageRendererEvaluator(renderer, imageEvaluator)
 }
 
 /** evaluate the transformed, rendered image with given image evaluator */
-class MappedImageRendererEvaluator[A](val renderer: ParametricImageRenderer[RGBA], val evaluator: DistributionEvaluator[A], f: RenderParameter => PixelImage[RGBA] => A)
-    extends DistributionEvaluator[RenderParameter] {
+class MappedImageRendererEvaluator[A](val renderer: ParametricImageRenderer[RGBA],
+                                      val evaluator: DistributionEvaluator[A],
+                                      f: RenderParameter => PixelImage[RGBA] => A
+) extends DistributionEvaluator[RenderParameter] {
 
   override def logValue(rps: RenderParameter): Double = {
     val rendered = f(rps)(renderer.renderImage(rps))
@@ -66,5 +72,8 @@ class MappedImageRendererEvaluator[A](val renderer: ParametricImageRenderer[RGBA
 }
 
 object ImageMappedRendererEvaluator {
-  def apply[A](renderer: ParametricImageRenderer[RGBA], evaluator: DistributionEvaluator[A], f: RenderParameter => PixelImage[RGBA] => A) = new MappedImageRendererEvaluator[A](renderer, evaluator, f)
+  def apply[A](renderer: ParametricImageRenderer[RGBA],
+               evaluator: DistributionEvaluator[A],
+               f: RenderParameter => PixelImage[RGBA] => A
+  ) = new MappedImageRendererEvaluator[A](renderer, evaluator, f)
 }

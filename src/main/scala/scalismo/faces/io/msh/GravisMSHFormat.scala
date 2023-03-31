@@ -34,7 +34,6 @@ object GravisMSHFormat {
   val magicStart = "GRAVIS::MSH2::BINARY::START\n"
   val magicEnd = "\nGRAVIS::MSH2::BINARY::END\n"
 
-
   /** encapsulate all MSH binary reading methods */
   object Reader {
     // MSH is in little endian format while Java uses big endian ...
@@ -98,12 +97,7 @@ object GravisMSHFormat {
       val textureName = readString(ds) // textureName
       val texture = if (hasTexture) Some(MSHTexture.fromFile(new File(path, textureName))) else None
 
-      MSHMaterial(name,
-        ambient,
-        diffuse,
-        specular,
-        shininess,
-        texture)
+      MSHMaterial(name, ambient, diffuse, specular, shininess, texture)
     }
 
     private def readRGBA(ds: DataInputStream): RGBA = {
@@ -171,21 +165,22 @@ object GravisMSHFormat {
         val points = vertices.map(_.toPoint)
         val texCoords = textureCoordinates.map(_.toPoint: Point[_3D])
         MSHMesh(materials,
-          points,
-          normals,
-          texCoords,
-          colors,
-          triangleList,
-          tni,
-          tti,
-          tci,
-          tmi,
-          lvi,
-          lti,
-          lci,
-          pvi,
-          pci,
-          file.getParentFile.getAbsoluteFile) // absolute path of containing directory
+                points,
+                normals,
+                texCoords,
+                colors,
+                triangleList,
+                tni,
+                tti,
+                tci,
+                tmi,
+                lvi,
+                lti,
+                lci,
+                pvi,
+                pci,
+                file.getParentFile.getAbsoluteFile
+        ) // absolute path of containing directory
       }
     }
 
@@ -193,7 +188,8 @@ object GravisMSHFormat {
       try {
         new DataInputStream(new GZIPInputStream(new FileInputStream(file)))
       } catch {
-        case e: java.util.zip.ZipException => new DataInputStream(new BufferedInputStream(new FileInputStream(file))) // not zipped
+        case e: java.util.zip.ZipException =>
+          new DataInputStream(new BufferedInputStream(new FileInputStream(file))) // not zipped
         case NonFatal(e) => throw e
       }
     }
@@ -201,9 +197,11 @@ object GravisMSHFormat {
   }
 
   object Writer {
+
     /** open a file with transparent GZip compression */
     private def openDeflated(file: File): DataOutputStream = file.getPath.toLowerCase match {
-      case fileName if fileName.endsWith(".gz") => new DataOutputStream(new GZIPOutputStream(new FileOutputStream(file)))
+      case fileName if fileName.endsWith(".gz") =>
+        new DataOutputStream(new GZIPOutputStream(new FileOutputStream(file)))
       case _ => new DataOutputStream(new BufferedOutputStream(new FileOutputStream(file)))
     }
 
@@ -247,7 +245,7 @@ object GravisMSHFormat {
       writeFloat(ds, data.z.toFloat)
     }
 
-    private def writeVector(ds: DataOutputStream, data:EuclideanVector[_3D]) = {
+    private def writeVector(ds: DataOutputStream, data: EuclideanVector[_3D]) = {
       writeFloat(ds, data.x.toFloat)
       writeFloat(ds, data.y.toFloat)
       writeFloat(ds, data.z.toFloat)
@@ -283,7 +281,9 @@ object GravisMSHFormat {
           writeBoolean(ds, data = true)
           val meshName = meshFile.getName.replaceFirst("[.]gz$", "").replaceFirst("[.][^.]+$", "")
           val meshPath = meshFile.getAbsoluteFile.getParent
-          val textureName = if (tex.file.getName.nonEmpty) meshName + "_" + tex.file.getName else meshName + "_" + data.name.replaceAll("[^a-zA-Z0-9.-]", "_") + ".png"
+          val textureName =
+            if (tex.file.getName.nonEmpty) meshName + "_" + tex.file.getName
+            else meshName + "_" + data.name.replaceAll("[^a-zA-Z0-9.-]", "_") + ".png"
           val textureFile = new File(meshPath, textureName)
           writeString(ds, textureFile.getName)
           PixelImageIO.write(tex.image, textureFile).get

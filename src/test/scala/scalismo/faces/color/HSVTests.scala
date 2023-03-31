@@ -21,9 +21,9 @@ import scalismo.utils.Random
 
 class HSVTests extends FacesTestSuite {
 
-  implicit val rng = Random(1024L)
+  implicit val rng: Random = Random(1024L)
 
-  def rndCol = RGB(rng.scalaRandom.nextDouble(),rng.scalaRandom.nextDouble(),rng.scalaRandom.nextDouble())
+  def rndCol = RGB(rng.scalaRandom.nextDouble(), rng.scalaRandom.nextDouble(), rng.scalaRandom.nextDouble())
 
   def between(v: Double, l: Double, r: Double): Unit = {
     v should be >= l
@@ -33,42 +33,42 @@ class HSVTests extends FacesTestSuite {
   val pi = math.Pi
 
   val pairedWithRGB = Seq(
-    (RGB.Black,HSV(0,0,0)),
-    (RGB.White,HSV(0,0,1)),
-    (RGB(1.0,0.0,0.0),HSV(0*pi/3.0,1,1)),
-    (RGB(1.0,1.0,0.0),HSV(1*pi/3.0,1,1)),
-    (RGB(0.0,1.0,0.0),HSV(2*pi/3.0,1,1)),
-    (RGB(0.0,1.0,1.0),HSV(3*pi/3.0,1,1)),
-    (RGB(0.0,0.0,1.0),HSV(4*pi/3.0,1,1)),
-    (RGB(1.0,0.0,1.0),HSV(5*pi/3.0,1,1))
+    (RGB.Black, HSV(0, 0, 0)),
+    (RGB.White, HSV(0, 0, 1)),
+    (RGB(1.0, 0.0, 0.0), HSV(0 * pi / 3.0, 1, 1)),
+    (RGB(1.0, 1.0, 0.0), HSV(1 * pi / 3.0, 1, 1)),
+    (RGB(0.0, 1.0, 0.0), HSV(2 * pi / 3.0, 1, 1)),
+    (RGB(0.0, 1.0, 1.0), HSV(3 * pi / 3.0, 1, 1)),
+    (RGB(0.0, 0.0, 1.0), HSV(4 * pi / 3.0, 1, 1)),
+    (RGB(1.0, 0.0, 1.0), HSV(5 * pi / 3.0, 1, 1))
   )
   val colors = pairedWithRGB.map(_._1) ++ Seq.fill[RGB](100)(rndCol)
 
   describe("HSV color") {
 
     it("converted from RGB has values in proper range") {
-      colors.foreach{ color =>
+      colors.foreach { color =>
         val hsv = HSV(color)
-        between(hsv.hue,0.0,2.0*math.Pi)
-        between(hsv.saturation,0.0,1.0)
-        between(hsv.value,0.0,1.0)
+        between(hsv.hue, 0.0, 2.0 * math.Pi)
+        between(hsv.saturation, 0.0, 1.0)
+        between(hsv.value, 0.0, 1.0)
       }
     }
 
     it("can be constructed from RGB and converted back to RGB") {
-      colors.foreach{ color =>
+      colors.foreach { color =>
         val hsv = HSV(color)
         val roundTrip = hsv.toRGB
-        (color - roundTrip).norm should be < 1.0E-8
+        (color - roundTrip).norm should be < 1.0e-8
       }
     }
 
     it("can be constructed from RGB correctly for a few specific values") {
-      pairedWithRGB.foreach{ case (rgb,hsv) =>
+      pairedWithRGB.foreach { case (rgb, hsv) =>
         val hsvConv = HSV(rgb)
-          hsvConv.hue - hsv.hue should be < 1.0E-8
-          hsvConv.value - hsv.value should be < 1.0E-8
-          hsvConv.saturation - hsv.saturation should be < 1.0E-8
+        hsvConv.hue - hsv.hue should be < 1.0e-8
+        hsvConv.value - hsv.value should be < 1.0e-8
+        hsvConv.saturation - hsv.saturation should be < 1.0e-8
       }
     }
   }

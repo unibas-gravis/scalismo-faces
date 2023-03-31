@@ -30,18 +30,17 @@ import scala.util.Try
 /**
  * Reads a ply file based on its header. This class is independent of the mesh class and could be reused in other
  * ply-readers.
- *
  */
 object PlyReader {
 
   import PlyHelpers._
 
   /**
-   * Read the ply file from the url. Returns a list of textures and a list of elements,
-   * where each element is a list of properties. This reflects the structure of elements
-   * and properties from the header.
+   * Read the ply file from the url. Returns a list of textures and a list of elements, where each element is a list of
+   * properties. This reflects the structure of elements and properties from the header.
    *
-   * @param url File to read.
+   * @param url
+   *   File to read.
    * @return
    */
   def read(url: String): (List[(String, List[(String, List[_])])], List[PixelImage[RGBA]]) = {
@@ -61,12 +60,15 @@ object PlyReader {
     // as we use buffered readers we need to reset the input stream
     val fis = new FileInputStream(url)
     val bis = new BufferedInputStream(fis)
-    bis.skip(header.map(_.size).sum + header.size*lineSeparatorSize)
+    bis.skip(header.map(_.size).sum + header.size * lineSeparatorSize)
     val values = readData(bis, plyFormat, elementReaders)
     (values, textures)
   }
 
-  private def readData(bis: BufferedInputStream, plyFormat: PlyFormat.PlyFormat, elementReaders: List[(String, PlyElementReader)]): List[(String, List[(String, List[_])])] = {
+  private def readData(bis: BufferedInputStream,
+                       plyFormat: PlyFormat.PlyFormat,
+                       elementReaders: List[(String, PlyElementReader)]
+  ): List[(String, List[(String, List[_])])] = {
     plyFormat match {
       case PlyFormat.ASCII =>
         def readFormat(locale: Locale) = Try {
@@ -147,8 +149,10 @@ object PlyReader {
     val textureFiles = linesWithTexture.map { l =>
       val parts = l.split(" ")
       if (parts.size != 3) {
-        throw new IOException("Expected comment with a texture file to have format: " +
-          "\"" + PLY.comment + " " + PLY.textureFile + " <TEXTURE_FILE>\"")
+        throw new IOException(
+          "Expected comment with a texture file to have format: " +
+            "\"" + PLY.comment + " " + PLY.textureFile + " <TEXTURE_FILE>\""
+        )
       }
       parts(2)
     }
@@ -182,7 +186,10 @@ object PlyReader {
 
     val firstLine = list.head.split(" ")
 
-    assert(firstLine.size == 3, "Expect that the starting line of an element in the header has the form: \"" + PLY.element + " <TYPE> <NUMBER>\"")
+    assert(
+      firstLine.size == 3,
+      "Expect that the starting line of an element in the header has the form: \"" + PLY.element + " <TYPE> <NUMBER>\""
+    )
     assert(firstLine(0) == "element", "The first tag of the element line should be \"" + PLY.element + "\".")
 
     val elementType = firstLine(1)
@@ -199,7 +206,9 @@ object PlyReader {
 
   private def parsePropertyHeader(list: List[String]): List[(String, PlyPropertyReader[_])] = {
     val partList = list.map(_.split(" "))
-    assert(partList.forall(p => p(0) == PLY.property), "Expect that the property of an element starts with \"" + PLY.property + "\".")
+    assert(partList.forall(p => p(0) == PLY.property),
+           "Expect that the property of an element starts with \"" + PLY.property + "\"."
+    )
     assert(partList.forall(p => p.size >= 3), "Expect that the properties consists of at least three elements.")
     val parts = partList.map(p => (p.last, p.init))
 
@@ -212,25 +221,26 @@ object PlyReader {
   private def makeReader(format: Array[String]): PlyPropertyReader[_] = {
     if (format.size == 1) {
       PlyTypes.withName(format(0)) match {
-        case PlyTypes.char | PlyTypes.int8 => new PlyPropertyReader(new FixedLengthSequenceReader[Char])
+        case PlyTypes.char | PlyTypes.int8   => new PlyPropertyReader(new FixedLengthSequenceReader[Char])
         case PlyTypes.uchar | PlyTypes.uint8 => new PlyPropertyReader(new FixedLengthSequenceReader[Byte])
-        case PlyTypes.int | PlyTypes.int32 => new PlyPropertyReader(new FixedLengthSequenceReader[Int])
-        case PlyTypes.long | PlyTypes.int64 => new PlyPropertyReader(new FixedLengthSequenceReader[Long])
-        case PlyTypes.float | PlyTypes.float32 | PlyTypes.float32 => new PlyPropertyReader(new FixedLengthSequenceReader[Float])
+        case PlyTypes.int | PlyTypes.int32   => new PlyPropertyReader(new FixedLengthSequenceReader[Int])
+        case PlyTypes.long | PlyTypes.int64  => new PlyPropertyReader(new FixedLengthSequenceReader[Long])
+        case PlyTypes.float | PlyTypes.float32 | PlyTypes.float32 =>
+          new PlyPropertyReader(new FixedLengthSequenceReader[Float])
         case PlyTypes.double | PlyTypes.float64 => new PlyPropertyReader(new FixedLengthSequenceReader[Double])
-        case PlyTypes.short | PlyTypes.int16 => new PlyPropertyReader(new FixedLengthSequenceReader[Short])
+        case PlyTypes.short | PlyTypes.int16    => new PlyPropertyReader(new FixedLengthSequenceReader[Short])
         case _ =>
           throw new IOException("Do not know how to read property type: " + format(0))
       }
     } else if (format.size == 3) {
       PlyTypes.withName(format(2)) match {
-        case PlyTypes.char | PlyTypes.int8 => new PlyPropertyReader(new VariableLengthSequenceReader[Char])
-        case PlyTypes.uchar | PlyTypes.uint8 => new PlyPropertyReader(new VariableLengthSequenceReader[Byte])
-        case PlyTypes.int | PlyTypes.int32 => new PlyPropertyReader(new VariableLengthSequenceReader[Int])
-        case PlyTypes.long | PlyTypes.int64 => new PlyPropertyReader(new VariableLengthSequenceReader[Long])
-        case PlyTypes.float | PlyTypes.float32 => new PlyPropertyReader(new VariableLengthSequenceReader[Float])
+        case PlyTypes.char | PlyTypes.int8      => new PlyPropertyReader(new VariableLengthSequenceReader[Char])
+        case PlyTypes.uchar | PlyTypes.uint8    => new PlyPropertyReader(new VariableLengthSequenceReader[Byte])
+        case PlyTypes.int | PlyTypes.int32      => new PlyPropertyReader(new VariableLengthSequenceReader[Int])
+        case PlyTypes.long | PlyTypes.int64     => new PlyPropertyReader(new VariableLengthSequenceReader[Long])
+        case PlyTypes.float | PlyTypes.float32  => new PlyPropertyReader(new VariableLengthSequenceReader[Float])
         case PlyTypes.double | PlyTypes.float64 => new PlyPropertyReader(new VariableLengthSequenceReader[Double])
-        case PlyTypes.short | PlyTypes.int16 => new PlyPropertyReader(new VariableLengthSequenceReader[Short])
+        case PlyTypes.short | PlyTypes.int16    => new PlyPropertyReader(new VariableLengthSequenceReader[Short])
         case _ =>
           throw new IOException("Do not know how to read property type: " + format.mkString(" "))
       }
@@ -239,24 +249,21 @@ object PlyReader {
     }
   }
 
-
-
-
   private def getLineSeparatorSize(url: String): Int = {
-    val fis = new FileInputStream( url )
-    while ( fis.available()>0 )
-    {
+    val fis = new FileInputStream(url)
+    while (fis.available() > 0) {
       val c = fis.read().asInstanceOf[Char]
-      if ( ( c == '\n' ) || ( c == '\r' ) )
-      {
-        if ( fis.available()>0){
+      if ((c == '\n') || (c == '\r')) {
+        if (fis.available() > 0) {
           val c2 = fis.read().asInstanceOf[Char]
-          if ( (( c2 == '\n' ) || ( c2 == '\r' )) && c != c2) return 2
+          if (((c2 == '\n') || (c2 == '\r')) && c != c2) return 2
           return 1
         }
         return 1
       }
-      if ( c == '\u0085' || c == '\u2028' || c == '\u2029') return 1
+      if (c == '\u0085' || c == '\u2028' || c == '\u2029') {
+        return 1
+      }
     }
     // default line separator size is 1, this will be choosen if file is empty or does not use \r or \n characters (will use unicode characters)
     return 1

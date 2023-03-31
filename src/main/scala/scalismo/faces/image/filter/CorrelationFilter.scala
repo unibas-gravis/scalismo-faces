@@ -21,7 +21,9 @@ import scalismo.faces.image.PixelImage
 
 import scala.reflect.ClassTag
 
-case class CorrelationFilter[@specialized A: ClassTag](kernel: PixelImage[Double])(implicit ops: ColorSpaceOperations[A]) extends ImageFilter[A, A] {
+case class CorrelationFilter[@specialized A: ClassTag](kernel: PixelImage[Double])(implicit
+  ops: ColorSpaceOperations[A]
+) extends ImageFilter[A, A] {
   require(kernel.width % 2 == 1 && kernel.height % 2 == 1, "discrete convolution only with odd-sized kernel")
   import ColorSpaceOperations.implicits._
 
@@ -46,8 +48,6 @@ case class CorrelationFilter[@specialized A: ClassTag](kernel: PixelImage[Double
       kvsum
     }
 
-    PixelImage(image.width, image.height, perPixel(_,_))
+    PixelImage(image.width, image.height, perPixel(_, _))
   }
 }
-
-

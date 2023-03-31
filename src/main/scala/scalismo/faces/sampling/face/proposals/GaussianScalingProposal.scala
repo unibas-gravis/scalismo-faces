@@ -21,10 +21,14 @@ import scalismo.faces.sampling.evaluators.LogNormalDistribution
 import scalismo.sampling.{ProposalGenerator, TransitionProbability}
 import scalismo.utils.Random
 
-/** proposal to change the scaling of the image through the focal length of the camera
-  * @param logSdev log of factor of typical variation, 0.0 is no variation */
+/**
+ * proposal to change the scaling of the image through the focal length of the camera
+ * @param logSdev
+ *   log of factor of typical variation, 0.0 is no variation
+ */
 case class GaussianScalingProposal(logSdev: Double)(implicit rnd: Random)
-    extends ProposalGenerator[Camera] with TransitionProbability[Camera] {
+    extends ProposalGenerator[Camera]
+    with TransitionProbability[Camera] {
 
   override def propose(current: Camera): Camera = {
     val f = math.exp(rnd.scalaRandom.nextGaussian() * logSdev)
@@ -33,7 +37,7 @@ case class GaussianScalingProposal(logSdev: Double)(implicit rnd: Random)
 
   override def logTransitionProbability(from: Camera, to: Camera): Double = {
     if (to.copy(focalLength = from.focalLength) == from) {
-      LogNormalDistribution.logDensity(to.focalLength/from.focalLength, 0.0, logSdev)
+      LogNormalDistribution.logDensity(to.focalLength / from.focalLength, 0.0, logSdev)
     } else
       Double.NegativeInfinity
   }

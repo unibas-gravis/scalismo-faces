@@ -22,11 +22,16 @@ import scalismo.faces.image.{ColumnMajorImageDomain, PixelImage, RowMajorImageDo
 import scala.reflect.ClassTag
 
 /**
-  * Separable morphological filter (separable structuring element)
-  * @param rowElement 1d structuring element, must be 1 row or column
-  * @param windowFilter Filtering function
-  */
-case class SeparableMorphologicalFilter[A: ClassTag](rowElement: PixelImage[Boolean], colElement: PixelImage[Boolean], windowFilter: (Seq[A]) => A) extends ImageFilter[A, A] {
+ * Separable morphological filter (separable structuring element)
+ * @param rowElement
+ *   1d structuring element, must be 1 row or column
+ * @param windowFilter
+ *   Filtering function
+ */
+case class SeparableMorphologicalFilter[A: ClassTag](rowElement: PixelImage[Boolean],
+                                                     colElement: PixelImage[Boolean],
+                                                     windowFilter: (Seq[A]) => A
+) extends ImageFilter[A, A] {
   require(rowElement.height == 1 && colElement.width == 1, "Structuring elements must be 1D")
 
   private val width = rowElement.width
@@ -37,13 +42,16 @@ case class SeparableMorphologicalFilter[A: ClassTag](rowElement: PixelImage[Bool
 
   override def filter(image: PixelImage[A]): PixelImage[A] = image.domain match {
     case d: ColumnMajorImageDomain => image.filter(columnFilter).withAccessMode(Repeat()).filter(rowFilter)
-    case d: RowMajorImageDomain => image.filter(rowFilter).withAccessMode(Repeat()).filter(columnFilter)
+    case d: RowMajorImageDomain    => image.filter(rowFilter).withAccessMode(Repeat()).filter(columnFilter)
   }
 }
 
 object SeparableMorphologicalFilter {
+
   /** create a filter with a structuring element el1d * el1d.t */
-  def apply[A: ClassTag](structElement1D: PixelImage[Boolean], windowFilter: (Seq[A]) => A): SeparableMorphologicalFilter[A] = {
+  def apply[A: ClassTag](structElement1D: PixelImage[Boolean],
+                         windowFilter: (Seq[A]) => A
+  ): SeparableMorphologicalFilter[A] = {
     require(structElement1D.width == 1 || structElement1D.height == 1, "structuring element needs to be 1D")
     val rowElement = if (structElement1D.height == 1) structElement1D else structElement1D.transposed
     SeparableMorphologicalFilter(rowElement, rowElement.transposed, windowFilter)

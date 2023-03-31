@@ -22,9 +22,9 @@ import scalismo.faces.image.{ImageBuffer, PixelImage}
 import scala.reflect.ClassTag
 
 /**
-  * general structure for a rendering target buffer: stores result and handles multiple fragments per position, this is the renderer's viewport
-  * y orientation is upwards! (Coordinate system of an OpenGL viewport)
-  */
+ * general structure for a rendering target buffer: stores result and handles multiple fragments per position, this is
+ * the renderer's viewport y orientation is upwards! (Coordinate system of an OpenGL viewport)
+ */
 trait RenderBuffer[A] {
   def update(x: Int, y: Int, z: Double, v: A): Unit
 
@@ -38,7 +38,11 @@ trait RenderBuffer[A] {
 }
 
 /** simple z buffer administrator - standard render buffer for most applications */
-case class ZBuffer[A: ClassTag](override val width: Int, override val height: Int, background: A, zInit: Double = Double.PositiveInfinity) extends RenderBuffer[A] {
+case class ZBuffer[A: ClassTag](override val width: Int,
+                                override val height: Int,
+                                background: A,
+                                zInit: Double = Double.PositiveInfinity
+) extends RenderBuffer[A] {
   private val buffer = ImageBuffer.makeConstantBuffer(width, height, background)
   private val zBuffer = ImageBuffer.makeConstantBuffer(width, height, zInit)
 
@@ -57,7 +61,11 @@ case class ZBuffer[A: ClassTag](override val width: Int, override val height: In
 }
 
 /** synchronized z buffer for parallel rendering */
-case class SyncedZBuffer[A: ClassTag](override val width: Int, override val height: Int, background: A, zInit: Double = Double.PositiveInfinity) extends RenderBuffer[A] {
+case class SyncedZBuffer[A: ClassTag](override val width: Int,
+                                      override val height: Int,
+                                      background: A,
+                                      zInit: Double = Double.PositiveInfinity
+) extends RenderBuffer[A] {
   private val buffer = ImageBuffer.makeConstantBuffer(width, height, background)
   private val zBuffer = ImageBuffer.makeConstantBuffer(width, height, zInit)
 
@@ -78,7 +86,11 @@ case class SyncedZBuffer[A: ClassTag](override val width: Int, override val heig
 }
 
 /** blend colors onto each other (use A channel for transparency) - respects depth: only fg pixels overlay bg pixels */
-case class BlendingBufferWithDepth(override val width: Int, override val height: Int, background: RGBA, zInit: Double = Double.PositiveInfinity) extends RenderBuffer[RGBA] {
+case class BlendingBufferWithDepth(override val width: Int,
+                                   override val height: Int,
+                                   background: RGBA,
+                                   zInit: Double = Double.PositiveInfinity
+) extends RenderBuffer[RGBA] {
   private val buffer = ImageBuffer.makeConstantBuffer(width, height, background)
   private val zBuffer = ImageBuffer.makeConstantBuffer(width, height, zInit)
 
@@ -99,7 +111,11 @@ case class BlendingBufferWithDepth(override val width: Int, override val height:
 }
 
 /** blend colors onto each other (use A channel for transparency) */
-case class BlendingBuffer(override val width: Int, override val height: Int, background: RGBA, zInit: Double = Double.PositiveInfinity) extends RenderBuffer[RGBA] {
+case class BlendingBuffer(override val width: Int,
+                          override val height: Int,
+                          background: RGBA,
+                          zInit: Double = Double.PositiveInfinity
+) extends RenderBuffer[RGBA] {
   private val buffer = ImageBuffer.makeConstantBuffer(width, height, background)
 
   override def update(x: Int, y: Int, z: Double, v: RGBA): Unit = {
@@ -114,7 +130,8 @@ case class BlendingBuffer(override val width: Int, override val height: Int, bac
 }
 
 /** simple plain render buffer, does not manage fragment collapse, last is kept */
-case class PlainRenderBuffer[A: ClassTag](override val width: Int, override val height: Int, clearColor: A) extends RenderBuffer[A] {
+case class PlainRenderBuffer[A: ClassTag](override val width: Int, override val height: Int, clearColor: A)
+    extends RenderBuffer[A] {
   val buffer: ImageBuffer[A] = ImageBuffer.makeInitializedBuffer(width, height)(clearColor)
 
   override def update(x: Int, y: Int, z: Double, v: A): Unit = {

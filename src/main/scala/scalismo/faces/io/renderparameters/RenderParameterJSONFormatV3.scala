@@ -26,11 +26,11 @@ trait RenderParameterJSONFormatV3 extends RenderParameterJSONFormatV2 {
   override val version = "V3.0"
 
   implicit val viewParameterFormat: RootJsonFormat[ViewParameter] = new RootJsonFormat[ViewParameter] {
-    override def write(p: ViewParameter): JsValue = JsObject(
-      ("translation", p.translation.toJson),
-      ("roll",p.roll.toJson),
-      ("yaw", p.yaw.toJson),
-      ("pitch", p.pitch.toJson))
+    override def write(p: ViewParameter): JsValue = JsObject(("translation", p.translation.toJson),
+                                                             ("roll", p.roll.toJson),
+                                                             ("yaw", p.yaw.toJson),
+                                                             ("pitch", p.pitch.toJson)
+    )
 
     override def read(json: JsValue): ViewParameter = {
       val fields = json.asJsObject(s"expected Pose object, got: $json").fields
@@ -38,7 +38,8 @@ trait RenderParameterJSONFormatV3 extends RenderParameterJSONFormatV2 {
         translation = fields("translation").convertTo[EuclideanVector[_3D]],
         roll = fields("roll").convertTo[Double],
         yaw = fields("yaw").convertTo[Double],
-        pitch = fields("pitch").convertTo[Double])
+        pitch = fields("pitch").convertTo[Double]
+      )
     }
   }
 
@@ -49,7 +50,8 @@ trait RenderParameterJSONFormatV3 extends RenderParameterJSONFormatV2 {
       ("sensorSize", cam.sensorSize.toJson),
       ("near", cam.near.toJson),
       ("far", cam.far.toJson),
-      ("orthographic", cam.orthographic.toJson))
+      ("orthographic", cam.orthographic.toJson)
+    )
 
     override def read(json: JsValue): Camera = {
       val fields = json.asJsObject(s"expected Camera object, got: $json").fields
@@ -59,14 +61,16 @@ trait RenderParameterJSONFormatV3 extends RenderParameterJSONFormatV2 {
         principalPoint = fields("principalPoint").convertTo[EuclideanVector[_2D]].toPoint,
         near = fields("near").convertTo[Double],
         far = fields("far").convertTo[Double],
-        orthographic = fields("orthographic").convertTo[Boolean])
+        orthographic = fields("orthographic").convertTo[Boolean]
+      )
     }
   }
 
   // render parameter reader / writer
-  override implicit val renderParameterFormat: RootJsonFormat[RenderParameter] = new RootJsonFormat[RenderParameter] {
+  implicit override val renderParameterFormat: RootJsonFormat[RenderParameter] = new RootJsonFormat[RenderParameter] {
     override def write(param: RenderParameter): JsValue = {
-      val illumination: Illumination = if (param.environmentMap.nonEmpty) param.environmentMap else param.directionalLight
+      val illumination: Illumination =
+        if (param.environmentMap.nonEmpty) param.environmentMap else param.directionalLight
 
       JsObject(
         "pose" -> param.pose.toJson,
@@ -90,25 +94,26 @@ trait RenderParameterJSONFormatV3 extends RenderParameterJSONFormatV2 {
 
       val shLight = fields("illumination").convertTo[Illumination] match {
         case sh: SphericalHarmonicsLight => sh
-        case dirLight: DirectionalLight => SphericalHarmonicsLight.empty
+        case dirLight: DirectionalLight  => SphericalHarmonicsLight.empty
       }
 
       val dirLight = fields("illumination").convertTo[Illumination] match {
         case sh: SphericalHarmonicsLight => DirectionalLight.off
-        case dirLight: DirectionalLight => dirLight
+        case dirLight: DirectionalLight  => dirLight
       }
 
       fields("version") match {
-        case JsString(`version`) => RenderParameter(
-          pose = fields("pose").convertTo[Pose],
-          view = fields("view").convertTo[ViewParameter],
-          camera = fields("camera").convertTo[Camera],
-          environmentMap = shLight,
-          directionalLight = dirLight,
-          momo = momo,
-          imageSize = fields("imageSize").convertTo[ImageSize],
-          colorTransform = fields("colorTransform").convertTo[ColorTransform]
-        )
+        case JsString(`version`) =>
+          RenderParameter(
+            pose = fields("pose").convertTo[Pose],
+            view = fields("view").convertTo[ViewParameter],
+            camera = fields("camera").convertTo[Camera],
+            environmentMap = shLight,
+            directionalLight = dirLight,
+            momo = momo,
+            imageSize = fields("imageSize").convertTo[ImageSize],
+            colorTransform = fields("colorTransform").convertTo[ColorTransform]
+          )
         case v => throw new DeserializationException(s"wrong version number, expected $version, got $v")
       }
     }
@@ -121,24 +126,27 @@ trait RenderParameterJSONFormatV3 extends RenderParameterJSONFormatV2 {
       val fields = json.asJsObject(s"expected SceneTree, got $json").fields
       fields("@type") match {
         case JsString("SceneObject") => SceneObject(fields("renderObject").convertTo[RenderObject])
-        case JsString("PoseNode") => PoseNode(
-          pose = fields("pose").convertTo[Pose],
-          children = fields("children").convertTo[IndexedSeq[SceneTree]]
-        )
+        case JsString("PoseNode") =>
+          PoseNode(
+            pose = fields("pose").convertTo[Pose],
+            children = fields("children").convertTo[IndexedSeq[SceneTree]]
+          )
         case _ => throw new DeserializationException(s"unknown type of SceneTree node")
       }
     }
 
     override def write(obj: SceneTree): JsValue = obj match {
-      case PoseNode(pose, children) => JsObject(
-        "pose" -> pose.toJson,
-        "children" -> children.toJson,
-        "@type" -> "PoseNode".toJson
-      )
-      case SceneObject(renderObject) => JsObject(
-        "renderObject" -> renderObject.toJson,
-        "@type" -> "SceneObject".toJson
-      )
+      case PoseNode(pose, children) =>
+        JsObject(
+          "pose" -> pose.toJson,
+          "children" -> children.toJson,
+          "@type" -> "PoseNode".toJson
+        )
+      case SceneObject(renderObject) =>
+        JsObject(
+          "renderObject" -> renderObject.toJson,
+          "@type" -> "SceneObject".toJson
+        )
     }
   }
 
@@ -157,14 +165,15 @@ trait RenderParameterJSONFormatV3 extends RenderParameterJSONFormatV2 {
     override def read(json: JsValue): SceneParameter = {
       val fields = json.asJsObject(s"expected SceneParameter object, got: $json").fields
       fields("version") match {
-        case JsString(`version`) => SceneParameter(
-          view = fields("view").convertTo[ViewParameter],
-          camera = fields("camera").convertTo[Camera],
-          illuminations = fields("illuminations").convertTo[IndexedSeq[Illumination]],
-          sceneTree = fields("sceneTree").convertTo[SceneTree],
-          imageSize = fields("imageSize").convertTo[ImageSize],
-          colorTransform = fields("colorTransform").convertTo[ColorTransform]
-        )
+        case JsString(`version`) =>
+          SceneParameter(
+            view = fields("view").convertTo[ViewParameter],
+            camera = fields("camera").convertTo[Camera],
+            illuminations = fields("illuminations").convertTo[IndexedSeq[Illumination]],
+            sceneTree = fields("sceneTree").convertTo[SceneTree],
+            imageSize = fields("imageSize").convertTo[ImageSize],
+            colorTransform = fields("colorTransform").convertTo[ColorTransform]
+          )
         case v => throw new DeserializationException(s"wrong version number, expected $version, got $v")
       }
     }

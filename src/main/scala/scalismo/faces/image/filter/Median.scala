@@ -23,34 +23,37 @@ object Median {
   // extract median value
   private def median(values: Seq[Double]): Double = {
     require(values.nonEmpty, "median needs non-empty (pixel value) sequence")
-    if(values.length == 1)
+    if (values.length == 1)
       values.head
-    else{
+    else {
       val sorted = values.sorted
-      (sorted(values.length/2) + sorted(values.length - values.length/2)) / 2
+      (sorted(values.length / 2) + sorted(values.length - values.length / 2)) / 2
     }
   }
 
   /**
-    * median filter with box as its structuring element
-    * @param size side length of the box
-    */
+   * median filter with box as its structuring element
+   * @param size
+   *   side length of the box
+   */
   def box(size: Int): MorphologicalFilter[Double] = {
     MorphologicalFilter(MorphologicalFilter.boxElement(size), median)
   }
 
   /**
-    * approximate median filter with box as its structuring element, separable (not identical to box)
-    * @param size side length of the box
-    */
+   * approximate median filter with box as its structuring element, separable (not identical to box)
+   * @param size
+   *   side length of the box
+   */
   def separableBox(size: Int): SeparableMorphologicalFilter[Double] = {
     SeparableMorphologicalFilter(SeparableMorphologicalFilter.lineElement(size), median)
   }
 
   /**
-    * general median filter with structuring element
-    * @param structuringElement structuring element, see morphological filter
-    */
+   * general median filter with structuring element
+   * @param structuringElement
+   *   structuring element, see morphological filter
+   */
   def apply(structuringElement: PixelImage[Boolean]): MorphologicalFilter[Double] = {
     MorphologicalFilter[Double](structuringElement, median)
   }

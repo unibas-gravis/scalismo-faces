@@ -19,7 +19,7 @@ package scalismo.faces.warp
 import scalismo.color.ColorSpaceOperations
 import scalismo.faces.image.AccessMode.Strict
 import scalismo.faces.image.PixelImage
-import scalismo.geometry.{EuclideanVector, _2D}
+import scalismo.geometry.{_2D, EuclideanVector}
 
 import scala.reflect.ClassTag
 
@@ -28,23 +28,32 @@ object ImageWarper {
   type WarpField = PixelImage[EuclideanVector[_2D]]
 
   /** set boundary of warp field to EuclideanVector(0, 0) - warp leaves boundary unchanged ("stops" at image border) */
-  def constantWarpBoundary(image: PixelImage[Option[EuclideanVector[_2D]]]): PixelImage[Option[EuclideanVector[_2D]]] = {
+  def constantWarpBoundary(
+    image: PixelImage[Option[EuclideanVector[_2D]]]
+  ): PixelImage[Option[EuclideanVector[_2D]]] = {
     def isBorder(x: Int, y: Int) = x == 0 || y == 0 || x == image.width - 1 || y == image.height - 1
     val borderWarp: Option[EuclideanVector[_2D]] = Some(EuclideanVector(0f, 0f))
     PixelImage.fromTemplate(image, (x, y) => if (isBorder(x, y)) borderWarp else image(x, y))
   }
 
   /** standard image warp (backwarp), warp field defines for each new pixel where it comes from */
-  def warpImage[A: ClassTag](original: PixelImage[A], warpField: PixelImage[EuclideanVector[_2D]])(implicit ops: ColorSpaceOperations[A]): PixelImage[A] = {
+  def warpImage[A: ClassTag](original: PixelImage[A], warpField: PixelImage[EuclideanVector[_2D]])(implicit
+    ops: ColorSpaceOperations[A]
+  ): PixelImage[A] = {
     val contImage = original.interpolate
-    PixelImage(warpField.width, warpField.height, (x, y) => {
-      val w = warpField(x, y)
-      contImage(x + w.x + 0.5, y + w.y + 0.5)
-    }).buffer.withAccessMode(Strict())
+    PixelImage(warpField.width,
+               warpField.height,
+               (x, y) => {
+                 val w = warpField(x, y)
+                 contImage(x + w.x + 0.5, y + w.y + 0.5)
+               }
+    ).buffer.withAccessMode(Strict())
   }
 
   /** forward mapping of each pixel, inverts the field and uses backwarp */
-  def warpImageForward[A: ClassTag](original: PixelImage[A], warpField: PixelImage[EuclideanVector[_2D]])(implicit ops: ColorSpaceOperations[A]): PixelImage[A] = {
+  def warpImageForward[A: ClassTag](original: PixelImage[A], warpField: PixelImage[EuclideanVector[_2D]])(implicit
+    ops: ColorSpaceOperations[A]
+  ): PixelImage[A] = {
     require(original.domain == warpField.domain, "forward warp needs identical image and warp field domains")
     val invertedWarp = WarpFieldInversion.fixedPointInversion(warpField)
     warpImage(original, invertedWarp)

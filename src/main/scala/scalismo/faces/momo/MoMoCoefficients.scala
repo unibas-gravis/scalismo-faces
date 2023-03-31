@@ -19,33 +19,30 @@ package scalismo.faces.momo
 import breeze.linalg.DenseVector
 
 /** coefficients describing a Morphable Model instance */
-case class MoMoCoefficients(shape: DenseVector[Double],
-                            color: DenseVector[Double],
-                            expression: DenseVector[Double]) {
+case class MoMoCoefficients(shape: DenseVector[Double], color: DenseVector[Double], expression: DenseVector[Double]) {
   def *(f: Float): MoMoCoefficients = this * f.toDouble
   def *(d: Double): MoMoCoefficients = copy(shape = shape * d, color = color * d, expression = expression * d)
-  def +(other: MoMoCoefficients): MoMoCoefficients = copy(shape = shape + other.shape, color = color + other.color, expression = expression + other.expression)
-  def -(other: MoMoCoefficients): MoMoCoefficients = copy(shape = shape - other.shape, color = color - other.color, expression = expression - other.expression)
+  def +(other: MoMoCoefficients): MoMoCoefficients =
+    copy(shape = shape + other.shape, color = color + other.color, expression = expression + other.expression)
+  def -(other: MoMoCoefficients): MoMoCoefficients =
+    copy(shape = shape - other.shape, color = color - other.color, expression = expression - other.expression)
 }
 
 object MoMoCoefficients {
-  def apply(shape: IndexedSeq[Double],
-            color: IndexedSeq[Double],
-            expression: IndexedSeq[Double]) = new MoMoCoefficients(DenseVector(shape.toArray), DenseVector(color.toArray), DenseVector(expression.toArray))
+  def apply(shape: IndexedSeq[Double], color: IndexedSeq[Double], expression: IndexedSeq[Double]) =
+    new MoMoCoefficients(DenseVector(shape.toArray), DenseVector(color.toArray), DenseVector(expression.toArray))
 
-  def apply(shape: IndexedSeq[Double],
-            color: IndexedSeq[Double]) = new MoMoCoefficients(DenseVector(shape.toArray), DenseVector(color.toArray), DenseVector.zeros[Double](0))
+  def apply(shape: IndexedSeq[Double], color: IndexedSeq[Double]) =
+    new MoMoCoefficients(DenseVector(shape.toArray), DenseVector(color.toArray), DenseVector.zeros[Double](0))
 
-  def apply(shape: DenseVector[Double],
-            color: DenseVector[Double]) = new MoMoCoefficients(shape, color, DenseVector.zeros[Double](0))
+  def apply(shape: DenseVector[Double], color: DenseVector[Double]) =
+    new MoMoCoefficients(shape, color, DenseVector.zeros[Double](0))
 
   /** get 0 coefficients of specified length */
-  def zeros(shapeComponents: Int,
-            colorComponents: Int,
-            expressionComponents: Int): MoMoCoefficients = {
-    new MoMoCoefficients(
-      DenseVector.zeros(shapeComponents),
-      DenseVector.zeros(colorComponents),
-      DenseVector.zeros(expressionComponents))
+  def zeros(shapeComponents: Int, colorComponents: Int, expressionComponents: Int): MoMoCoefficients = {
+    new MoMoCoefficients(DenseVector.zeros(shapeComponents),
+                         DenseVector.zeros(colorComponents),
+                         DenseVector.zeros(expressionComponents)
+    )
   }
 }

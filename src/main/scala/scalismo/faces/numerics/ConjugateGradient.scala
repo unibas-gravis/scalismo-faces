@@ -16,13 +16,14 @@
 
 package scalismo.faces.numerics
 
-import breeze.linalg.{CSCMatrix, DenseVector, norm}
+import breeze.linalg.{norm, CSCMatrix, DenseVector}
 
 /** Conjugate Gradient solver for sparse, large linear system */
 object ConjugateGradient {
 
-  /** solve system A*x = b, for a sparse matrix A using the Conjugate Gradient algorithm
-    * uses initial guess of zero */
+  /**
+   * solve system A*x = b, for a sparse matrix A using the Conjugate Gradient algorithm uses initial guess of zero
+   */
   def solveSparse(A: CSCMatrix[Double], b: DenseVector[Double], tolerance: Double = 1e-10): DenseVector[Double] = {
     // without initial guess: zero
     val initial = DenseVector.zeros[Double](b.length)
@@ -30,7 +31,12 @@ object ConjugateGradient {
   }
 
   /** solve system A*x = b, for a sparse matrix A using the Conjugate Gradient algorithm */
-  def solveSparse(A: CSCMatrix[Double], b: DenseVector[Double], xInit: DenseVector[Double], tolerance: Double, maxIter: Int): DenseVector[Double] = {
+  def solveSparse(A: CSCMatrix[Double],
+                  b: DenseVector[Double],
+                  xInit: DenseVector[Double],
+                  tolerance: Double,
+                  maxIter: Int
+  ): DenseVector[Double] = {
     require(A.cols == b.length, "matrix and vector dimensions disagree")
     // prepare
     val initial = initialState(A, b, xInit)
@@ -59,15 +65,14 @@ object ConjugateGradient {
     // alpha: step length
     val alpha: Double = rsq / (state.p.t * Ap)
     // update solution
-    val x: DenseVector[Double] = state.x + alpha * state.p
-    val r: DenseVector[Double] = state.r - alpha * Ap
+    val x: DenseVector[Double] = state.x + state.p * alpha
+    val r: DenseVector[Double] = state.r - Ap * alpha
     // conjugate direction update
     val beta: Double = (r.t * r) / rsq
-    val p: DenseVector[Double] = r + beta * state.p
+    val p: DenseVector[Double] = r + state.p * beta
     CGState(x, r, p)
   }
 
   /** CG algorithm state (use for iterative interface) */
   case class CGState(x: DenseVector[Double], r: DenseVector[Double], p: DenseVector[Double])
 }
-

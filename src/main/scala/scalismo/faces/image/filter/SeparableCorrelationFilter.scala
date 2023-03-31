@@ -23,7 +23,10 @@ import scalismo.faces.image.{ColumnMajorImageDomain, PixelImage, RowMajorImageDo
 import scala.reflect.ClassTag
 
 /** filter for a separable correlation/convolution */
-case class SeparableCorrelationFilter[@specialized A: ClassTag](kernelRow: PixelImage[Double], kernelCol: PixelImage[Double])(implicit ops: ColorSpaceOperations[A]) extends ImageFilter[A, A] {
+case class SeparableCorrelationFilter[@specialized A: ClassTag](kernelRow: PixelImage[Double],
+                                                                kernelCol: PixelImage[Double]
+)(implicit ops: ColorSpaceOperations[A])
+    extends ImageFilter[A, A] {
   require(kernelCol.width == 1, "column filter is not a column")
   require(kernelRow.height == 1, "row filter is not a row")
 
@@ -32,6 +35,6 @@ case class SeparableCorrelationFilter[@specialized A: ClassTag](kernelRow: Pixel
 
   override def filter(image: PixelImage[A]): PixelImage[A] = image.domain match {
     case _: ColumnMajorImageDomain => image.filter(columnFilter).withAccessMode(Repeat()).filter(rowFilter)
-    case _: RowMajorImageDomain => image.filter(rowFilter).withAccessMode(Repeat()).filter(columnFilter)
+    case _: RowMajorImageDomain    => image.filter(rowFilter).withAccessMode(Repeat()).filter(columnFilter)
   }
 }

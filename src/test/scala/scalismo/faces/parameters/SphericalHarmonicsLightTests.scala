@@ -19,7 +19,7 @@ package scalismo.faces.parameters
 import breeze.linalg.DenseVector
 import scalismo.faces.FacesTestSuite
 import scalismo.color.RGB
-import scalismo.geometry.{EuclideanVector, EuclideanVector3D, _3D}
+import scalismo.geometry.{_3D, EuclideanVector, EuclideanVector3D}
 
 class SphericalHarmonicsLightTests extends FacesTestSuite {
 
@@ -29,7 +29,7 @@ class SphericalHarmonicsLightTests extends FacesTestSuite {
       sh5.bands shouldBe 5
       sh5.coefficients.length shouldBe SphericalHarmonicsLight.coefficientsInBands(5)
     }
-    
+
     it("can be rescaled to more components") {
       val sh = SphericalHarmonicsLight.frontal
       assert(sh.bands == 1)
@@ -53,13 +53,13 @@ class SphericalHarmonicsLightTests extends FacesTestSuite {
       band0.coefficients(0) shouldBe sh.coefficients(0)
     }
 
-    it("SH to DenseVector and from DenseVector"){
+    it("SH to DenseVector and from DenseVector") {
       val sh = SphericalHarmonicsLight.frontal
       val shB = sh.toBreezeVector
       val shN = SphericalHarmonicsLight.fromBreezeVector(shB)
       sh shouldBe shN
 
-      val bV =  DenseVector(Array.fill(27)(rnd.scalaRandom.nextGaussian()))
+      val bV = DenseVector(Array.fill(27)(rnd.scalaRandom.nextGaussian()))
       val shL = SphericalHarmonicsLight.fromBreezeVector(bV)
       val nV = shL.toBreezeVector
       bV.toArray should contain theSameElementsInOrderAs nV.toArray
@@ -67,24 +67,33 @@ class SphericalHarmonicsLightTests extends FacesTestSuite {
 
     it("avoids building of invalid coefficients") {
       val wrongLength = IndexedSeq.fill(2)(EuclideanVector3D.zero)
-      an [IllegalArgumentException] should be thrownBy  SphericalHarmonicsLight(wrongLength)
+      an[IllegalArgumentException] should be thrownBy SphericalHarmonicsLight(wrongLength)
     }
 
     describe("To recover a principal direction of illumination, SphericalHarmonicsLight") {
       it("extracts consistently the direction from randomly generated directed spherical harmonics.") {
 
-        /** Measures direction discrepancy between fromAmbientDiffuse and directionFromSH.
-          * Creates directed illuminations for random directions with fromAmbientDiffuse and solves for the direction with directionFromSH. */
+        /**
+         * Measures direction discrepancy between fromAmbientDiffuse and directionFromSH. Creates directed illuminations
+         * for random directions with fromAmbientDiffuse and solves for the direction with directionFromSH.
+         */
         def testDirectionFromSH(eps: Double, repeat: Int): Boolean = {
-          def genDirLight(v: EuclideanVector[_3D]) = SphericalHarmonicsLight.fromAmbientDiffuse(RGB(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble()), RGB(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble()), v)
-          def randDirection = EuclideanVector.fromSpherical(1.0, rnd.scalaRandom.nextDouble() * math.Pi, rnd.scalaRandom.nextDouble() * math.Pi * 2.0)//non-uniform on the sphere! Does not matter for the test.
+          def genDirLight(v: EuclideanVector[_3D]) = SphericalHarmonicsLight.fromAmbientDiffuse(
+            RGB(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble()),
+            RGB(rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble(), rnd.scalaRandom.nextDouble()),
+            v
+          )
+          def randDirection = EuclideanVector.fromSpherical(1.0,
+                                                            rnd.scalaRandom.nextDouble() * math.Pi,
+                                                            rnd.scalaRandom.nextDouble() * math.Pi * 2.0
+          ) // non-uniform on the sphere! Does not matter for the test.
           (0 until repeat).forall { _ =>
             val v = randDirection.normalize
             val rec = SphericalHarmonicsLight.directionFromSHLightIntensity(genDirLight(v))
-            if(rec.isDefined) { // if we find a direction
-            val d = (v - rec.get).norm
+            if (rec.isDefined) { // if we find a direction
+              val d = (v - rec.get).norm
               d < eps
-            }else // if no direction is found. Should always find a direction in this test.
+            } else // if no direction is found. Should always find a direction in this test.
               false
           }
         }
