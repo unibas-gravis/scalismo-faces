@@ -17,54 +17,55 @@
 package scalismo.faces.io.renderparameters
 
 import scalismo.faces.parameters.RenderParameter
-import spray.json._
+
+import ujson.Value
+import upickle.default.{read, writeJs as write, ReadWriter}
+
+import scala.util.{Success, Try}
 
 /**
  * default JSON reader and writer for RenderParameter versioned reader, writer uses default format
  */
-object RenderParameterJSONFormat extends RenderParameterJSONFormatV3 {
+object RenderParameterJSONFormat extends RenderParameterRootJsonFormat {
 
-  val version1 = RenderParameterJSONFormatLegacy
-  val version2 = RenderParameterJSONFormatV2
-  val version3 = RenderParameterJSONFormatV3
-  val version4 = RenderParameterJSONFormatV4
+  val version1 = RenderParameterJSONFormatLegacy.rpsMapper
+  val version2 = RenderParameterJSONFormatV2.rpsMapper
+  val version3 = RenderParameterJsonFormatV3.rpsMapper
+  val version4 = RenderParameterJSONFormatV4.rpsMapper
 
-  val defaultFormat = RenderParameterJSONFormatV4
+  val defaultFormat: upickle.default.ReadWriter[RenderParameter] = version4
 
-  def versionString(json: JsValue): Option[String] = {
-    val fields = json.asJsObject(s"expected RenderParameter object, got: $json").fields
-
-    fields.get("version") match {
-      case Some(JsString(v)) => Some(v)
-      case _                 => None
+  def versionString(json: Value): Option[String] = {
+    Try {
+      json("version").str
+    } match {
+      case Success(v) => Some(v)
+      case _          => None
     }
   }
 
   /** parse a RenderParameter from the JSON tree, selects proper version */
-  def readRenderParameter(json: JsValue): RenderParameter = json.convertTo[RenderParameter]
+  def readRenderParameter(json: Value): RenderParameter = read[RenderParameter](json)
 
   /** construct JSON serialization of a RenderParameter, uses default format */
-  def writeRenderParameter(param: RenderParameter): JsValue = param.toJson
+  def writeRenderParameter(param: RenderParameter): Value = write(param)
 
-  implicit override val renderParameterFormat: RootJsonFormat[RenderParameter] = new RootJsonFormat[RenderParameter] {
-    def readLegacy(json: JsValue): RenderParameter = {
-      RenderParameterJSONFormatLegacy.renderParameterFormat.read(json)
-    }
-
-    override def read(json: JsValue): RenderParameter = {
-      val version = versionString(json)
-      version match {
-        case None                                          => readLegacy(json)
-        case Some("")                                      => readLegacy(json)
-        case Some("legacy")                                => readLegacy(json)
-        case Some(RenderParameterJSONFormatLegacy.version) => readLegacy(json)
-        case Some(RenderParameterJSONFormatV2.version) => RenderParameterJSONFormatV2.renderParameterFormat.read(json)
-        case Some(RenderParameterJSONFormatV3.version) => RenderParameterJSONFormatV3.renderParameterFormat.read(json)
-        case Some(RenderParameterJSONFormatV4.version) => RenderParameterJSONFormatV4.renderParameterFormat.read(json)
-        case Some(vstr)                                => throw new DeserializationException("unknown version: " + vstr)
+  implicit override val rpsMapper: ReadWriter[RenderParameter] = upickle.default
+    .readwriter[ujson.Value]
+    .bimap[RenderParameter](
+      rps => write(rps)(defaultFormat),
+      json => {
+        val version = versionString(json)
+        version match {
+          case None                                          => read(json)(version1)
+          case Some("")                                      => read(json)(version1)
+          case Some("legacy")                                => read(json)(version1)
+          case Some(RenderParameterJSONFormatLegacy.version) => read(json)(version1)
+          case Some(RenderParameterJSONFormatV2.version)     => read(json)(version2)
+          case Some(RenderParameterJsonFormatV3.version)     => read(json)(version3)
+          case Some(RenderParameterJSONFormatV4.version)     => read(json)(version4)
+          case Some(vstr) => throw new IllegalArgumentException("unknown version: " + vstr)
+        }
       }
-    }
-
-    override def write(obj: RenderParameter): JsValue = defaultFormat.renderParameterFormat.write(obj)
-  }
+    )
 }
