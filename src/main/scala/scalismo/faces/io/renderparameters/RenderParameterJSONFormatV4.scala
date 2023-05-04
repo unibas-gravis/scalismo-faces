@@ -17,67 +17,37 @@
 package scalismo.faces.io.renderparameters
 
 import java.net.URI
+import scalismo.faces.parameters.*
+import upickle.default.{read, writeJs as write}
 
-import scalismo.faces.parameters._
-import spray.json._
+import scala.util.{Failure, Success, Try}
 
-/** V4 file format */
-trait RenderParameterJSONFormatV4 extends RenderParameterJSONFormatV3 {
-  // based on format V3: updated MoMoInstance now always has expressions, MoMoExpressInstance removed
+object RenderParameterJSONFormatV4 extends RenderParameterRootJsonFormat {
 
   override val version = "V4.0"
 
-  // momo instance writer and reader: direct format now
-  implicit override val momoInstanceFormat: RootJsonFormat[MoMoInstance] = new RootJsonFormat[MoMoInstance] {
-    def write(momo: MoMoInstance): JsValue = JsObject(("shape", momo.shape.toJson),
-                                                      ("color", momo.color.toJson),
-                                                      ("expression", momo.expression.toJson),
-                                                      ("modelURI", momo.modelURI.toJson)
-    )
+  import scalismo.faces.io.renderparameters.fromats.RenderParameterJSONFormats._
 
-    def read(json: JsValue): MoMoInstance = {
-      val fields = json.asJsObject(s"expected MoMoInstance object, got: $json").fields
-      MoMoInstance(
-        shape = fields("shape").convertTo[IndexedSeq[Double]],
-        color = fields("color").convertTo[IndexedSeq[Double]],
-        expression = fields("expression").convertTo[IndexedSeq[Double]],
-        modelURI = fields("modelURI").convertTo[URI]
-      )
-    }
-  }
-
-  // render parameter reader / writer
-  implicit override val renderParameterFormat: RootJsonFormat[RenderParameter] = new RootJsonFormat[RenderParameter] {
-    override def write(param: RenderParameter): JsValue = JsObject(
-      "pose" -> param.pose.toJson,
-      "view" -> param.view.toJson,
-      "camera" -> param.camera.toJson,
-      "environmentMap" -> param.environmentMap.toJson,
-      "directionalLight" -> param.directionalLight.toJson,
-      "momo" -> param.momo.toJson,
-      "imageSize" -> param.imageSize.toJson,
-      "colorTransform" -> param.colorTransform.toJson,
-      "version" -> version.toJson
-    )
-
-    override def read(json: JsValue): RenderParameter = {
-      val fields = json.asJsObject(s"expected BetterRenderParameter object, got: $json").fields
-      fields("version") match {
-        case JsString(`version`) =>
-          RenderParameter(
-            pose = fields("pose").convertTo[Pose],
-            view = fields("view").convertTo[ViewParameter],
-            camera = fields("camera").convertTo[Camera],
-            environmentMap = fields("environmentMap").convertTo[SphericalHarmonicsLight],
-            directionalLight = fields("directionalLight").convertTo[DirectionalLight],
-            momo = fields("momo").convertTo[MoMoInstance],
-            imageSize = fields("imageSize").convertTo[ImageSize],
-            colorTransform = fields("colorTransform").convertTo[ColorTransform]
-          )
-        case v => throw new DeserializationException(s"wrong version number, expected $version, got $v")
+  val pureRpsMapper: upickle.default.ReadWriter[RenderParameter] = upickle.default.macroRW
+  implicit val rpsMapper: upickle.default.ReadWriter[RenderParameter] = upickle.default
+    .readwriter[ujson.Value]
+    .bimap[RenderParameter](
+      rps => {
+        val json = write(rps)(pureRpsMapper)
+        json("version") = version
+        json
+      },
+      json => {
+        Try {
+          json("version").str
+        } match {
+          case Success(version) =>
+            if (version != "V4.0")
+              throw IllegalArgumentException(s"V4 json reader expects V4.0 json file, got: $version")
+          case Failure(e) =>
+            throw IllegalArgumentException(s"V4 json reader expects V4.0 json file, got: $e")
+        }
+        read[RenderParameter](json)(pureRpsMapper)
       }
-    }
-  }
+    )
 }
-
-object RenderParameterJSONFormatV4 extends RenderParameterJSONFormatV4

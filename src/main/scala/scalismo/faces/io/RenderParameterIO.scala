@@ -22,11 +22,14 @@ import java.util.Scanner
 import scalismo.faces.io.renderparameters.RenderParameterJSONFormat
 import scalismo.faces.parameters.RenderParameter
 import scalismo.faces.utils.ResourceManagement
-import spray.json._
 
-import RenderParameterJSONFormat.renderParameterFormat
+import RenderParameterJSONFormat.rpsMapper
 
 import scala.util.Try
+import scala.io.Source
+
+import ujson.Value
+import upickle.default.ReadWriter
 
 object RenderParameterIO {
 
@@ -37,14 +40,18 @@ object RenderParameterIO {
   def read(file: File): Try[RenderParameter] = readWithFormat[RenderParameter](file)
 
   /** read a Parameter type from a json file, needs the json format, e.g. RenderParameterJSONFormatLegacy._ */
-  def readWithFormat[A](file: File)(implicit format: RootJsonFormat[A]): Try[A] = Try(
-    readASTFromStream(new FileInputStream(file)).convertTo[A]
+  def readWithFormat[A](file: File)(implicit format: ReadWriter[A]): Try[A] = Try(
+    upickle.default.read[A](readASTFromStream(new FileInputStream(file)))
   )
 
   /** write a parameter type to a file, needs a json format for the type, e.g. RenderParameterJSONFormatLegacy._ */
-  def writeWithFormat[A](parameter: A, file: File)(implicit format: RootJsonFormat[A]): Try[Unit] = Try(
-    writeASTToStream(parameter.toJson, new FileOutputStream(file))
-  )
+  def writeWithFormat[A](parameter: A, file: File)(implicit format: ReadWriter[A]): Try[Unit] = {
+    Try {
+      val json = upickle.default.writeJs(parameter)
+      val fos = new FileOutputStream(file)
+      writeASTToStream(json, fos)
+    }
+  }
 
   /**
    * read a parameter type from a path in a nested json file, path format: field1/field2/field3
@@ -54,7 +61,7 @@ object RenderParameterIO {
    * @param path
    *   path in the json tree, format: field1/field2/field3
    */
-  def readWithPath[A](file: File, path: String)(implicit format: JsonFormat[A]): Try[A] = {
+  def readWithPath[A](file: File, path: String)(implicit format: ReadWriter[A]): Try[A] = {
     readFromStreamWithPath[A](new FileInputStream(file), path)
   }
 
@@ -68,7 +75,7 @@ object RenderParameterIO {
    * @param path
    *   path inside json, format: field1/field2/field3
    */
-  def writeWithPath[A](parameter: A, file: File, path: String)(implicit format: JsonFormat[A]): Try[Unit] = {
+  def writeWithPath[A](parameter: A, file: File, path: String)(implicit format: ReadWriter[A]): Try[Unit] = {
     writeToStreamWithPath[A](parameter, new FileOutputStream(file), path)
   }
 
@@ -80,13 +87,13 @@ object RenderParameterIO {
   def readFromStream(stream: InputStream): Try[RenderParameter] = readFromStreamWithFormat[RenderParameter](stream)
 
   /** read a Parameter type from a json file, needs the json format, e.g. RenderParameterJSONFormatLegacy._ */
-  def readFromStreamWithFormat[A](stream: InputStream)(implicit format: RootJsonFormat[A]): Try[A] = Try(
-    readASTFromStream(stream).convertTo[A]
+  def readFromStreamWithFormat[A](stream: InputStream)(implicit format: ReadWriter[A]): Try[A] = Try(
+    upickle.default.read[A](readASTFromStream(stream))
   )
 
   /** write a parameter type to a file, needs a json format for the type, e.g. RenderParameterJSONFormatLegacy._ */
-  def writeToStreamWithFormat[A](parameter: A, stream: OutputStream)(implicit format: RootJsonFormat[A]): Try[Unit] =
-    Try(writeASTToStream(parameter.toJson, stream))
+  def writeToStreamWithFormat[A](parameter: A, stream: OutputStream)(implicit format: ReadWriter[A]): Try[Unit] =
+    Try(writeASTToStream(upickle.default.writeJs(parameter), stream))
 
   /**
    * read a parameter type from a path in a nested json file, path format: field1/field2/field3
@@ -96,7 +103,7 @@ object RenderParameterIO {
    * @param path
    *   path in the json tree, format: field1/field2/field3
    */
-  def readFromStreamWithPath[A](stream: InputStream, path: String)(implicit format: JsonFormat[A]): Try[A] = {
+  def readFromStreamWithPath[A](stream: InputStream, path: String)(implicit format: ReadWriter[A]): Try[A] = {
     val json = readASTFromStream(stream)
     readFromASTWithPath[A](json, path)
   }
@@ -111,8 +118,8 @@ object RenderParameterIO {
    * @param path
    *   path inside json, format: field1/field2/field3
    */
-  def writeToStreamWithPath[A](parameter: A, stream: OutputStream, path: String)(implicit
-    format: JsonFormat[A]
+  def writeToStreamWithPath[A](parameter: A, stream: OutputStream, path: String = "")(implicit
+    format: ReadWriter[A]
   ): Try[Unit] = Try {
     val fullAST = writeToASTWithPath(parameter, path)
     writeASTToStream(fullAST, stream)
@@ -126,12 +133,12 @@ object RenderParameterIO {
    * @param path
    *   path in the json tree, format: field1/field2/field3
    */
-  def readFromASTWithPath[A](json: JsValue, path: String)(implicit format: JsonFormat[A]): Try[A] = Try {
+  def readFromASTWithPath[A](json: Value, path: String = "")(implicit format: ReadWriter[A]): Try[A] = Try {
     val version = RenderParameterJSONFormat.versionString(json)
     val fieldNames: IndexedSeq[String] = path.split("/").filter(_.nonEmpty).toIndexedSeq
     // traverse the json AST along the given path
-    val jsonField = fieldNames.foldLeft(json) { (jsValue, fieldName) => jsValue.asJsObject.fields(fieldName) }
-    jsonField.convertTo[A]
+    val jsonField = fieldNames.foldLeft(json) { (jsValue, fieldName) => jsValue(fieldName) }
+    upickle.default.read[A](jsonField)
   }
 
   /**
@@ -142,28 +149,26 @@ object RenderParameterIO {
    * @param path
    *   path inside json, format: field1/field2/field3
    */
-  def writeToASTWithPath[A](parameter: A, path: String)(implicit format: JsonFormat[A]): JsValue = {
-    val parameterAST = parameter.toJson
+  def writeToASTWithPath[A](parameter: A, path: String = "")(implicit format: ReadWriter[A]): Value = {
+    val parameterAST = upickle.default.writeJs(parameter)
     val fieldNames: IndexedSeq[String] = path.split("/").filter(_.nonEmpty).toIndexedSeq
     // create composite, nested tree along path
     val fullAST = fieldNames.reverse.foldLeft(parameterAST) { (compositeTree, fieldName) =>
-      JsObject((fieldName, compositeTree))
+      ujson.Obj(fieldName -> compositeTree)
     }
     fullAST
   }
 
   /** parse json from stream as abstract syntax tree (spray's JsValue) */
-  def readASTFromStream(stream: InputStream): JsValue = {
-    ResourceManagement.using(new Scanner(stream).useDelimiter("\\A")) { scanner =>
-      val string = if (scanner.hasNext()) scanner.next() else ""
-      string.parseJson
-    }
+  def readASTFromStream(stream: InputStream): Value = {
+    val source = Source.fromInputStream(stream)
+    val data = source.getLines().mkString("\n")
+    ujson.read(data)
   }
 
   /** write an abstract syntax tree (spray's JsValue) to a file (pretty printed) */
-  def writeASTToStream(jasonAST: JsValue, stream: OutputStream): Unit = {
-    ResourceManagement.using(new PrintWriter(stream)) { f =>
-      f.print(jasonAST.prettyPrint)
-    }
+  def writeASTToStream(json: Value, stream: OutputStream): Unit = {
+    val writer = new PrintWriter(stream, true)
+    writer.println(json)
   }
 }

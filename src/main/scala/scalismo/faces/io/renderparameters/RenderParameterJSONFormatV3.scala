@@ -16,169 +16,213 @@
 
 package scalismo.faces.io.renderparameters
 
-import scalismo.faces.parameters._
-import scalismo.geometry._
-import spray.json._
+import scalismo.color.{ColorSpaceOperations, RGBA}
+import scalismo.faces.mesh.{IndirectProperty, TextureMappedProperty, VertexPropertyPerTriangle}
+import scalismo.faces.parameters.*
+import scalismo.geometry.*
+import scalismo.numerics.ValueInterpolator
+import scalismo.mesh.SurfacePointProperty
 
-trait RenderParameterJSONFormatV3 extends RenderParameterJSONFormatV2 {
-  // based on format V2
+import scala.reflect.ClassTag
+import scala.util.{Failure, Success, Try}
+import upickle.default.{read, writeJs as write, ReadWriter}
+
+object RenderParameterJsonFormatV3 extends RenderParameterRootJsonFormat {
 
   override val version = "V3.0"
 
-  implicit val viewParameterFormat: RootJsonFormat[ViewParameter] = new RootJsonFormat[ViewParameter] {
-    override def write(p: ViewParameter): JsValue = JsObject(("translation", p.translation.toJson),
-                                                             ("roll", p.roll.toJson),
-                                                             ("yaw", p.yaw.toJson),
-                                                             ("pitch", p.pitch.toJson)
-    )
+  implicit val uriMapper: ReadWriter[java.net.URI] = fromats.RenderParameterJSONFormats.uriMapper
+  implicit val poseMapper: ReadWriter[Pose] = fromats.RenderParameterJSONFormats.poseMapper
+  implicit val viewMapper: ReadWriter[ViewParameter] = fromats.RenderParameterJSONFormats.viewMapper
+  implicit val cameraMapper: ReadWriter[Camera] = fromats.RenderParameterJSONFormats.cameraMapper
+  implicit val imageSizeMapper: ReadWriter[ImageSize] = fromats.RenderParameterJSONFormats.imageSizeMapper
+  implicit val colorTransformMapper: ReadWriter[ColorTransform] =
+    fromats.RenderParameterJSONFormats.colorTransformMapper
+  implicit val renderObjectMapper: ReadWriter[RenderObject] = RenderParameterJSONFormatV2.renderObjectMapper
+  implicit val illuminationMapper: ReadWriter[Illumination] = RenderParameterJSONFormatV2.illuminationMapper
 
-    override def read(json: JsValue): ViewParameter = {
-      val fields = json.asJsObject(s"expected Pose object, got: $json").fields
-      ViewParameter(
-        translation = fields("translation").convertTo[EuclideanVector[_3D]],
-        roll = fields("roll").convertTo[Double],
-        yaw = fields("yaw").convertTo[Double],
-        pitch = fields("pitch").convertTo[Double]
-      )
-    }
+  implicit val momoMapper: upickle.default.ReadWriter[MoMoInstance] = upickle.default.macroRW
+
+  implicit val rgbaMapper: ReadWriter[RGBA] = fromats.RenderParameterJSONFormats.rgbaMapper
+  implicit val ev3Mapper: ReadWriter[EuclideanVector[_3D]] = fromats.RenderParameterJSONFormats.ev3DMapper
+
+  implicit def surfacePropertyMapper[A: ClassTag](implicit
+    formatA: ReadWriter[A],
+    interpolator: ValueInterpolator[A]
+  ): ReadWriter[SurfacePointProperty[A]] = {
+    fromats.RenderParameterJSONFormats.surfacePointPropertyFormat
   }
 
-  implicit val cameraFormat: RootJsonFormat[Camera] = new RootJsonFormat[Camera] {
-    override def write(cam: Camera): JsValue = JsObject(
-      ("focalLength", cam.focalLength.toJson),
-      ("principalPoint", cam.principalPoint.toVector.toJson),
-      ("sensorSize", cam.sensorSize.toJson),
-      ("near", cam.near.toJson),
-      ("far", cam.far.toJson),
-      ("orthographic", cam.orthographic.toJson)
-    )
-
-    override def read(json: JsValue): Camera = {
-      val fields = json.asJsObject(s"expected Camera object, got: $json").fields
-      Camera(
-        focalLength = fields("focalLength").convertTo[Double],
-        sensorSize = fields("sensorSize").convertTo[EuclideanVector[_2D]],
-        principalPoint = fields("principalPoint").convertTo[EuclideanVector[_2D]].toPoint,
-        near = fields("near").convertTo[Double],
-        far = fields("far").convertTo[Double],
-        orthographic = fields("orthographic").convertTo[Boolean]
-      )
-    }
+  implicit def textureMappedPropertyMapper[A: ClassTag](implicit
+    formatA: ReadWriter[A],
+    interpolator: ValueInterpolator[A],
+    colorSpaceOperations: ColorSpaceOperations[A]
+  ): ReadWriter[TextureMappedProperty[A]] = {
+    fromats.RenderParameterJSONFormats.textureMappedPropertyFormat
   }
 
-  // render parameter reader / writer
-  implicit override val renderParameterFormat: RootJsonFormat[RenderParameter] = new RootJsonFormat[RenderParameter] {
-    override def write(param: RenderParameter): JsValue = {
-      val illumination: Illumination =
-        if (param.environmentMap.nonEmpty) param.environmentMap else param.directionalLight
+  implicit def vertexPropertyPerTriangleMapper[A: ClassTag](implicit
+    formatA: ReadWriter[A],
+    interpolator: ValueInterpolator[A],
+    colorSpaceOperations: ColorSpaceOperations[A]
+  ): ReadWriter[VertexPropertyPerTriangle[A]] = {
+    fromats.RenderParameterJSONFormats.vertexPropertyPerTriangleFormat
+  }
 
-      JsObject(
-        "pose" -> param.pose.toJson,
-        "view" -> param.view.toJson,
-        "camera" -> param.camera.toJson,
-        "illumination" -> illumination.toJson,
-        "renderObject" -> MoMoExpressInstanceV2(param.momo).toJson,
-        "imageSize" -> param.imageSize.toJson,
-        "colorTransform" -> param.colorTransform.toJson,
-        "version" -> version.toJson
-      )
-    }
+  implicit def indirectPropertyMapper[A: ClassTag](implicit
+    formatA: ReadWriter[A],
+    interpolator: ValueInterpolator[A],
+    colorSpaceOperations: ColorSpaceOperations[A]
+  ): ReadWriter[IndirectProperty[A]] = {
+    fromats.RenderParameterJSONFormats.indirectPropertyFormat
+  }
 
-    override def read(json: JsValue): RenderParameter = {
-      val fields = json.asJsObject(s"expected BetterRenderParameter object, got: $json").fields
+  implicit val meshVertexColorMapper: ReadWriter[MeshVertexColor] =
+    fromats.RenderParameterJSONFormats.meshVertexColorFormat
+  implicit val meshColorNormalsMapper: ReadWriter[MeshColorNormals] =
+    fromats.RenderParameterJSONFormats.meshColorNormalsFormat
+  implicit val meshFileMapper: ReadWriter[MeshFile] = fromats.RenderParameterJSONFormats.meshFileFormat
 
-      val momo = fields("renderObject").convertTo[RenderObject] match {
+  case class RenderParameterV3(pose: Pose,
+                               view: ViewParameter,
+                               camera: Camera,
+                               illumination: Illumination,
+                               renderObject: RenderObject,
+                               imageSize: ImageSize,
+                               colorTransform: ColorTransform,
+                               version: String = version
+  ) {
+    def toRenderParameter(): RenderParameter = {
+      val shLight = illumination match {
+        case sh: SphericalHarmonicsLight => sh
+        case _: DirectionalLight         => SphericalHarmonicsLight.empty
+      }
+
+      val dirLight = illumination match {
+        case _: SphericalHarmonicsLight => DirectionalLight.off
+        case dirLight: DirectionalLight => dirLight
+      }
+
+      val momo = renderObject match {
         case m: MoMoInstance => m
         case _ => throw new RuntimeException("cannot read other object than MoMoInstance/MoMoExpressInstance")
       }
 
-      val shLight = fields("illumination").convertTo[Illumination] match {
-        case sh: SphericalHarmonicsLight => sh
-        case dirLight: DirectionalLight  => SphericalHarmonicsLight.empty
-      }
-
-      val dirLight = fields("illumination").convertTo[Illumination] match {
-        case sh: SphericalHarmonicsLight => DirectionalLight.off
-        case dirLight: DirectionalLight  => dirLight
-      }
-
-      fields("version") match {
-        case JsString(`version`) =>
-          RenderParameter(
-            pose = fields("pose").convertTo[Pose],
-            view = fields("view").convertTo[ViewParameter],
-            camera = fields("camera").convertTo[Camera],
-            environmentMap = shLight,
-            directionalLight = dirLight,
-            momo = momo,
-            imageSize = fields("imageSize").convertTo[ImageSize],
-            colorTransform = fields("colorTransform").convertTo[ColorTransform]
-          )
-        case v => throw new DeserializationException(s"wrong version number, expected $version, got $v")
-      }
+      RenderParameter(
+        pose = pose,
+        view = view,
+        camera = camera,
+        environmentMap = shLight,
+        directionalLight = dirLight,
+        momo = momo,
+        imageSize = imageSize,
+        colorTransform = colorTransform
+      )
     }
   }
 
-  // ** scene parameter part **
-
-  implicit val sceneTreeFormat: RootJsonFormat[SceneTree] = new RootJsonFormat[SceneTree] {
-    override def read(json: JsValue): SceneTree = {
-      val fields = json.asJsObject(s"expected SceneTree, got $json").fields
-      fields("@type") match {
-        case JsString("SceneObject") => SceneObject(fields("renderObject").convertTo[RenderObject])
-        case JsString("PoseNode") =>
-          PoseNode(
-            pose = fields("pose").convertTo[Pose],
-            children = fields("children").convertTo[IndexedSeq[SceneTree]]
-          )
-        case _ => throw new DeserializationException(s"unknown type of SceneTree node")
-      }
-    }
-
-    override def write(obj: SceneTree): JsValue = obj match {
-      case PoseNode(pose, children) =>
-        JsObject(
-          "pose" -> pose.toJson,
-          "children" -> children.toJson,
-          "@type" -> "PoseNode".toJson
-        )
-      case SceneObject(renderObject) =>
-        JsObject(
-          "renderObject" -> renderObject.toJson,
-          "@type" -> "SceneObject".toJson
-        )
-    }
-  }
-
-  implicit val sceneParameterFormat: RootJsonFormat[SceneParameter] = new RootJsonFormat[SceneParameter] {
-    val version = "SceneParameterV3.0"
-    override def write(param: SceneParameter): JsValue = JsObject(
-      "view" -> param.view.toJson,
-      "camera" -> param.camera.toJson,
-      "illuminations" -> param.illuminations.toJson,
-      "sceneTree" -> param.sceneTree.toJson,
-      "imageSize" -> param.imageSize.toJson,
-      "colorTransform" -> param.colorTransform.toJson,
-      "version" -> version.toJson
+  object RenderParameterV3 {
+    def apply(rps: RenderParameter) = new RenderParameterV3(
+      pose = rps.pose,
+      view = rps.view,
+      camera = rps.camera,
+      illumination =
+        if (rps.environmentMap.nonEmpty)
+          rps.environmentMap
+        else
+          rps.directionalLight,
+      renderObject = rps.momo,
+      imageSize = rps.imageSize,
+      colorTransform = rps.colorTransform
     )
 
-    override def read(json: JsValue): SceneParameter = {
-      val fields = json.asJsObject(s"expected SceneParameter object, got: $json").fields
-      fields("version") match {
-        case JsString(`version`) =>
-          SceneParameter(
-            view = fields("view").convertTo[ViewParameter],
-            camera = fields("camera").convertTo[Camera],
-            illuminations = fields("illuminations").convertTo[IndexedSeq[Illumination]],
-            sceneTree = fields("sceneTree").convertTo[SceneTree],
-            imageSize = fields("imageSize").convertTo[ImageSize],
-            colorTransform = fields("colorTransform").convertTo[ColorTransform]
-          )
-        case v => throw new DeserializationException(s"wrong version number, expected $version, got $v")
-      }
-    }
+    val renderParameterV3Mapper: upickle.default.ReadWriter[RenderParameterV3] = upickle.default.macroRW
+    implicit val renderParameterV3GuardedMapper: upickle.default.ReadWriter[RenderParameterV3] = upickle.default
+      .readwriter[ujson.Value]
+      .bimap(
+        rpsV3 => write(rpsV3)(renderParameterV3Mapper),
+        json => {
+          Try {
+            json("version").str
+          } match {
+            case Success(version) =>
+              if (version != "V3.0")
+                throw IllegalArgumentException(s"V3 json reader expects V3.0 json file, got: $version")
+            case Failure(e) =>
+              throw IllegalArgumentException(s"V3 json reader expects V3.0 json file, got: $e")
+          }
+          read[RenderParameterV3](json)(renderParameterV3Mapper)
+        }
+      )
   }
 
-}
+  implicit val rpsMapper: upickle.default.ReadWriter[RenderParameter] = upickle.default
+    .readwriter[RenderParameterV3]
+    .bimap[RenderParameter](
+      rps => RenderParameterV3(rps),
+      rpsV3 => rpsV3.toRenderParameter()
+    )
 
-object RenderParameterJSONFormatV3 extends RenderParameterJSONFormatV3
+  implicit val sceneTreeFormat: ReadWriter[SceneTree] = upickle.default
+    .readwriter[ujson.Value]
+    .bimap[SceneTree](
+      obj =>
+        obj match {
+          case PoseNode(pose, children) =>
+            ujson.Obj(
+              "pose" -> write(pose),
+              "children" -> write(children),
+              "@type" -> "PoseNode"
+            )
+          case SceneObject(renderObject) =>
+            ujson.Obj(
+              "renderObject" -> write(renderObject),
+              "@type" -> "SceneObject"
+            )
+        },
+      json => {
+        json("@type").str match {
+          case "SceneObject" => SceneObject(read[RenderObject](json("renderObject")))
+          case "PoseNode" =>
+            PoseNode(
+              pose = read[Pose](json("pose")),
+              children = read[IndexedSeq[SceneTree]](json("children"))
+            )
+          case _ => throw new IllegalArgumentException(s"unknown type of SceneTree node")
+        }
+      }
+    )
+
+  implicit val sceneParameterFormat: ReadWriter[SceneParameter] = {
+    val version = "SceneParameterV3.0"
+
+    upickle.default
+      .readwriter[ujson.Value]
+      .bimap[SceneParameter](
+        param =>
+          ujson.Obj(
+            "view" -> write(param.view),
+            "camera" -> write(param.camera),
+            "illuminations" -> write(param.illuminations),
+            "sceneTree" -> write(param.sceneTree),
+            "imageSize" -> write(param.imageSize),
+            "colorTransform" -> write(param.colorTransform),
+            "version" -> version
+          ),
+        json => {
+          json("version").str match {
+            case version =>
+              SceneParameter(
+                view = read[ViewParameter](json("view")),
+                camera = read[Camera](json("camera")),
+                illuminations = read[IndexedSeq[Illumination]](json("illuminations")),
+                sceneTree = read[SceneTree](json("sceneTree")),
+                imageSize = read[ImageSize](json("imageSize")),
+                colorTransform = read[ColorTransform](json("colorTransform"))
+              )
+            case v => throw new IllegalArgumentException(s"wrong version number, expected $version, got $v")
+          }
+        }
+      )
+  }
+}

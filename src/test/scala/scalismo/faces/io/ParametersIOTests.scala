@@ -16,23 +16,29 @@
 
 package scalismo.faces.io
 
-import java.io._
+import java.io.*
 import java.net.URI
-
 import scalismo.faces.FacesTestSuite
 import scalismo.color.{RGB, RGBA}
 import scalismo.faces.image.PixelImageDomain
-import scalismo.faces.io.renderparameters.{RenderParameterJSONFormat, RenderParameterJSONFormatV4}
-import scalismo.faces.mesh._
-import scalismo.faces.parameters._
-import scalismo.faces.render._
+import scalismo.faces.io.renderparameters.fromats.{MoMoInstanceLegacyFormat, SphericalHarmonicsLegacyFormat}
+import scalismo.faces.io.renderparameters.{
+  RenderParameterJSONFormat,
+  RenderParameterJSONFormatLegacy,
+  RenderParameterJSONFormatV2,
+  RenderParameterJSONFormatV4,
+  RenderParameterJsonFormatV3
+}
+import scalismo.faces.mesh.*
+import scalismo.faces.parameters.*
+import scalismo.faces.render.*
 import scalismo.faces.utils.ResourceManagement
-import scalismo.geometry._
+import scalismo.geometry.*
 import scalismo.mesh.{SurfacePointProperty, VertexColorMesh3D}
-import spray.json._
 
 import scala.io.Source
 import scala.reflect.ClassTag
+import upickle.default.{read, writeJs as write}
 
 class ParametersIOTests extends FacesTestSuite {
 
@@ -73,6 +79,31 @@ class ParametersIOTests extends FacesTestSuite {
     )
   }
 
+  // explicit json to parse with target
+  val targetParam = RenderParameter(
+    view = ViewParameter(translation = EuclideanVector(10.0, 20.0, 2000.0), pitch = 0.75, roll = -0.125, yaw = 1.5),
+    camera = Camera(
+      far = 100000.0,
+      focalLength = 50.0,
+      near = 1.0,
+      orthographic = false,
+      principalPoint = Point(0.005555555555555556, -0.016666666666666666),
+      sensorSize = EuclideanVector(36.0, 24.0)
+    ),
+    colorTransform = ColorTransform(RGB(1.0, 0.5, 0.25), 1.0, RGB(0.25, 0.125, 0.75)),
+    environmentMap = SphericalHarmonicsLight(
+      IndexedSeq(EuclideanVector(0.5, 0.25, 0.125),
+                 EuclideanVector(0.125, 0.25, 0.5),
+                 EuclideanVector(0.25, 0.5, 0.125),
+                 EuclideanVector(0.5, 0.125, 0.25)
+      )
+    ),
+    directionalLight = DirectionalLight(RGB.Black, RGB.Black, EuclideanVector3D.unitZ, RGB.Black, 10.0),
+    imageSize = ImageSize(width = 720, height = 480),
+    momo = MoMoInstance(IndexedSeq(-1.0, 0.5, -0.25), IndexedSeq(1.0, 0.0, 0.5), IndexedSeq(), new URI("modelPath1")),
+    pose = Pose(1.0, EuclideanVector(0.0, 0.0, -1000.0), roll = 0.125, yaw = -0.125, pitch = 0.25)
+  )
+
   def vec2Close(v1: EuclideanVector[_2D], v2: EuclideanVector[_2D]): Unit = {
     math.abs(v1.x - v2.x) should be < 1e-5
     math.abs(v1.y - v2.y) should be < 1e-5
@@ -105,19 +136,83 @@ class ParametersIOTests extends FacesTestSuite {
     p1.view shouldBe p2.view
   }
 
-  def writeReadTest[A: ClassTag](a: A)(implicit format: JsonFormat[A]): Unit = {
+  var idx = 0
+  def writeReadTest[A: ClassTag](a: A)(implicit format: upickle.default.ReadWriter[A]): Unit = {
+    idx += 1
     val tag = implicitly[ClassTag[A]]
-    it(s"consistently writes/reads ${tag.runtimeClass.getName}") {
-      a.toJson.convertTo[A] shouldBe a
+    it(s"consistently writes/reads ${tag.runtimeClass.getName} - ${idx}") {
+      val tmp = write(a)
+      read[A](tmp) shouldBe a
     }
   }
 
   // choose a random parameter for this test: "ensures" different values for each field
   val randomParam: RenderParameter = randomParameter()
 
-  describe("RenderParameters JSON Formats V3") {
+  describe("RenderParameter JSON V1 Legacy Format") {
+    import scalismo.faces.io.renderparameters.RenderParameterJSONFormatLegacy._
 
-    import scalismo.faces.io.renderparameters.RenderParameterJSONFormatV3._
+    writeReadTest(MoMoInstanceLegacyFormat(randomList(10), new java.net.URI("foobarr"), randomList(10), randomDouble))
+    writeReadTest(
+      SphericalHarmonicsLegacyFormat(IndexedSeq.fill(9)(randomList(3)).map(l => EuclideanVector(l(0), l(1), l(2))))
+    )
+
+    it("can read old C++ json") {
+      val source = Source
+        .fromURL(this.getClass.getResource("/renderParametersV1.rps"))
+      val text = source.getLines().mkString("")
+      val json = ujson.read(text)
+      val cxxParam = RenderParameterIO.readFromASTWithPath[RenderParameter](json).get
+      cxxParam shouldBe targetParam
+    }
+
+    it("can convert to and from C++ json") {
+      import RenderParameterJSONFormatLegacy.rpsMapper
+      val jstr = write(targetParam)
+      val pRead = read[RenderParameter](jstr)
+      identical(pRead, targetParam)
+    }
+
+  }
+
+  describe("RenderParameter JSON format V2") {
+    import scalismo.faces.io.renderparameters.RenderParameterJSONFormatV2.rpsMapper
+
+    describe("When the illumination is a directional light") {
+      import RenderParameterJSONFormatV2.illuminationMapper
+      writeReadTest[Illumination](
+        DirectionalLight(randomRGB, randomRGB, randomVector3D, randomRGB, 42.31415).asInstanceOf[Illumination]
+      )
+    }
+    describe("When the illumination is a spherical harmonics light") {
+      import RenderParameterJSONFormatV2.illuminationMapper
+      writeReadTest[Illumination](
+        SphericalHarmonicsLight(IndexedSeq.fill(9)(randomList(3)).map(l => EuclideanVector(l(0), l(1), l(2))))
+          .asInstanceOf[Illumination]
+      )
+    }
+
+    it("can read V2 example json") {
+      val source = Source
+        .fromURL(this.getClass.getResource("/renderParametersV2.rps"))
+      val text = source.getLines().mkString("")
+      val json = ujson.read(text)
+      val v2Param = RenderParameterIO.readFromASTWithPath(json).get
+      v2Param shouldBe targetParam
+    }
+  }
+
+  describe("RenderParameters JSON Formats V3") {
+    import RenderParameterJsonFormatV3._
+
+    it("can read V3 example json") {
+      val source = Source
+        .fromURL(this.getClass.getResource("/renderParametersV3.rps"))
+      val text = source.getLines().mkString("")
+      val json = ujson.read(text)
+      val v3Param = RenderParameterIO.readFromASTWithPath[RenderParameter](json).get
+      v3Param shouldBe targetParam
+    }
 
     describe("View parameterization") {
       writeReadTest(ViewParameter(randomVector3D, randomDouble, randomDouble, randomDouble))
@@ -180,8 +275,9 @@ class ParametersIOTests extends FacesTestSuite {
     describe("Illumination JSON format") {
       writeReadTest(
         DirectionalLight(randomRGB, randomRGB, randomVector3D.normalize, randomRGB, rnd.scalaRandom.nextDouble())
+          .asInstanceOf[Illumination]
       )
-      writeReadTest(randomParam.environmentMap)
+      writeReadTest(randomParam.environmentMap.asInstanceOf[Illumination])
     }
 
     describe("SceneParameter") {
@@ -197,10 +293,12 @@ class ParametersIOTests extends FacesTestSuite {
         val f = File.createTempFile("ParametersIOTest", ".rps")
         f.deleteOnExit()
         ResourceManagement.using(new PrintWriter(new FileOutputStream(f))) { wr =>
-          wr.print(sp.toJson.prettyPrint)
+          val json = write(sp)
+          wr.print(json)
         }
 
-        val rsp = Source.fromFile(f).mkString.parseJson.convertTo[SceneParameter]
+        val text = Source.fromFile(f).mkString
+        val rsp = read[SceneParameter](ujson.read(text))
         rsp shouldBe sp
       }
     }
@@ -314,7 +412,7 @@ class ParametersIOTests extends FacesTestSuite {
   }
 
   describe("RenderParameters JSON Formats V4") {
-    import RenderParameterJSONFormat.version4._
+    import scalismo.faces.io.renderparameters.fromats.RenderParameterJSONFormats._
 
     describe("MoMoInstance JSON format") {
       writeReadTest(
@@ -330,45 +428,10 @@ class ParametersIOTests extends FacesTestSuite {
 
   describe("Render Parameter JSON Reader") {
 
-    import RenderParameterJSONFormat.defaultFormat._
+    implicit val format: upickle.default.ReadWriter[RenderParameter] = RenderParameterJSONFormat.defaultFormat
 
-    it("default format is V4.0") {
-      RenderParameterJSONFormat.defaultFormat shouldBe RenderParameterJSONFormatV4
-    }
-
-    it("reader can read spray json (versioned dispatcher)") {
-      val jstr = randomParam.toJson
-      val pRead = jstr.convertTo[RenderParameter]
-      identical(pRead, randomParam)
-    }
-
-    // explicit json to parse with target
-    val targetParam = RenderParameter(
-      view = ViewParameter(translation = EuclideanVector(10.0, 20.0, 2000.0), pitch = 0.75, roll = -0.125, yaw = 1.5),
-      camera = Camera(
-        far = 100000.0,
-        focalLength = 50.0,
-        near = 1.0,
-        orthographic = false,
-        principalPoint = Point(0.005555555555555556, -0.016666666666666666),
-        sensorSize = EuclideanVector(36.0, 24.0)
-      ),
-      colorTransform = ColorTransform(RGB(1.0, 0.5, 0.25), 1.0, RGB(0.25, 0.125, 0.75)),
-      environmentMap = SphericalHarmonicsLight(
-        IndexedSeq(EuclideanVector(0.5, 0.25, 0.125),
-                   EuclideanVector(0.125, 0.25, 0.5),
-                   EuclideanVector(0.25, 0.5, 0.125),
-                   EuclideanVector(0.5, 0.125, 0.25)
-        )
-      ),
-      directionalLight = DirectionalLight(RGB.Black, RGB.Black, EuclideanVector3D.unitZ, RGB.Black, 10.0),
-      imageSize = ImageSize(width = 720, height = 480),
-      momo = MoMoInstance(IndexedSeq(-1.0, 0.5, -0.25), IndexedSeq(1.0, 0.0, 0.5), IndexedSeq(), new URI("modelPath1")),
-      pose = Pose(1.0, EuclideanVector(0.0, 0.0, -1000.0), roll = 0.125, yaw = -0.125, pitch = 0.25)
-    )
-
-    def readResourceAsString(resource: String): String = {
-      Source.fromURL(this.getClass.getResource("/" + resource)).toString()
+    it("writes by default version 4") {
+      RenderParameterJSONFormat.defaultFormat shouldBe RenderParameterJSONFormatV4.rpsMapper
     }
 
     it("can be written to and read from a stream") {
@@ -379,43 +442,12 @@ class ParametersIOTests extends FacesTestSuite {
       identical(readParam, randomParam)
     }
 
-    it("can read old C++ json") {
-      import RenderParameterJSONFormat.version1._
-      val cxxParam = Source
-        .fromURL(this.getClass.getResource("/renderParametersV1.rps"))
-        .mkString
-        .parseJson
-        .convertTo[RenderParameter]
-      cxxParam shouldBe targetParam
-    }
-
-    it("can read V2 example json") {
-      import RenderParameterJSONFormat.version2._
-      val v2Param = Source
-        .fromURL(this.getClass.getResource("/renderParametersV2.rps"))
-        .mkString
-        .parseJson
-        .convertTo[RenderParameter]
-      v2Param shouldBe targetParam
-    }
-
-    it("can read V3 example json") {
-      import RenderParameterJSONFormat.version3._
-      val v3Param = Source
-        .fromURL(this.getClass.getResource("/renderParametersV3.rps"))
-        .mkString
-        .parseJson
-        .convertTo[RenderParameter]
-      v3Param shouldBe targetParam
-    }
-
     it("can read V4 example json") {
-      import RenderParameterJSONFormat.version4._
-      val v4Param = Source
+      val source = Source
         .fromURL(this.getClass.getResource("/renderParametersV4.rps"))
-        .mkString
-        .parseJson
-        .convertTo[RenderParameter]
+      val text = source.getLines().mkString("")
+      val json = ujson.read(text)
+      val v4Param = RenderParameterIO.readFromASTWithPath(json).get
       v4Param shouldBe targetParam
     }
 
@@ -444,7 +476,7 @@ class ParametersIOTests extends FacesTestSuite {
       val f = File.createTempFile("ParameterIOTest", ".rps")
       f.deleteOnExit()
       RenderParameterIO.writeWithPath(randomParam, f, path).get
-      val readParam = RenderParameterIO.readWithPath[RenderParameter](f, path).get
+      val readParam = RenderParameterIO.readWithPath(f, path).get
       identical(readParam, randomParam)
     }
 
