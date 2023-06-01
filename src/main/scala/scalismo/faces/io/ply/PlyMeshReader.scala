@@ -342,12 +342,12 @@ class PlyPropertyReader[A](private val reader: SequenceReader[A]) {
 
   def getList: List[A] = _buffer.toList
 
-  def read(scanner: Scanner): Seq[A] = {
-    (_buffer ++= reader.read(scanner)).toSeq
+  def read(scanner: Scanner): Unit = {
+    _buffer ++= reader.read(scanner)
   }
 
-  def read(is: InputStream, bo: ByteOrder): Seq[A] = {
-    (_buffer ++= reader.read(is, bo)).toSeq
+  def read(is: InputStream, bo: ByteOrder): Unit = {
+    _buffer ++= reader.read(is, bo)
   }
 
 }
